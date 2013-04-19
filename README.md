@@ -51,8 +51,9 @@ Recursively render a tree, something that's a bit more cumbersome to incremental
 ```
 class TreeNode
   constructor: (value, children) ->
-    @value = rx.cell()
-    @children = rx.array()
+    @value = rx.cell(value)
+    # Arrays only insert/remove the minimum set into/from the DOM (via the `map` method)
+    @children = rx.array(children)
 
 root = new TreeNode 'root', [
   new TreeNode 'alpha', []
