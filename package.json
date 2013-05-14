@@ -22,7 +22,8 @@
     "grunt-karma": "~0.3.0",
     "grunt-open": "~0.2.0",
     "matchdep": "~0.1.1",
-    "grunt-google-cdn": "~0.1.1"
+    "grunt-google-cdn": "~0.1.1",
+    "phantomjs": "~1.9.0-3"
   },
   "engines": {
     "node": ">=0.8.0"
