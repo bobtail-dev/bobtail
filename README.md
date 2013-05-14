@@ -1,4 +1,4 @@
-reactive.coffee
+reactive-coffee
 ===============
 
 Declaratively specify your DOM templates in a simple CoffeeScript embedded DSL.
