@@ -73,6 +73,29 @@ recurse = (node) ->
 $('body').append( ul {}, [ recurse(root) ] )
 ```
 
+Development Setup
+-----------------
+
+To fetch node dependencies:
+
+    npm install # pull dependencies into ./node_modules
+    npm install -g phantomjs # temp workaround for karma phantomjs launcher
+
+To build and test:
+
+    grunt
+
+To test:
+
+    grunt test
+
+Tests may spew this error after running:
+
+    ERROR [launcher]: Cannot start PhantomJS
+
+You can ignore this; it was fixed recently in
+<https://github.com/karma-runner/karma/issues/444>.
+
 See Also
 --------
 
