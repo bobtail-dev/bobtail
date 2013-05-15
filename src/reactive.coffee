@@ -1,8 +1,11 @@
+if typeof exports is 'undefined'
+  @rx = rx = {}
+else
+  rx = exports
+
 #
 # Reactivity
 #
-
-rx = {}
 
 class Recorder
   constructor: ->
@@ -257,7 +260,10 @@ $.fn.rx = (prop) ->
 # reactive template DSL
 #
 
-rxt = {}
+if typeof exports is 'undefined'
+  @rxt = rxt = {}
+else
+  rxt = exports
 
 rxt.mktag = mktag = (tag) ->
   (attrs, contents) ->
