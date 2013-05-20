@@ -7,7 +7,7 @@ basePath = '';
 files = [
   JASMINE,
   JASMINE_ADAPTER,
-  'src/*.js',
+  'src/*.coffee',
   'src/**/*.js',
   'test/mock/**/*.js',
   'test/spec/**/*.js'
