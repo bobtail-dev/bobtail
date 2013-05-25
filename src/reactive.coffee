@@ -3,6 +3,16 @@ if typeof exports is 'undefined'
 else
   rx = exports
 
+nextUid = 0
+mkuid = -> nextUid += 1
+
+popKey = (x, k) ->
+  if not k of x
+    throw 'object has no key ' + k
+  v = x[k]
+  delete x[k]
+  v
+
 #
 # Reactivity
 #
