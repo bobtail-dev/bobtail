@@ -1,0 +1,14 @@
+{
+  "name": "reactive-coffee",
+  "version": "0.0.0",
+  "main": "src/reactive.coffee",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ],
+  "dependencies": {
+    "underscore": "~1.4.4",
+    "jquery": "~1.7.0"
+  }
+}
