@@ -7,10 +7,12 @@ basePath = '';
 files = [
   JASMINE,
   JASMINE_ADAPTER,
+  'components/underscore/underscore.js',
+  'components/jquery/jquery.js',
   'src/*.coffee',
   'src/**/*.js',
   'test/mock/**/*.js',
-  'test/spec/**/*.js'
+  'test/spec/**/*.coffee'
 ];
 
 // list of files to exclude
