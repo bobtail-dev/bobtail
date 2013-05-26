@@ -702,6 +702,8 @@
     };
   };
 
+  rxt.p = mktag('p');
+
   rxt.br = mktag('br')({}, []);
 
   rxt.ul = mktag('ul');
@@ -718,15 +720,7 @@
 
   rxt.select = mktag('select');
 
-  rxt.select = function(attr, contents) {
-    return mktag('select')(attr, contents);
-  };
-
   rxt.option = mktag('option');
-
-  rxt.option = function(attr, contents) {
-    return mktag('option')(attr, contents);
-  };
 
   rxt.label = mktag('label');
 
@@ -735,6 +729,14 @@
   rxt.fieldset = mktag('fieldset');
 
   rxt.legend = mktag('legend');
+
+  rxt.section = mktag('section');
+
+  rxt.header = mktag('header');
+
+  rxt.footer = mktag('footer');
+
+  rxt.strong = mktag('strong');
 
   rxt.h1 = mktag('h1');
 
