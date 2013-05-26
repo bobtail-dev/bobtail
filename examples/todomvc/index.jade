@@ -68,14 +68,15 @@ html
                     }
                     label {for: 'toggle-all'}, ['Mark all as complete']
                     ul {id: 'todo-list'}, tasks.map (task) ->
+                      editBox = null
                       li {
                         class: bind -> [
                           'completed' if task.isCompleted.get()
                           'editing' if task.isEditing.get()
                         ].filter((x) -> x?).join(' ')
-                      }, do ->
+                      }, bind ->
                         if task.isEditing.get() then [
-                          input {
+                          editBox = input {
                             type: 'text'
                             class: 'edit'
                             autofocus: true
@@ -96,7 +97,9 @@ html
                             init: -> @change => task.isCompleted.set(@is(':checked'))
                           }
                           label {
-                            init: -> @dblclick => task.isEditing.set(true)
+                            init: -> @dblclick =>
+                              task.isEditing.set(true)
+                              editBox.focus()
                           }, bind -> ["#{task.title.get()}"]
                           button {
                             class: 'destroy'
