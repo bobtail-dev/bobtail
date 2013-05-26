@@ -32,6 +32,9 @@ module.exports = function (grunt) {
         tasks: ['livereload']
       }
     },
+    bower: {
+      install: {}
+    },
     connect: {
       options: {
         port: 9000,
@@ -115,6 +118,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('test', [
     'clean:server',
+    // 'bower:install', // slows down build a bit and puts things in ./lib
     'coffee',
     'connect:test',
     'karma'
