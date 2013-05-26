@@ -1,7 +1,7 @@
 {
   "name": "reactive-coffee",
   "version": "0.0.0",
-  "main": "src/reactive.coffee",
+  "main": ["dist/reactive-coffee.js", "dist/reactive-coffee.min.js"],
   "ignore": [
     "**/.*",
     "node_modules",
