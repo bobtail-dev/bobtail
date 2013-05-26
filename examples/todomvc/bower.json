@@ -1,0 +1,16 @@
+{
+  "name": "reactive-coffee-todomvc",
+  "version": "0.0.0",
+  "main": [
+    "index.html"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ],
+  "dependencies": {
+    "reactive-coffee": "~0.0.0",
+    "todomvc-common": "~0.1.7"
+  }
+}

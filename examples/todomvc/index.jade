@@ -1,0 +1,130 @@
+html
+  head
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    title Reactive TodoMVC
+    link(rel='stylesheet', href='components/todomvc-common/base.css')
+  body
+    script(src='components/todomvc-common/base.js')
+    script(src='components/jquery/jquery.js')
+    script(src='components/underscore/underscore.js')
+    //script(src='components/reactive-coffee/dist/reactive-coffee.js')
+    script(src='../../dist/reactive-coffee.js')
+    :coffeescript
+      bind = rx.bind
+      section = rxt.section
+      header = rxt.header
+      footer = rxt.footer
+      ul = rxt.ul
+      li = rxt.li
+      h1 = rxt.h1
+      input = rxt.input
+      label = rxt.label
+      span = rxt.span
+      strong = rxt.strong
+      button = rxt.button
+      div = rxt.div
+      p = rxt.p
+
+      class Task
+        constructor: (title) ->
+          @title = rx.cell(title)
+          @isEditing = rx.cell(false)
+          @isCompleted = rx.cell(false)
+
+      class TodoList
+        constructor: ->
+          @tasks = rx.array()
+
+      window.todoList = new TodoList()
+
+      boolStr = (bool, str) -> if bool then str else ''
+
+      incompleteTasks = bind ->
+        (task for task in todoList.tasks.all() when not task.isCompleted.get()).length
+
+      $ ->
+        $('body').prepend(
+          section {id: 'todoapp'}, [
+            header {id: 'header'}, [
+              h1 {}, ['todos']
+              input {
+                id: 'new-todo'
+                type: 'text'
+                placeholder: 'What needs to be done?'
+                autofocus: true
+                init: -> @keydown (e) =>
+                  if e.which == 13
+                    todoList.tasks.push(new Task(@val().trim()))
+                    @val('')
+              }
+            ]
+            div {}, bind ->
+              if todoList.tasks.length() == 0
+                []
+              else
+                [
+                  section {id: 'main'}, [
+                    input {
+                      id: 'toggle-all'
+                      type: 'checkbox'
+                      init: -> @change =>
+                        for task in todoList.tasks.all()
+                          task.isCompleted.set(@is(':checked'))
+                    }
+                    label {for: 'toggle-all'}, ['Mark all as complete']
+                    ul {id: 'todo-list'}, todoList.tasks.map (task) ->
+                      li {
+                        class: bind ->
+                          cls = []
+                          cls.push('completed') if task.isCompleted.get()
+                          cls.push('editing') if task.isEditing.get()
+                          cls.join(' ')
+                      }, do ->
+                        if task.isEditing.get() then [
+                          input {
+                            type: 'text'
+                            class: 'edit'
+                            autofocus: true
+                            value: task.title.get()
+                            init: ->
+                              @keyup (e) =>
+                                if e.which == 13
+                                  @blur()
+                              @blur =>
+                                task.title.set(@val())
+                                task.isEditing.set(false)
+                          }
+                        ] else [
+                          input {
+                            class: 'toggle'
+                            type: 'checkbox'
+                            checked: bind -> task.isCompleted.get()
+                            init: -> @change => task.isCompleted.set(@is(':checked'))
+                          }
+                          label {
+                            init: -> @dblclick => task.isEditing.set(true)
+                          }, bind -> ["#{task.title.get()}"]
+                          button {
+                            class: 'destroy'
+                            init: -> @click -> todoList.tasks.remove(task)
+                          }
+                        ]
+                  ]
+                  footer {id: 'footer'}, [
+                    span {id: 'todo-count'}, bind -> [
+                      strong {}, ["#{incompleteTasks.get()}"]
+                      if incompleteTasks.get() == 1
+                        ' item left'
+                      else
+                        ' items left'
+                    ]
+                    button {
+                      id: 'clear-completed'
+                      init: -> @click =>
+                        todoList.tasks.replace(task for task in todoList.tasks.all() when not task.isCompleted.get())
+                    }, ['Clear completed']
+                  ]
+                ]
+          ]
+        )
