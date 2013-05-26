@@ -32,16 +32,10 @@ html
           @isEditing = rx.cell(false)
           @isCompleted = rx.cell(false)
 
-      class TodoList
-        constructor: ->
-          @tasks = rx.array()
+      window.tasks = rx.array()
 
-      window.todoList = new TodoList()
-
-      boolStr = (bool, str) -> if bool then str else ''
-
-      incompleteTasks = bind ->
-        (task for task in todoList.tasks.all() when not task.isCompleted.get()).length
+      incomplete = ->
+        (task for task in tasks.all() when not task.isCompleted.get()).length
 
       $ ->
         $('body').prepend(
@@ -55,12 +49,12 @@ html
                 autofocus: true
                 init: -> @keydown (e) =>
                   if e.which == 13
-                    todoList.tasks.push(new Task(@val().trim()))
+                    tasks.push(new Task(@val().trim()))
                     @val('')
               }
             ]
             div {}, bind ->
-              if todoList.tasks.length() == 0
+              if tasks.length() == 0
                 []
               else
                 [
@@ -69,17 +63,16 @@ html
                       id: 'toggle-all'
                       type: 'checkbox'
                       init: -> @change =>
-                        for task in todoList.tasks.all()
+                        for task in tasks.all()
                           task.isCompleted.set(@is(':checked'))
                     }
                     label {for: 'toggle-all'}, ['Mark all as complete']
-                    ul {id: 'todo-list'}, todoList.tasks.map (task) ->
+                    ul {id: 'todo-list'}, tasks.map (task) ->
                       li {
-                        class: bind ->
-                          cls = []
-                          cls.push('completed') if task.isCompleted.get()
-                          cls.push('editing') if task.isEditing.get()
-                          cls.join(' ')
+                        class: bind -> [
+                          'completed' if task.isCompleted.get()
+                          'editing' if task.isEditing.get()
+                        ].filter((x) -> x?).join(' ')
                       }, do ->
                         if task.isEditing.get() then [
                           input {
@@ -107,22 +100,19 @@ html
                           }, bind -> ["#{task.title.get()}"]
                           button {
                             class: 'destroy'
-                            init: -> @click -> todoList.tasks.remove(task)
+                            init: -> @click -> tasks.remove(task)
                           }
                         ]
                   ]
                   footer {id: 'footer'}, [
                     span {id: 'todo-count'}, bind -> [
-                      strong {}, ["#{incompleteTasks.get()}"]
-                      if incompleteTasks.get() == 1
-                        ' item left'
-                      else
-                        ' items left'
+                      strong {}, ["#{incomplete()}"]
+                      if incomplete() == 1 then ' item left' else ' items left'
                     ]
                     button {
                       id: 'clear-completed'
                       init: -> @click =>
-                        todoList.tasks.replace(task for task in todoList.tasks.all() when not task.isCompleted.get())
+                        tasks.replace(task for task in tasks.all() when not task.isCompleted.get())
                     }, ['Clear completed']
                   ]
                 ]
