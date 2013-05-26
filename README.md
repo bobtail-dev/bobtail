@@ -80,6 +80,12 @@ To fetch node dependencies:
 
     npm install # pull dependencies into ./node_modules
     npm install -g phantomjs # temp workaround for karma phantomjs launcher
+    npm install -g grunt-cli # for conveniently running grunt
+    npm install -g bower # for conveniently running grunt
+
+To fetch dependencies:
+
+    bower install
 
 To build and test:
 
