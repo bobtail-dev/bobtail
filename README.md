@@ -725,6 +725,29 @@ function_, which is what constructs a DOM element.
 FAQ
 ---
 
+**Why yet another client-side framework?**
+
+It's actually generous to call this a framework, (or I guess it can be called a
+"micro-framework"), but hopefully most of the questions are addresed in
+[Motivation and Design Rationale](#motivation-and-design-rationale) and [See
+Also](#see-also).
+
+**Isn't this approach just going back to the PHP days of mixing markup and
+logic?**
+
+Reactive is designed for rich application development.  Rather than focusing on
+the division between markup and logic, Reactive focuses on separating models
+from views and on the component abstraction.  Components must encapsulate not
+just markup, but also behavior.  The two should be coupled, not separated.
+
+This library also takes the stance that logic-less is a counter-productive
+endeavor---the gains are primarily superficial, readability can be *adversely*
+affected, and it does not separate concerns.  Others have [written] [more] on
+this.
+
+[written]: http://boronine.com/2012/09/07/Cult-Of-Logic-less-Templates/
+[more]: http://www.ebaytechblog.com/2012/10/01/the-case-against-logic-less-templates/
+
 **Why jQuery / what is the relationship between Reactive Coffee and jQuery?**
 
 The library just uses jQuery as a cross-browser interface to the DOM for its
