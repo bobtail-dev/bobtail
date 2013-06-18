@@ -1,4 +1,4 @@
-Reactive Coffee
+reactive.coffee
 ===============
 
 A lightweight CoffeeScript library for reactive programming and for
