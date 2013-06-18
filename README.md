@@ -2,8 +2,7 @@ reactive.coffee
 ===============
 
 A lightweight CoffeeScript library for reactive programming and for
-declaratively specifying reactive DOM templates in a simple CoffeeScript
-embedded DSL.
+declaratively specifying reactive DOM templates in a simple embedded DSL.
 
 Quickstart Examples
 -------------------
