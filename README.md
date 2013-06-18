@@ -145,7 +145,7 @@ transforms), you retain all the benefits of the tooling around an established
 host language, such as source maps, syntax highlighting, linting, comment doc
 processing, compiler implementations, etc.
 
-The syntax leverages some features of Coffeescript to achieve the expressive
+The syntax leverages some features of CoffeeScript to achieve the expressive
 power of a declarative HTML-ish template language:
 
 - [general malleability][DSLs] for DSLs, esp. for declaring structures
@@ -155,7 +155,7 @@ power of a declarative HTML-ish template language:
 
 [DSLs]: https://github.com/jashkenas/coffee-script/wiki/%5Bextensibility%5D-writing-DSLs
 
-At the same time, because we are simply writing Coffeescript, we have all the
+At the same time, because we are simply writing CoffeeScript, we have all the
 flexibility and code which that brings to the table, useful for shaping data
 for the views as well as for specifying component behavior.  Reactive is
 designed for rich application development.  This is a developer-centric
