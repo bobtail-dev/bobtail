@@ -275,6 +275,9 @@ if typeof exports is 'undefined'
 else
   rxt = exports
 
+RawHtml = class rxt.RawHtml
+  constructor: (@html) ->
+
 rxt.mktag = mktag = (tag) ->
   (attrs, contents) ->
     elt = $("<#{tag}/>")
@@ -292,6 +295,8 @@ rxt.mktag = mktag = (tag) ->
           for child in contents
             if _.isString(child)
               child = $('<span/>').text(child)
+            else if child instanceof RawHtml
+              child = $('<span/>').html(child.html)
             elt.append(child)
         else
           throw 'Unknown type for contents: ' + contents.constructor.name
@@ -340,4 +345,5 @@ tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script',
   'menuitem', 'menu']
 
 rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
+rxt.rawHtml = (html) -> new RawHtml(html)
 rxt.importTags = (x) => _(x ? this).extend(rxt.tags)

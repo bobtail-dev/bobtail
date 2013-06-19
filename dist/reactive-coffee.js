@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, lagBind, mktag, mkuid, nextUid, popKey, recorder, rx, rxt, tag, tags, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, lagBind, mktag, mkuid, nextUid, popKey, recorder, rx, rxt, tag, tags, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -621,6 +621,15 @@
     rxt = exports;
   }
 
+  RawHtml = rxt.RawHtml = (function() {
+    function RawHtml(html) {
+      this.html = html;
+    }
+
+    return RawHtml;
+
+  })();
+
   rxt.mktag = mktag = function(tag) {
     return function(attrs, contents) {
       var elt, name, updateContents, value, _ref4, _ref5;
@@ -653,6 +662,8 @@
               child = contents[_i];
               if (_.isString(child)) {
                 child = $('<span/>').text(child);
+              } else if (child instanceof RawHtml) {
+                child = $('<span/>').html(child.html);
               }
               _results.push(elt.append(child));
             }
@@ -715,6 +726,10 @@
     }
     return _results;
   })());
+
+  rxt.rawHtml = function(html) {
+    return new RawHtml(html);
+  };
 
   rxt.importTags = function(x) {
     return _(x != null ? x : _this).extend(rxt.tags);
