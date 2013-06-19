@@ -1,0 +1,13 @@
+{
+  "name": "react-tut",
+  "version": "0.0.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ],
+  "dependencies": {
+    "reactive-coffee": "~0.0.0",
+    "showdown": "~0.3.1"
+  }
+}
