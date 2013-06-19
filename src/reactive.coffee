@@ -317,28 +317,27 @@ rxt.mktag = mktag = (tag) ->
     attrs.init?.call(elt)
     elt
 
-rxt.p = mktag('p')
-rxt.br = mktag('br') {}, []
-rxt.ul = mktag('ul')
-rxt.li = mktag('li')
-rxt.span = mktag('span')
-rxt.anchor = mktag('a')
-rxt.div = mktag('div')
-rxt.input = mktag('input')
-rxt.select = mktag('select')
-rxt.option = mktag('option')
-rxt.label = mktag('label')
-rxt.button = mktag('button')
-rxt.fieldset = mktag('fieldset')
-rxt.legend = mktag('legend')
-rxt.section = mktag('section')
-rxt.header = mktag('header')
-rxt.footer = mktag('footer')
-rxt.strong = mktag('strong')
-rxt.h1 = mktag('h1')
-rxt.h2 = mktag('h2')
-rxt.h3 = mktag('h3')
-rxt.h4 = mktag('h4')
-rxt.h5 = mktag('h5')
-rxt.h6 = mktag('h6')
-rxt.h7 = mktag('h7')
+# From <https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list>
+#
+# Extract with:
+#
+#     "['"+document.body.innerText.match(/<.*?>/g).map(function(x){return x.substring(1, x.length-1);}).join("', '")+"']";
+
+tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script',
+  'noscript', 'body', 'body', 'section', 'nav', 'article', 'aside', 'h1', 'h2',
+  'h3', 'h4', 'h5', 'h6', 'h1', 'h6', 'header', 'footer', 'address', 'main',
+  'main', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd',
+  'dd', 'figure', 'figcaption', 'div', 'a', 'em', 'strong', 'small', 's',
+  'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd',
+  'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo',
+  'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'object',
+  'param', 'object', 'video', 'audio', 'source', 'video', 'audio', 'track',
+  'video', 'audio', 'canvas', 'map', 'area', 'area', 'map', 'svg', 'math',
+  'table', 'caption', 'colgroup', 'col', 'tbody', 'thead', 'tfoot', 'tr', 'td',
+  'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button',
+  'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea',
+  'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details',
+  'menuitem', 'menu']
+
+rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
+rxt.importTags = (x) => _(x ? this).extend(rxt.tags)

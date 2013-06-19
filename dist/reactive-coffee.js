@@ -1,9 +1,10 @@
 (function() {
-  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, lagBind, mktag, mkuid, nextUid, popKey, recorder, rx, rxt, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, lagBind, mktag, mkuid, nextUid, popKey, recorder, rx, rxt, tag, tags, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    _this = this;
 
   if (typeof exports === 'undefined') {
     this.rx = rx = {};
@@ -702,54 +703,21 @@
     };
   };
 
-  rxt.p = mktag('p');
+  tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script', 'noscript', 'body', 'body', 'section', 'nav', 'article', 'aside', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h1', 'h6', 'header', 'footer', 'address', 'main', 'main', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'dd', 'figure', 'figcaption', 'div', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'object', 'param', 'object', 'video', 'audio', 'source', 'video', 'audio', 'track', 'video', 'audio', 'canvas', 'map', 'area', 'area', 'map', 'svg', 'math', 'table', 'caption', 'colgroup', 'col', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details', 'menuitem', 'menu'];
 
-  rxt.br = mktag('br')({}, []);
+  rxt.tags = _.object((function() {
+    var _i, _len, _results;
 
-  rxt.ul = mktag('ul');
+    _results = [];
+    for (_i = 0, _len = tags.length; _i < _len; _i++) {
+      tag = tags[_i];
+      _results.push([tag, rxt.mktag(tag)]);
+    }
+    return _results;
+  })());
 
-  rxt.li = mktag('li');
-
-  rxt.span = mktag('span');
-
-  rxt.anchor = mktag('a');
-
-  rxt.div = mktag('div');
-
-  rxt.input = mktag('input');
-
-  rxt.select = mktag('select');
-
-  rxt.option = mktag('option');
-
-  rxt.label = mktag('label');
-
-  rxt.button = mktag('button');
-
-  rxt.fieldset = mktag('fieldset');
-
-  rxt.legend = mktag('legend');
-
-  rxt.section = mktag('section');
-
-  rxt.header = mktag('header');
-
-  rxt.footer = mktag('footer');
-
-  rxt.strong = mktag('strong');
-
-  rxt.h1 = mktag('h1');
-
-  rxt.h2 = mktag('h2');
-
-  rxt.h3 = mktag('h3');
-
-  rxt.h4 = mktag('h4');
-
-  rxt.h5 = mktag('h5');
-
-  rxt.h6 = mktag('h6');
-
-  rxt.h7 = mktag('h7');
+  rxt.importTags = function(x) {
+    return _(x != null ? x : _this).extend(rxt.tags);
+  };
 
 }).call(this);

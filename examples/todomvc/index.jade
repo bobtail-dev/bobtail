@@ -12,19 +12,7 @@ html
     script(src='../../dist/reactive-coffee.js')
     :coffeescript
       bind = rx.bind
-      section = rxt.section
-      header = rxt.header
-      footer = rxt.footer
-      ul = rxt.ul
-      li = rxt.li
-      h1 = rxt.h1
-      input = rxt.input
-      label = rxt.label
-      span = rxt.span
-      strong = rxt.strong
-      button = rxt.button
-      div = rxt.div
-      p = rxt.p
+      rxt.importTags()
 
       class Task
         constructor: (title) ->
