@@ -288,7 +288,7 @@ rxt.mktag = mktag = (tag) ->
     if contents?
       updateContents = (contents) ->
         elt.html('')
-        if contents instanceof Array
+        if _.isArray(contents)
           for child in contents
             if _.isString(child)
               child = $('<span/>').text(child)
@@ -310,7 +310,7 @@ rxt.mktag = mktag = (tag) ->
         # propagate the minimal change set)
         contents.onSet.sub(([old, val]) ->
           updateContents(val))
-      else if contents instanceof Array
+      else if _.isArray(contents)
         updateContents(contents)
       else
         throw 'Unknown type for contents: ' + contents.constructor.name

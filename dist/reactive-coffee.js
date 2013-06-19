@@ -646,7 +646,7 @@
           var child, _i, _len, _results;
 
           elt.html('');
-          if (contents instanceof Array) {
+          if (_.isArray(contents)) {
             _results = [];
             for (_i = 0, _len = contents.length; _i < _len; _i++) {
               child = contents[_i];
@@ -689,7 +689,7 @@
             old = _arg[0], val = _arg[1];
             return updateContents(val);
           });
-        } else if (contents instanceof Array) {
+        } else if (_.isArray(contents)) {
           updateContents(contents);
         } else {
           throw 'Unknown type for contents: ' + contents.constructor.name;
