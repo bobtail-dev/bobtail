@@ -17,7 +17,7 @@ popKey = (x, k) ->
 # Reactivity
 #
 
-class Recorder
+Recorder = class rx.Recorder
   constructor: ->
     @stack = []
   # takes a dep cell
@@ -48,7 +48,7 @@ rx.lagBind = lagBind = (init, f) ->
   dep.refresh()
   dep
 
-class DepMgr
+DepMgr = class rx.DepMgr
   constructor: ->
     @uid2src = {}
   # called by source Ev
@@ -61,7 +61,7 @@ class DepMgr
 
 depMgr = new DepMgr()
 
-class Ev
+Ev = class rx.Ev
   constructor: (@inits) ->
     @subs = []
   sub: (listener) ->
@@ -79,7 +79,7 @@ class Ev
   unsub: (uid) ->
     popKey(@subs, uid)
 
-class ObsCell
+ObsCell = class rx.ObsCell
   constructor: (@x) ->
     @x = @x ? null
     @onSet = new Ev(=> [[null, @x]]) # [old, new]
@@ -87,7 +87,7 @@ class ObsCell
     recorder.sub((target) => @onSet.sub(-> target.refresh()))
     @x
 
-class SrcCell extends ObsCell
+SrcCell = class rx.SrcCell extends ObsCell
   set: (x) ->
     recorder.warnMutate()
     old = @x
@@ -95,7 +95,7 @@ class SrcCell extends ObsCell
     @onSet.pub([old, x])
     old
 
-class DepCell extends ObsCell
+DepCell = class rx.DepCell extends ObsCell
   constructor: (@body, init, lag) ->
     super(init ? null)
     @subs = []
@@ -129,7 +129,7 @@ class DepCell extends ObsCell
   addSub: (subUid) ->
     @subs.push(subUid)
 
-class ObsArray
+ObsArray = class rx.ObsArray
   constructor: (@xs) ->
     @xs = @xs ? []
     @onChange = new Ev(=> [[0, [], @xs]]) # [index, removed, added]
@@ -154,7 +154,7 @@ class ObsArray
     removed = @xs.splice.apply(@xs, [index, count].concat(additions))
     @onChange.pub([index, removed, additions])
 
-class SrcArray extends ObsArray
+SrcArray = class rx.SrcArray extends ObsArray
   spliceArray: (index, count, additions) ->
     recorder.warnMutate()
     @realSplice(index, count, additions)
@@ -166,9 +166,9 @@ class SrcArray extends ObsArray
   put: (i, x) -> @splice(i, 1, x)
   replace: (xs) -> @spliceArray(0, @length(), xs)
 
-class MappedDepArray extends ObsArray
+MappedDepArray = class rx.MappedDepArray extends ObsArray
 
-class DepArray extends ObsArray
+DepArray = class rx.DepArray extends ObsArray
   constructor: (@f) ->
     super()
     new DepCell(@f).onSet.sub(([old, val]) ->
@@ -183,7 +183,7 @@ class DepArray extends ObsArray
         @realSplice(index, count, additions)
     )
 
-class ObsMap
+ObsMap = class rx.ObsMap
   constructor: (@x = {}) ->
     @onAdd = new Ev(=> ([k,v] for k,v of x)) # [key, new]
     @onRemove = new Ev() # [key, old]
@@ -210,7 +210,7 @@ class ObsMap
     @onRemove.pub([key, val])
     val
 
-class SrcMap extends ObsMap
+SrcMap = class rx.SrcMap extends ObsMap
   put: (key, val) ->
     recorder.warnMutate()
     @realPut(key, val)
@@ -218,7 +218,7 @@ class SrcMap extends ObsMap
     recorder.warnMutate()
     @realRemove(key)
 
-class DepMap extends ObsMap
+Depmap = class rx.DepMap extends ObsMap
   constructor: (@f) ->
     super()
     new DepCell(@f).onSet.sub(([old, val]) ->

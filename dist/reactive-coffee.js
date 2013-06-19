@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, lagBind, mktag, mkuid, nextUid, popKey, recorder, rx, rxt, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, lagBind, mktag, mkuid, nextUid, popKey, recorder, rx, rxt, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -28,7 +28,7 @@
     return v;
   };
 
-  Recorder = (function() {
+  Recorder = rx.Recorder = (function() {
     function Recorder() {
       this.stack = [];
     }
@@ -79,7 +79,7 @@
     return dep;
   };
 
-  DepMgr = (function() {
+  DepMgr = rx.DepMgr = (function() {
     function DepMgr() {
       this.uid2src = {};
     }
@@ -99,7 +99,7 @@
 
   depMgr = new DepMgr();
 
-  Ev = (function() {
+  Ev = rx.Ev = (function() {
     function Ev(inits) {
       this.inits = inits;
       this.subs = [];
@@ -141,7 +141,7 @@
 
   })();
 
-  ObsCell = (function() {
+  ObsCell = rx.ObsCell = (function() {
     function ObsCell(x) {
       var _ref,
         _this = this;
@@ -168,7 +168,7 @@
 
   })();
 
-  SrcCell = (function(_super) {
+  SrcCell = rx.SrcCell = (function(_super) {
     __extends(SrcCell, _super);
 
     function SrcCell() {
@@ -190,7 +190,7 @@
 
   })(ObsCell);
 
-  DepCell = (function(_super) {
+  DepCell = rx.DepCell = (function(_super) {
     __extends(DepCell, _super);
 
     function DepCell(body, init, lag) {
@@ -249,7 +249,7 @@
 
   })(ObsCell);
 
-  ObsArray = (function() {
+  ObsArray = rx.ObsArray = (function() {
     function ObsArray(xs) {
       var _ref1,
         _this = this;
@@ -328,7 +328,7 @@
 
   })();
 
-  SrcArray = (function(_super) {
+  SrcArray = rx.SrcArray = (function(_super) {
     __extends(SrcArray, _super);
 
     function SrcArray() {
@@ -376,7 +376,7 @@
 
   })(ObsArray);
 
-  MappedDepArray = (function(_super) {
+  MappedDepArray = rx.MappedDepArray = (function(_super) {
     __extends(MappedDepArray, _super);
 
     function MappedDepArray() {
@@ -388,7 +388,7 @@
 
   })(ObsArray);
 
-  DepArray = (function(_super) {
+  DepArray = rx.DepArray = (function(_super) {
     __extends(DepArray, _super);
 
     function DepArray(f) {
@@ -417,7 +417,7 @@
 
   })(ObsArray);
 
-  ObsMap = (function() {
+  ObsMap = rx.ObsMap = (function() {
     function ObsMap(x) {
       var _this = this;
 
@@ -490,7 +490,7 @@
 
   })();
 
-  SrcMap = (function(_super) {
+  SrcMap = rx.SrcMap = (function(_super) {
     __extends(SrcMap, _super);
 
     function SrcMap() {
@@ -512,7 +512,7 @@
 
   })(ObsMap);
 
-  DepMap = (function(_super) {
+  Depmap = rx.DepMap = (function(_super) {
     __extends(DepMap, _super);
 
     function DepMap(f) {
