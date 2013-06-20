@@ -27,31 +27,43 @@ $('body').append(
 )
 ```
 
-A simple reactive example:
+A simple reactive example implementing a simple todo list (you can also find a
+more complete TodoMVC example in `examples/`):
 
 ```coffeescript
-# Our model
-a = rx.cell(0)
-b = rx.cell(0)
+class Task
+  constructor: (description, isDone) ->
+    @description = rx.cell(description)
+    @isDone = rx.cell(isDone)
 
-# `bind` subscribes to the contained cell values, ensuring that (e.g.) `abtn` *always* shows the current value of `a`
-abtn = button {}, bind -> [ "#{a.get()}" ]
-bbtn = button {}, bind -> [ "#{b.get()}" ]
-# Tags are just jQuery objects
-abtn.click -> a.set(a.get() + 1)
-bbtn.click -> b.set(b.get() + 1)
+tasks = rx.array([
+  new Task('Get milk', false)
+  new Task('Play with Reactive Coffee', false)
+  new Task('Walk the dog', false)
+])
 
 $('body').append(
-  div { class: 'formula' }, [
-    abtn
-    bbtn
-    # We can bind to any number of things
-    span { class: 'result' }, bind -> [ "#{a.get() + b.get()}" ]
+  div {class: 'task-manager'}, [
+    h1 {}, ["Tasks for today"]
+    ul {class: 'tasks'}, tasks.map (task) ->
+      li {class: 'task'}, [
+        input {
+          type: 'checkbox'
+          checked: bind -> task.isDone.get()
+          init: -> @change => task.isDone.set(@val())
+        }
+        task.description.get()
+      ]
+    $newTask = input {type: 'text', placeholder: 'Enter new task'}
   ]
 )
+
+$newTask.keydown (e) ->
+  tasks.push(new Task($(this).val(), false)) if e.key == 13
+  $(this).val('')
 ```
 
-Recursively render a tree, something that's a bit more cumbersome to
+Recursively render a tree structure, something that's a bit more complex to
 incrementally maintain otherwise:
 
 ```coffeescript
@@ -61,13 +73,13 @@ class TreeNode
     # Arrays only insert/remove the minimum set into/from the DOM (via the `map` method)
     @children = rx.array(children)
 
-root = new TreeNode 'root', [
-  new TreeNode 'alpha', []
-  new TreeNode 'beta', [
-    new TreeNode 'gamma', []
-    new TreeNode 'delta', []
-  ]
-]
+root = new TreeNode('root', [
+  new TreeNode('alpha', [])
+  new TreeNode('beta', [
+    new TreeNode('gamma', [])
+    new TreeNode('delta', [])
+  ])
+])
 
 # Nested `bind`/`map` calls are insulated from parents, re-rendering only
 # what's necessary.
