@@ -959,7 +959,7 @@ limited to the following:
 This one is rather low-hanging fruit: when a cell's value has been set to the
 same value, we should not propagate events downstream to dependent nodes.
 
-### Structural Attributes
+### Structural Attribute Bindings
 
 Currently, attributes are strings.  For most attributes this is fine, but for
 certain attributes such as `style`, we could have a simple convenience
@@ -980,6 +980,8 @@ sorted order.  For instance, consider the following DAG:
     C -> D
     D -> E
 
+![DAG](https://chart.googleapis.com/chart?chl=digraph+%22classes_No_Name%22+%7B%0D%0AA+-%3E+B%3B%0D%0AA+-%3E+C%3B%0D%0AB+-%3E+D%3B%0D%0AC+-%3E+D%3B%0D%0AD+-%3E+E%3B%0D%0A%7D%0D%0A&cht=gv)
+
 If `A` is updated, then we'd currently perform a recursive descent starting at
 `A` and visit the nodes in this order:
 
@@ -990,10 +992,7 @@ topologically sorted order:
 
     A, B, C, D, E
 
-The main benefit is that this avoids multiple visits to the same node.
-
-The performance effects of this warrants research, but my feeling is that it
-scales better and should not be slower for simpler DAGs.
+This guarantees avoiding multiple visits to the same node.
 
 ### Lazy Event Notification
 
@@ -1002,8 +1001,8 @@ Currently arrays have built-in mechanisms for efficient propagation of events
 such as insertion, removal, splicing, etc.  However, for more involved
 transformations, or if we want to reuse existing array transformation code, we
 can still do better than re-evaluating all dependents downstream by figuring
-out what has changed, and then only propagating the diff's instead of (or in
-addition to) the full new array.
+out what has changed, and then propagating the diff's or operations (such as
+reorderings) for more efficient downstream handling.
 
 This can be extended to arbitrary object types/data structures beyond arrays
 and should be configurable, with the ability to substitute in various change
@@ -1030,7 +1029,7 @@ And examples.  Need more tests and examples.  'Nuff said.
 Ideas
 -----
 
-### Automatic Re-Rendering Analysis
+### Dirty-Tracking Re-Rendering Analysis
 
 The fine-grained control over re-rendering and bindings is powerful, but for
 bindings that are non-performance-critical or don't need to scale, it's less
@@ -1087,6 +1086,13 @@ work to re-compute what has actually changed.  The [Polymer] framework
 pioneered support for `Object.observe`, but as of this writing it's not a
 widely supported feature (only available in Chrome Canary) and the framework
 has a more expensive fallback.
+
+### DOM-Diff Re-Rendering Analysis
+
+Throw away all observables and bindings, and re-build the entire view on every
+change to the model via an API that mirrors `rxt` except for returning
+lightweight DOM representations.  By computing the diff between
+representations, the actual DOM operations can be computed.
 
 ### Network Data Bindings
 
