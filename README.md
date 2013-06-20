@@ -59,8 +59,9 @@ $('body').append(
 )
 
 $newTask.keydown (e) ->
-  tasks.push(new Task($(this).val(), false)) if e.key == 13
-  $(this).val('')
+  if e.key == 13
+    tasks.push(new Task($(this).val(), false))
+    $(this).val('')
 ```
 
 Recursively render a tree structure, something that's a bit more complex to
