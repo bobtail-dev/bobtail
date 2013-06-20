@@ -1060,8 +1060,10 @@ ul {
 ### Object.observe
 
 A platform feature looming on the horizon of ECMAScript is that of
-[Object.observe], which allows for reacting to mutation events on objects
+[`Object.observe`], which allows for reacting to mutation events on objects
 without needing explicit syntax for it, e.g.:
+
+[`Object.observe`]: http://updates.html5rocks.com/2012/11/Respond-to-change-with-Object-observe
 
 ```coffeescript
 x = 0
@@ -1117,7 +1119,7 @@ draws inspiration from them.  Ideally, there wouldn't have been a need to
 create Reactive.
 
 - Any of the multitude of declarative UI toolkits based on reactive
-  programming, especially those in the Haskell universe, but also [Bling],
+  programming, especially FRP in the Haskell universe, but also [Bling],
   [FlapJax], and others rooted more in the programming languages community.
 
 - Specifically in JS land: [Knockout] in terms of the mechanics behind
@@ -1207,3 +1209,5 @@ create Reactive.
 [Polymer]: http://www.polymer-project.org/
 [React]: http://facebook.github.io/react/
 [JSX]: http://facebook.github.io/react/docs/jsx-is-not-html.html
+[Bling]: https://bling.codeplex.com/
+[FlapJax]: http://www.flapjax-lang.org/
