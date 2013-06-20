@@ -170,24 +170,20 @@ power of a declarative HTML-ish template language:
 
 At the same time, because we are simply writing CoffeeScript, we have all the
 flexibility and code which that brings to the table, useful for shaping data
-for the views as well as for specifying component behavior.  Reactive is
-designed for rich application development.  This is a developer-centric
-framework that does not pretend to be something that is used by designers or
-tools.  Rather than focusing on the division between markup and logic, Reactive
-focuses on separating models from views and on the component abstraction.
-Components must encapsulate not just markup, but also behavior.  The two should
-be coupled, not separated.
+for the views as well as for specifying component behavior.
 
-This library also takes the stance that logic-less is a counter-productive
-endeavor---the gains are primarily superficial, readability can be *adversely*
-affected, and it does not separate concerns.  Others have [written] [more] on
-this.
-
-[written]: http://boronine.com/2012/09/07/Cult-Of-Logic-less-Templates/
-[more]: http://www.ebaytechblog.com/2012/10/01/the-case-against-logic-less-templates/
+Reactive is designed for rich application development.  This is a
+developer-centric framework that does not pretend to be something that is used
+by designers or tools.  Rather than focusing on the division between markup and
+logic, Reactive focuses on separating models from views and on the component
+abstraction.  Components must encapsulate not just markup, but also behavior.
+The two should be coupled, not separated.
 
 Finally, Reactive also aims to be a compact framework.  The documentation
 you're now reading is significantly longer than the code.
+
+For more on design choices and to juxtapose this framework against others in
+this space, refer to [FAQ](#faq) and [See Also](#see-also).
 
 Tutorial
 --------
@@ -755,8 +751,8 @@ just markup, but also behavior.  The two should be coupled, not separated.
 
 This library also takes the stance that logic-less is a counter-productive
 endeavor---the gains are primarily superficial, readability can be *adversely*
-affected, and it does not separate concerns.  Others have [written] [more] on
-this.
+affected, and it does not separate concerns.  Others have [written][] [more][]
+on this.
 
 [written]: http://boronine.com/2012/09/07/Cult-Of-Logic-less-Templates/
 [more]: http://www.ebaytechblog.com/2012/10/01/the-case-against-logic-less-templates/
