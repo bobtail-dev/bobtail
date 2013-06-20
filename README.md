@@ -847,10 +847,40 @@ This would be closer to the concision of languages like Slim and Jade:
 However, the project currently errs on the side of more conservatively adding
 syntax to the DSL, and defaulting to strictness.
 
+**Why not use Knockout observables?**
+
+Reactive originally tried simply reusing KO, but ultimately divorced itself
+since there are both desired features that are missing (differences in array
+event propagation, topologically ordered batch propagations, etc.) and features
+that are unwanted (mis-matched programming model, larger API surface area,
+etc.).
+
 **How does Reactive stack up against the many other client-side frameworks?**
 
 For now, refer to the [See Also](#see-also) section—hoping to elaborate more on
 this soon.
+
+**Do I need to sprinkle `rx.cell()` everywhere in my model?**
+
+You actually don't.  At one extreme, you can always fall back to just wrapping
+your entire model in a single cell, and re-render everything on changes, which
+is sufficient for small/simple applications.
+
+However, there are other benefits to systematically using `rx.cell()` besides
+its performance scalability, including debugging and introspection of what the
+DAG of dependencies looks like in a running application (on a finer granularity
+than "views depend on model").  Additionally, applications may want to manually
+create subscriptions to events only on parts or certain cells of the model, in
+which case referencing cells is the clearest and most direct way to do so,
+rather than needing to compute diffs on your full model.
+
+An in-between optimization would be to have a system that figures out the diffs
+for you (variants of which are found in other frameworks including Angular and
+React), such that at least DOM changes are localized.  For more complex
+applications, though, where you may have multiple "layers" of models and
+view-models, cells scale.  Also, in the future, we may get the best of both
+worlds—take a look at `Object.observe`.  For more on these directions, see
+[Ideas](#ideas).
 
 **Can I use this from JavaScript?**
 
