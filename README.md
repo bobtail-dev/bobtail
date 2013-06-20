@@ -4,6 +4,8 @@ reactive.coffee
 A lightweight CoffeeScript library for reactive programming and for
 declaratively specifying reactive DOM templates in a simple embedded DSL.
 
+This library has been tested and used on Chrome, Firefox, Safari, and IE10.
+
 Quickstart Examples
 -------------------
 
