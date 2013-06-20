@@ -179,6 +179,15 @@ logic, Reactive focuses on separating models from views and on the component
 abstraction.  Components must encapsulate not just markup, but also behavior.
 The two should be coupled, not separated.
 
+The framework needs to scale well to more complex front-ends, including:
+
+- web page editor where the model is the DOM, CSSOM, etc. of a web page, and
+  views are not just editing controls but also the *fully rendered web page
+  itself*
+- data analysis tool involving sizeable amounts of data and detailed
+  visualizations over the data, where individual data points are represented in
+  the visualizations
+
 Finally, Reactive also aims to be a compact framework.  The documentation
 you're now reading is significantly longer than the code.
 
