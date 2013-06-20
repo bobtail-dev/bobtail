@@ -1110,15 +1110,25 @@ v0.0.0 — 2013-06-06
 See Also
 --------
 
-There are many other client-side framework for building rich web app UIs.  The
-frameworks are inspirational work, but Reactive was created for differing
-reasons.  More detailed write-ups of the trade-offs to come!
+There is no shortage of client-side framework for building rich web app UIs.
+This section will mainly focus on trade-offs and differences; to be clear, the
+author deeply respects the work of these other library authors, and liberally
+draws inspiration from them.  Ideally, there wouldn't have been a need to
+create Reactive.
 
 - Any of the multitude of declarative UI toolkits based on reactive
-  programming, especially those in the Haskell universe.
+  programming, especially those in the Haskell universe, but also [Bling],
+  [FlapJax], and others rooted more in the programming languages community.
 
 - Specifically in JS land: [Knockout] in terms of the mechanics behind
-  observables.
+  observables and computed observables, but with fewer moving parts (no
+  read/write interception, context management, etc.).  It uses `data-bind`
+  attributes to bind to element properties to expressions in HTML templates.
+
+  Reactive is more similar to [Knockout] than it is to [Backbone] (see [this
+  Stack Overflow answer][BBvKO] for more).
+
+  [BBvKO]: http://stackoverflow.com/a/6340870/43118
 
 - [Angular] is a popular framework that emphasizes testability that extends
   HTML with its own directives.  Unfortunately it employs a ton of magic and
@@ -1129,8 +1139,15 @@ reasons.  More detailed write-ups of the trade-offs to come!
   > linking, the creation of new scopes, and transclusion, all of which are
   > Angular-specific concepts.
 
+  Angular eschews change listeners for model diff computation.  Angular does
+  not construct a lightweight DOM to diff since it is aware of the
+  dependencies, since its bindings are restricted to simple path-like accessors
+  against the current scope (with optional filters).
+
 - [Ember] offers its own template language that feels right at home if you are
-  coming from a server-side templates background.
+  coming from a server-side templates background.  It has a
+  Mustache/Handlbars-ish template language that, like Angular, uses simple
+  path-like accessors against the current context.
 
 - [Polymer] for its brazen use of new but unstable technologies such as
   `Object.observe`, Web Components, and Shadow DOM.  Some good ideas here, but
@@ -1141,29 +1158,33 @@ reasons.  More detailed write-ups of the trade-offs to come!
 - [React] shares a similar approach of leveraging a full programming language
   (JS) rather than a more restrictive template language for declaratively
   assembling UI components, as well as a similar focus on only one-way data
-  bindings, as contributor Lee Byron describes:
+  bindings.  Beyond view rendering, React does not provide reactive programming
+  primitives for the rest of your application.
 
-  > React was born out of frustrations with the common pattern of writing
-  > two-way data bindings in complex MVC apps. React is an implementation of
-  > one-way data bindings.
-
-  React also encourages use of JSX, which is a syntactic transform over JS.
+  React encourages use of JSX, which is a syntactic transform over JS and comes
+  with its own set of [subtle differences from HTML][JSX].
 
   It imposes a more heavyweight component model with a more complex API that
   has a greater surface area.  There are a number of core concepts to learn:
   properties, refs, state, "classes", mixins, lifecycle management
   (`component[Will|Did]Mount`, `unmountAndReleaseReactRootNode`, etc.),
   property transfer, controlling update propagation (`shouldComponentUpdate`,
-  `componentWillReceiveProps`, etc.), and more.
+  `componentWillReceiveProps`, etc.), and more.  React also requires its own
+  way of doing things such as low-level DOM manipulation—something that
+  Reactive intentionally delegates to jQuery.
 
-  React also requires its own way of doing things such as low-level DOM
-  manipulation—something that Reactive intentionally delegates elsewhere, as
-  there already exist well-established libraries for these domains.
-
-  Lastly, React needs to compute diffs between states and between rendered DOMs.
-  This won't make a difference in many areas, but latency does unfortunately
-  matter in some, e.g. when you're trying to produce smooth reactions to mouse
-  move/drag events (without "breaking out" of the framework).
+  Performance-wise, React re-constructs a lightweight representation of the
+  entire updated DOM and computes diffs to determine what actual DOM operations
+  to execute.  This is adequate for certain classes of applications, though the
+  process takes on the order of 1ms for simple applications such as TodoMVC.
+  For other applications performance does unfortunately matter, e.g. for more
+  complex views (such as a web page editor, where not only the controls but the
+  web page itself is rendered as a view) and for when you're trying to produce
+  smooth responses to mouse move/drag events.  It's also more straightforward
+  to interact with the rendered DOM element, as that is the primary
+  representation being worked with.  That said, it would be neat to implement
+  this in Reactive anyway (see "Cell-Free Re-Rendering Analysis" in
+  [Ideas](#ideas)).
 
   Feel free to dig into our clone of the React tutorial, under
   `examples/react-tut/`.
@@ -1185,3 +1206,4 @@ reasons.  More detailed write-ups of the trade-offs to come!
 [Visage]: http://code.google.com/p/visage
 [Polymer]: http://www.polymer-project.org/
 [React]: http://facebook.github.io/react/
+[JSX]: http://facebook.github.io/react/docs/jsx-is-not-html.html
