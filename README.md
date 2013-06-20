@@ -641,6 +641,37 @@ making everything dynamic, since you can always opt-out of dynamism by stopping
 propagation, whereas you cannot later reintroduce dynamism into places with no
 dynamic bindings.
 
+### Binding To DOM Element Attributes
+
+We can treat certain interactive DOM elements' attributes as cells, thus
+binding to them as well.
+
+Consider a type-ahead search component, where the completion list only displays
+items that prefix-match the given query.  Furthermore, we want the completion
+list to only show up if it's enabled by the checkbox and when we actually have
+focused on the input text field:
+
+```coffeescript
+docs = [...]
+div {class: 'search'}, [
+  $query = input {type: 'text', placeholder: 'Enter query'}
+  $showResults = input {type: 'checkbox', id: 'show-results'}
+  label {for: 'show-results'}, ['Show type-ahead results']
+  div {class: 'results'}, bind ->
+    if $query.rx('focused') and $showResults.rx('checked')
+      for doc in docs when _(doc.title).startsWith($query.rx('val'))
+        a {href: doc.url}, [doc.title]
+    else
+      []
+  ]
+]
+```
+
+We are using three different types of reactive element attributes.
+`rx(property)` treats the value of the given property (focused, checked, val)
+as a cell and returns `get` on that cell; the `bind` is reactive to any of
+them.
+
 API Documentation
 -----------------
 
@@ -730,6 +761,13 @@ function_, which is what constructs a DOM element.
 - Tags: `p`, `br`, `ul`, `li`, `span`, `anchor`, `div`, `input`, `select`,
   `option`, `label`, `button`, `fieldset`, `legend`, `section`, `header`,
   `footer`, `strong`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `h7`
+
+**jQuery plug-in**
+
+- `rx(property)`: lazily create (or take the cached instance) of a cell whose
+  value is maintained to reflect the desired property on the element.
+  `property` can be `'checked'`, `'focused'`, or `'val'`.  Returns not the cell
+  but the value from `get` on the cell.
 
 FAQ
 ---
