@@ -1124,9 +1124,19 @@ create Reactive.
   [FlapJax], and others rooted more in the programming languages community.
 
 - Specifically in JS land: [Knockout] in terms of the mechanics behind
-  observables and computed observables, but with fewer moving parts (no
-  read/write interception, context management, etc.).  It uses `data-bind`
-  attributes to bind to element properties to expressions in HTML templates.
+  observables and computed observables, but with fewer moving parts and API
+  surface (no read/write interception, context management, etc.).  Reactive
+  originally tried simply reusing KO, but ultimately divorced itself since
+  there are both desired features that are missing (differences in array event
+  propagation, topologically ordered batch propagations, etc.) and features
+  that are unwanted (mis-matched programming model, larger API surface area,
+  etc.).
+
+  For its HTML-based template language it uses a micro-syntax in `data-bind`
+  attributes to bind to element properties to expressions.
+
+  A number of reactive programming libraries in JS besides [Knockout] including
+  [React.js], [Reactor], [RxJS] and [bacon.js].
 
   Reactive is more similar to [Knockout] than it is to [Backbone] (see [this
   Stack Overflow answer][BBvKO] for more).
@@ -1142,10 +1152,12 @@ create Reactive.
   > linking, the creation of new scopes, and transclusion, all of which are
   > Angular-specific concepts.
 
-  Angular eschews change listeners for model diff computation.  Angular does
-  not construct a lightweight DOM to diff since it is aware of the
-  dependencies, since its bindings are restricted to simple path-like accessors
-  against the current scope (with optional filters).
+  Angular eschews change listeners for model diff computation.  This is to be
+  distinguished from React's view diff computation—Angular does not need to
+  construct a lightweight DOM to diff since it is aware of the dependencies,
+  since its bindings are restricted to simple path-like accessors against the
+  current scope (with optional filters).  This shares similar scalability
+  worries as the but with an arbitrary 
 
 - [Ember] offers its own template language that feels right at home if you are
   coming from a server-side templates background.  It has a
@@ -1212,3 +1224,7 @@ create Reactive.
 [JSX]: http://facebook.github.io/react/docs/jsx-is-not-html.html
 [Bling]: https://bling.codeplex.com/
 [FlapJax]: http://www.flapjax-lang.org/
+[RxJS]: http://reactive-extensions.github.io/RxJS/
+[Reactor]: https://github.com/fynyky/reactor.js
+[bacon.js]: https://github.com/raimohanska/bacon.js
+[React.js]: http://www.reactjs.com/
