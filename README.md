@@ -1177,7 +1177,12 @@ create Reactive.
   primitives for the rest of your application.
 
   React encourages use of JSX, which is a syntactic transform over JS and comes
-  with its own set of [subtle differences from HTML][JSX].
+  with its own set of [subtle][spaces] [differences][JSX] from HTML, besides
+  the usual [complexities of integration into existing frameworks and
+  pipelines][integration].
+
+  [spaces]: https://groups.google.com/forum/?fromgroups#!topic/reactjs/gcRqGANsy40
+  [integration]: https://groups.google.com/forum/?fromgroups#!topic/reactjs/IzRlS2mBbKs
 
   It imposes a more heavyweight component model with a more complex API that
   has a greater surface area.  There are a number of core concepts to learn:
@@ -1190,19 +1195,23 @@ create Reactive.
 
   Performance-wise, React re-constructs a lightweight representation of the
   entire updated DOM and computes diffs to determine what actual DOM operations
-  to execute.  This is adequate for certain classes of applications, though the
-  process takes on the order of 1ms for simple applications such as TodoMVC.
-  For other applications performance does unfortunately matter, e.g. for more
-  complex views (such as a web page editor, where not only the controls but the
-  web page itself is rendered as a view) and for when you're trying to produce
-  smooth responses to mouse move/drag events.  It's also more straightforward
-  to interact with the rendered DOM element, as that is the primary
-  representation being worked with.  That said, it would be neat to implement
-  this in Reactive anyway (see "Cell-Free Re-Rendering Analysis" in
-  [Ideas](#ideas)).
+  to execute.  Programmability-wise, this does lead to some awkward situations
+  involving the predictability of re-rendering and also the control of things
+  such as [element focus].  Performance-wise, the approach is adequate for
+  certain classes of applications, though the process takes on the order of 1ms
+  for simple applications such as TodoMVC.  For other applications performance
+  does unfortunately matter, e.g. for more complex views (such as a web page
+  editor, where not only the controls but the web page itself is rendered as a
+  view) and for when you're trying to produce smooth responses to mouse
+  move/drag events.  It's also more straightforward to interact with the
+  rendered DOM element, as that is the primary representation being worked
+  with.  That said, it would be neat to implement this in Reactive anyway (see
+  "Cell-Free Re-Rendering Analysis" in [Ideas](#ideas)).
 
   Feel free to dig into our clone of the React tutorial, under
   `examples/react-tut/`.
+
+  [element focus]: https://groups.google.com/forum/#!searchin/reactjs/0.4/reactjs/-XHqDfKN5Ws/KbdNuGTg6IkJ
 
 - [Visage], formerly known as JavaFX, introduces incremental evaluation in a
   statically typed scripting language for the JVM.  It focuses on building
