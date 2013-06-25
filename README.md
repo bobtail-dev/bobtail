@@ -1,10 +1,66 @@
 reactive.coffee
 ===============
 
-A lightweight CoffeeScript library for reactive programming and for
-declaratively specifying reactive DOM templates in a simple embedded DSL.
+A lightweight CoffeeScript library/DSL for [reactive programming] and for
+declaratively building dynamic web UIs.
 
-This library has been tested and used on Chrome, Firefox, Safari, and IE10.
+[reactive programming]: http://en.wikipedia.org/wiki/Reactive_programming
+
+Highlights
+----------
+
+- Library of reactive programming primitives
+- Declarative DOM construction
+- Simple, no magic, no new template syntax, all CoffeeScript
+- Scalable in both performance and application architecture
+- Tested with Chrome, Firefox, Safari, and IE10
+- Available via [Bower] and [cdnjs]
+- Works with jQuery
+- MIT license
+
+Example: To-Do List
+-------------------
+
+[Play with example on jsFiddle][fiddle] or [see a complete TodoMVC
+example][TodoMVC]
+
+[fiddle]: http://jsfiddle.net/yang/SGvuy/
+
+```coffeescript
+class Task
+  constructor: (description, isDone) ->
+    @description = rx.cell(description)
+    @isDone = rx.cell(isDone)
+
+tasks = rx.array([
+  new Task('Get milk', false)
+  new Task('Play with Reactive Coffee', false)
+  new Task('Walk the dog', false)
+])
+
+$('body').append(
+  div {class: 'task-manager'}, [
+    h1 {}, ["Tasks for today"]
+    ul {class: 'tasks'}, tasks.map (task) ->
+      li {class: 'task'}, [
+        input {
+          type: 'checkbox'
+          checked: bind -> task.isDone.get()
+          init: -> @change => task.isDone.set(@val())
+        }
+        span { style: bind -> "opacity: #{if task.isDone.get() then .5 else 1}" }, [
+          task.description.get()
+        ]
+      ]
+    $newTask = input {type: 'text', placeholder: 'Enter new task'}
+  ]
+)
+
+$newTask.keydown (e) ->
+  if e.key == 13
+    tasks.push(new Task($(this).val(), false))
+    $(this).val('')
+```
 
 Quickstart Examples
 -------------------
