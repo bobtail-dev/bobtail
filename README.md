@@ -231,10 +231,11 @@ for the views as well as for specifying component behavior.
 
 Reactive is designed for rich application development.  This is a
 developer-centric framework that does not pretend to be something that is used
-by designers or tools.  Rather than focusing on the division between markup and
-logic, Reactive focuses on separating models from views and on the component
-abstraction.  Components must encapsulate not just markup, but also behavior.
-The two should be coupled, not separated.
+by designers or tools (which is not to say it does not fit in a workflow
+involving both developers and designers).  Rather than focusing on the division
+between markup and logic, Reactive focuses on separating models from views and
+on the component abstraction.  Components must encapsulate not just markup, but
+also behavior.  The two should be coupled, not separated.
 
 The framework needs to scale well to more complex front-ends, including:
 
