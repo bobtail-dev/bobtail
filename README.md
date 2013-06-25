@@ -27,8 +27,8 @@ $('body').append(
 )
 ```
 
-A simple reactive example implementing a simple todo list (you can also find a
-more complete TodoMVC example in `examples/`):
+A simple reactive example implementing a todo list (you can also find a more
+complete TodoMVC example in `examples/`):
 
 ```coffeescript
 class Task
@@ -93,8 +93,8 @@ recurse = (node) ->
 $('body').append( ul {}, [ recurse(root) ] )
 ```
 
-You can also have things elements depend certain attributes of each other.
-Here is a text box that searches/filters the given list.
+You can also have elements depend certain attributes of each other.  Here is a
+text box that searches/filters the given list.
 
 ```coffeescript
 countries = [...]
@@ -109,7 +109,7 @@ ul {}, bind ->
 ```
 
 Currently there is a complete [TodoMVC] example in the `examples/` directory
-(see the [source]).  More examples will be added!
+(see the [source]) and on [jsFiddle][fiddle].  More examples will be added!
 
 [TodoMVC]: http://todomvc.com/
 [source]: https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade
