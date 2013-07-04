@@ -386,7 +386,7 @@ These bindings can form an arbitrary DAG.
 
 Reactive programming is the same concept behind how spreadsheet calculations
 work, and is similar to the data-binding feature present in many of the other
-frameworks---which is an effective paradigm for frontend UI development---but
+frameworks—which is an effective paradigm for frontend UI development—but
 instead of being exclusively applied to view components, typically confined to
 a template language, this is generalized to be a generic way of expressing
 arbitrary time-varying data structures.
