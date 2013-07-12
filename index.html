@@ -1,119 +1,104 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset='utf-8'>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
-
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <title>reactive.coffee by yang</title>
+    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
+    <title>
+      Reactive Coffee - A Lightweight CoffeeScript library/DSL for reactive
+      programming and for declaratively building dynamic web UIs</title>
   </head>
-
   <body>
     <header>
+      <div class="overlay"></div>
       <div class="inner">
-        <h1>reactive.coffee</h1>
-        <h2>A lightweight CoffeeScript library/DSL for reactive programming and for declaratively building dynamic web UIs</h2>
-        <a href="https://github.com/yang/reactive-coffee" class="button"><small>View project on</small>GitHub</a>
+        <h1><a href="/">reactive.coffee</a></h1>
+        <h2>A lightweight CoffeeScript library/DSL for reactive programming and for declaratively building dynamic web UIs</h2><a href="https://github.com/yang/reactive-coffee" class="button"><small>View project on</small>GitHub</a>
       </div>
+      <nav class="top-nav">
+        <div class="inner">
+          <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
+        </div>
+      </nav>
     </header>
-
     <div id="content-wrapper">
       <div class="inner clearfix">
-        <section id="main-content">
-          <h2>
-<a name="highlights" class="anchor" href="#highlights"><span class="octicon octicon-link"></span></a>Highlights</h2>
+        <section id="main-content"><h2>Highlights</h2>
+<div class="note">
+<em>Already familiar with other frameworks such as Angular or React?  See
+<a href="design.html">Design</a> and <a href="related.html">Comparisons</a>.</em>
+</div>
 
 <ul>
 <li>Library of reactive programming primitives</li>
 <li>Declarative DOM construction</li>
-<li>Simple, no magic, no new template syntax, all CoffeeScript</li>
+<li>Simple, no magic, no new template language, all CoffeeScript</li>
 <li>Scalable in both performance and application architecture</li>
 <li>Tested with Chrome, Firefox, Safari, and IE10</li>
-<li>Available via <a href="http://bower.io/">Bower</a> and <a href="http://cdnjs.com/">cdnjs</a>
-</li>
+<li>Available via <a href="http://bower.io/">Bower</a> and <a href="http://cdnjs.com/">cdnjs</a></li>
 <li>Works with jQuery</li>
 <li>MIT license</li>
-</ul><h2>
-<a name="example-to-do-list" class="anchor" href="#example-to-do-list"><span class="octicon octicon-link"></span></a>Example: To-Do List</h2>
-
-<p><a href="http://jsfiddle.net/yang/SGvuy/">Play with example on jsFiddle</a> or <a href="https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade">see a complete TodoMVC example</a></p>
-
+</ul>
+<h2>Example: To-Do List</h2>
+<p>You can <a href="http://jsfiddle.net/yang/SGvuy/">play with this example on jsFiddle</a> or <a href="https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade">see a complete
+TodoMVC example</a>.</p>
 <div class="highlight"><pre><span class="k">class</span> <span class="nx">Task</span>
   <span class="nv">constructor: </span><span class="nf">(description, isDone) -&gt;</span>
     <span class="vi">@description = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">description</span><span class="p">)</span>
     <span class="vi">@isDone = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">isDone</span><span class="p">)</span>
 
 <span class="nv">tasks = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">([</span>
-  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">'Get milk'</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
-  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">'Play with Reactive Coffee'</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
-  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">'Walk the dog'</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Get milk&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Play with Reactive Coffee&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Walk the dog&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
 <span class="p">])</span>
 
-<span class="nx">$</span><span class="p">(</span><span class="s">'body'</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
-  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">'task-manager'</span><span class="p">},</span> <span class="p">[</span>
-    <span class="nx">h1</span> <span class="p">{},</span> <span class="p">[</span><span class="s">"Tasks for today"</span><span class="p">]</span>
-    <span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">'tasks'</span><span class="p">},</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(task) -&gt;</span>
-      <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">'task'</span><span class="p">},</span> <span class="p">[</span>
+<span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
+  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task-manager&#39;</span><span class="p">},</span> <span class="p">[</span>
+    <span class="nx">h1</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&quot;Tasks for today&quot;</span><span class="p">]</span>
+    <span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;tasks&#39;</span><span class="p">},</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(task) -&gt;</span>
+      <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task&#39;</span><span class="p">},</span> <span class="p">[</span>
         <span class="nx">input</span> <span class="p">{</span>
-          <span class="nv">type: </span><span class="s">'checkbox'</span>
+          <span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span>
           <span class="nv">checked: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
           <span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@change</span> <span class="o">=&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">@val</span><span class="p">())</span>
         <span class="p">}</span>
-        <span class="nx">span</span> <span class="p">{</span> <span class="nv">style: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">"opacity: </span><span class="si">#{</span><span class="k">if</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="p">.</span><span class="mi">5</span> <span class="k">else</span> <span class="mi">1</span><span class="si">}</span><span class="s">"</span> <span class="p">},</span> <span class="p">[</span>
+        <span class="nx">span</span> <span class="p">{</span> <span class="nv">style: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;opacity: </span><span class="si">#{</span><span class="k">if</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="p">.</span><span class="mi">5</span> <span class="k">else</span> <span class="mi">1</span><span class="si">}</span><span class="s">&quot;</span> <span class="p">},</span> <span class="p">[</span>
           <span class="nx">task</span><span class="p">.</span><span class="nx">description</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
         <span class="p">]</span>
       <span class="p">]</span>
-    <span class="nv">$newTask = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">'text'</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">'Enter new task'</span><span class="p">}</span>
+    <span class="nv">$newTask = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Enter new task&#39;</span><span class="p">}</span>
   <span class="p">]</span>
 <span class="p">)</span>
 
 <span class="nx">$newTask</span><span class="p">.</span><span class="nx">keydown</span> <span class="nf">(e) -&gt;</span>
   <span class="k">if</span> <span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">==</span> <span class="mi">13</span>
     <span class="nx">tasks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">(),</span> <span class="kc">false</span><span class="p">))</span>
-    <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s">''</span><span class="p">)</span>
+    <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
 </pre></div>
 
-<h2>
-<a name="next-steps" class="anchor" href="#next-steps"><span class="octicon octicon-link"></span></a>Next steps</h2>
+<h2>Next steps</h2>
+<p>See more <a href="quickstart.html">quickstart examples</a>, read through the
+<a href="tutorial.html">tutorial</a>, or learn more about the <a href="design.html">motivation and design
+rationale</a>.</p>
 
-<p>See more <a href="quickstart">quickstart examples</a>, read through the <a href="tutorial">tutorial</a>, or learn more about the <a href="design">motivation and design rationale</a>.</p>
         </section>
-
-        <aside id="sidebar">
-          <a href="https://github.com/yang/reactive-coffee/zipball/master" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/yang/reactive-coffee/tarball/master" class="button">
-            <small>Download</small>
-            .tar.gz file
-          </a>
-
-          <p class="repo-owner"><a href="https://github.com/yang/reactive-coffee"></a> is maintained by <a href="https://github.com/yang">yang</a>.</p>
-
-          <p>This page was generated by <a href="pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        <aside id="sidebar"><a href="https://github.com/yang/reactive-coffee/zipball/master" class="button"><small>Download</small> .zip file</a><a href="https://github.com/yang/reactive-coffee/tarball/master" class="button"><small>Download</small> .tar.gz file</a>
+          <p class="repo-owner"><a href="https://github.com/yang/reactive-coffee">reactive.coffee</a> is maintained by <a href="https://github.com/yang">yang</a>.</p>
+          <p>Based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
         </aside>
       </div>
-    </div>
-
-            <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA-41900480-1");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
-
+    </div><!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      try {
+        var pageTracker = _gat._getTracker("UA-41900480-1");
+        pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
   </body>
 </html>

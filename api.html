@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
+    <title>API Documentation - reactive.coffee</title>
+  </head>
+  <body>
+    <header>
+      <div class="overlay"></div>
+      <div class="inner">
+        <h1 class="smaller-title"><a href="/">reactive.coffee</a></h1>
+        <nav class="top-nav">
+          <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
+        </nav>
+      </div>
+    </header>
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <nav class="side-nav">
+          <ul>
+            <li><a href="quickstart.html">Quickstart Examples</a></li>
+            <li><a href="tutorial.html">Tutorial</a></li>
+            <li><a href="api.html" class="current">API Documentation</a><ul class="toc"><li><a href="#rx-namespace">rx Namespace</a></li><li><a href="#rxt-namespace">rxt Namespace</a></li></ul></li>
+            <li><a href="changes.html">Change Log</a></li>
+          </ul>
+        </nav>
+        <section id="main-content"><h1>API Documentation</h1>
+<h2><a name="rx-namespace"><code>rx</code> Namespace</a></h2>
+<p>This contains the core reactive programming primitives.  These are the core
+data structures:</p>
+<ul>
+<li><code>ObsCell</code>: observable cell base class<ul>
+<li><code>SrcCell</code>: a source cell, one that can be directly mutated</li>
+<li><code>DepCell</code>: a dependent cell, one whose value is some function of another
+observable cell</li>
+</ul>
+</li>
+<li><code>ObsArray</code>: observable array base class<ul>
+<li><code>SrcArray</code>: a source array, one that can be directly mutated</li>
+<li><code>DepArray</code>: a dependent array, one whose value is some transformation of
+another observable array</li>
+</ul>
+</li>
+<li><code>ObsMap</code>: observable object (map) base class<ul>
+<li><code>SrcMap</code>: a source object, one that can be directly mutated</li>
+<li><code>DepMap</code>: a dependent object, one whose value is some transformation of
+another observable object</li>
+</ul>
+</li>
+</ul>
+<p><strong>Free functions</strong></p>
+<ul>
+<li><code>cell(value)</code>: return a <code>SrcCell</code> initialized to the given value (optional;
+defaults to <code>undefined</code>)</li>
+<li><code>array(value)</code>: return a <code>SrcArray</code> initialized to the given array (optional;
+defaults to <code>[]</code>)</li>
+<li><code>bind(fn)</code>: given a 0-ary function, return a <code>DepCell</code> whose value is the
+bound to the result of evaluating that function.  The function is immediately
+evaluated once, and each time it&#39;s evaluated, for any accesses of
+observables, the <code>DepCell</code> subscribes to the corresponding events, which may
+subsequently trigger future re-evaluations.</li>
+<li><code>lagBind(init, fn)</code>: same as <code>bind</code> but waits a 500ms delay after getting an
+update before the <code>DepCell</code> updates itself (yes, this needs to be a
+configurable parameter)</li>
+</ul>
+<p><strong><code>ObsCell</code></strong></p>
+<ul>
+<li><code>get()</code>: return current value of the cell</li>
+</ul>
+<p><strong><code>SrcCell</code></strong></p>
+<ul>
+<li><code>set(x)</code>: set value of cell to <code>x</code></li>
+</ul>
+<p><strong><code>ObsArray</code></strong></p>
+<ul>
+<li><code>at(i)</code>: return element at <code>i</code></li>
+<li><code>all()</code>: return raw array copy of all elements</li>
+<li><code>length()</code>: return size of the array</li>
+<li><code>map(fn)</code>: return <code>DepArray</code> of given function mapped over this array</li>
+</ul>
+<p><strong><code>SrcArray</code></strong></p>
+<ul>
+<li><code>splice(index, count, additions...)</code>: replace <code>count</code> elements starting at
+<code>index</code> with <code>additions</code></li>
+<li><code>insert(x, i)</code>: insert value <code>x</code> at index <code>i</code></li>
+<li><code>remove(x)</code>: find and remove first occurrence of <code>x</code></li>
+<li><code>removeAt(i)</code>: remove element at index <code>i</code></li>
+<li><code>push(x)</code>: append <code>x</code> to the end of the array</li>
+<li><code>put(i, x)</code>: replace element <code>i</code> with value <code>x</code></li>
+<li><code>replace(xs)</code>: replace entire array with raw array <code>xs</code></li>
+</ul>
+<p><strong><code>ObsMap</code></strong></p>
+<ul>
+<li><code>get(k)</code>: return value associated with key <code>k</code></li>
+<li><code>all()</code>: return raw object copy</li>
+</ul>
+<p><strong><code>SrcMap</code></strong></p>
+<ul>
+<li><code>put(k, v)</code>: associate value <code>v</code> with key <code>k</code> and return any prior value associated with <code>k</code></li>
+<li><code>remove(k)</code>: remove the entry associated at key <code>k</code></li>
+</ul>
+<h2><a name="rxt-namespace"><code>rxt</code> Namespace</a></h2>
+<p>This contains the template DSL constructs.  Main thing here is the <em>tag
+function</em>, which is what constructs a DOM element.</p>
+<p><strong>Free functions</strong></p>
+<ul>
+<li><code>mktag(tag)</code>: returns a tag function of the given tag name.  The other tags
+are simply aliases to this, e.g.: <code>div = mktag(&#39;div&#39;)</code>.</li>
+<li><code>importTags()</code>: populate the global namespace with the tag symbols, so you
+don&#39;t need have <code>rxt</code> all over your templates.  Useful for quickly throwing
+something together.</li>
+<li><code>rawHtml(html)</code>: wrapper for strings that tags won&#39;t escape when rendering;
+example: <code>div {}, [rawHtml(&#39;&lt;span&gt;hello&lt;/span&gt;&#39;)]</code></li>
+<li>Tags: <code>p</code>, <code>br</code>, <code>ul</code>, <code>li</code>, <code>span</code>, <code>anchor</code>, <code>div</code>, <code>input</code>, <code>select</code>,
+<code>option</code>, <code>label</code>, <code>button</code>, <code>fieldset</code>, <code>legend</code>, <code>section</code>, <code>header</code>,
+<code>footer</code>, <code>strong</code>, <code>h1</code>, <code>h2</code>, <code>h3</code>, <code>h4</code>, <code>h5</code>, <code>h6</code>, <code>h7</code></li>
+</ul>
+<p><strong>jQuery plug-in</strong></p>
+<ul>
+<li><code>rx(property)</code>: lazily create (or take the cached instance) of a cell whose
+value is maintained to reflect the desired property on the element.
+<code>property</code> can be <code>&#39;checked&#39;</code>, <code>&#39;focused&#39;</code>, or <code>&#39;val&#39;</code>.  Returns not the cell
+but the value from <code>get</code> on the cell.</li>
+</ul>
+
+        </section>
+      </div>
+    </div><!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      try {
+        var pageTracker = _gat._getTracker("UA-41900480-1");
+        pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
+  </body>
+</html>

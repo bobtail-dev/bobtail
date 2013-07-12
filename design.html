@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
+    <title>Motivation and Design Rationale - reactive.coffee</title>
+  </head>
+  <body>
+    <header>
+      <div class="overlay"></div>
+      <div class="inner">
+        <h1 class="smaller-title"><a href="/">reactive.coffee</a></h1>
+        <nav class="top-nav">
+          <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
+        </nav>
+      </div>
+    </header>
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <nav class="side-nav">
+          <ul>
+            <li><a href="design.html" class="current">Motivation/Design</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+            <li><a href="related.html">Related Work</a></li>
+          </ul>
+        </nav>
+        <section id="main-content"><h1>Motivation and Design Rationale</h1>
+<p>With so many client-side model-view web frameworks out there, why create yet
+another one?  What&#39;s so special about this one?</p>
+<p>The goals of this particular framework are to strive for elegance and
+simplicity of mechanism in a package that minimizes &quot;magic,&quot; while at the same
+time achieving the expressiveness of frameworks that allow for declarative
+specification of data-bound template views which react immediately to changes
+in the model.  Another core goal is to have foundations in composable core
+primitives that scale well in both performance and code architecture to complex
+applications involving both large numbers of bindings and deep/complex model
+structures.</p>
+<p>Reactive actually consists of two layers.  At its core, it provides reactive
+programming primitives that allows users to declaratively specify arbitrary
+dataflow DAGs, where data structures are automatically updated in response to
+updates in their dependencies.  This is in lieu of the more complex event
+systems powering systems like <a href="http://backbonejs.org/">Backbone</a>.  The idea is that all application
+dependencies, including high-level business logic and domain-specific concepts,
+are conveniently represented by (potentially complex) data types built out of
+observable nodes.</p>
+<p>The second layer in Reactive is that of the &quot;template language,&quot; the DSL for
+constructing UIs out of not only DOM elements but arbitrary user-defined
+components as well.</p>
+<p>A major benefit of embedding into a host language that is a full-fledged
+programming language, rather than creating a limited template language, is that
+the system now inherits the abstractions and expressive power of the host
+language for free.  For instance, defining reusable component abstractions is
+as simple as.  The ability to define reusable components, and the manner in
+which they are assembled together, is at the core of what makes for scalable
+architecture, and this is an area where Reactive is very simple.  Plus, we
+inherit all the expressivity of the host language, control flow (loops and
+conditionals), variables, expressions, and so forth.</p>
+<p>Furthermore, by avoiding the creation of a new language (even simple syntactic
+transforms), you retain all the benefits of the tooling around an established
+host language, such as source maps, syntax highlighting, linting, comment doc
+processing, compiler implementations, etc.</p>
+<p>The syntax leverages some features of CoffeeScript to achieve the expressive
+power of a declarative HTML-ish template language:</p>
+<ul>
+<li><a href="https://github.com/jashkenas/coffee-script/wiki/%5Bextensibility%5D-writing-DSLs">general malleability</a> for DSLs, esp. for declaring structures</li>
+<li>concise anonymous function definitions for delimiting bindings to re-compute</li>
+<li>string interpolation</li>
+<li>reuse any code you&#39;ve already written</li>
+</ul>
+<p>At the same time, because we are simply writing CoffeeScript, we have all the
+flexibility and code which that brings to the table, useful for shaping data
+for the views as well as for specifying component behavior.</p>
+<p>Reactive is designed for rich application development.  This is a
+developer-centric framework that does not pretend to be something that is used
+by designers or tools (which is not to say it does not fit in a workflow
+involving both developers and designers).  Rather than focusing on the division
+between markup and logic, Reactive focuses on separating models from views and
+on the component abstraction.  Components must encapsulate not just markup, but
+also behavior.  The two should be coupled, not separated.</p>
+<p>The framework needs to scale well to more complex front-ends, including:</p>
+<ul>
+<li>web page editor where the model is the DOM, CSSOM, etc. of a web page, and
+views are not just editing controls but also the <em>fully rendered web page
+itself</em></li>
+<li>data analysis tool involving sizeable amounts of data and detailed
+visualizations over the data, where individual data points are represented in
+the visualizations</li>
+</ul>
+<p>Finally, Reactive also aims to be a compact framework.  The documentation
+you&#39;re now reading is significantly longer than the code.</p>
+<p>For more on design choices and to juxtapose this framework against others in
+this space, refer to <a href="faq.html">FAQ</a> and <a href="related.html">Related Work</a>.</p>
+
+        </section>
+      </div>
+    </div><!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      try {
+        var pageTracker = _gat._getTracker("UA-41900480-1");
+        pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
+  </body>
+</html>

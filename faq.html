@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
+    <title>FAQ - reactive.coffee</title>
+  </head>
+  <body>
+    <header>
+      <div class="overlay"></div>
+      <div class="inner">
+        <h1 class="smaller-title"><a href="/">reactive.coffee</a></h1>
+        <nav class="top-nav">
+          <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
+        </nav>
+      </div>
+    </header>
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <nav class="side-nav">
+          <ul>
+            <li><a href="design.html">Motivation/Design</a></li>
+            <li><a href="faq.html" class="current">FAQ</a></li>
+            <li><a href="related.html">Related Work</a></li>
+          </ul>
+        </nav>
+        <section id="main-content"><h1>FAQ</h1>
+<p><strong>Why yet another client-side framework?</strong></p>
+<p>See <a href="design.html">Motivation and Design Rationale</a>.</p>
+<p><strong>How does Reactive stack up against the many other client-side frameworks?</strong></p>
+<p>See <a href="related.html">Relaed Work</a>.</p>
+<p><strong>Isn&#39;t this approach just reverting back to the PHP days of mixing markup
+and logic?</strong></p>
+<p>Reactive is designed for rich application development.  Rather than focusing on
+the division between markup and logic, Reactive focuses on separating models
+from views and on the component abstraction.  Components must encapsulate not
+just markup, but also behavior.  The two should be coupled, not separated.</p>
+<p>This library also takes the stance that logic-less is a counter-productive
+endeavor---the gains are primarily superficial, readability can be <em>adversely</em>
+affected, and it does not separate concerns.  Others have <a href="http://boronine.com/2012/09/07/Cult-Of-Logic-less-Templates/">written</a> <a href="http://www.ebaytechblog.com/2012/10/01/the-case-against-logic-less-templates/">more</a>
+on this.</p>
+<p><strong>Why jQuery / what is the relationship between Reactive Coffee and jQuery?</strong></p>
+<p>The library just uses jQuery as a cross-browser interface to the DOM for its
+own operations.  All tags are wrapped in jQuery objects.  You don&#39;t need to use
+jQuery, but jQuery excels as a cross-platform API and is probably the most
+popular of managing low-level DOM operations.  Although jQuery is known to not
+scale very well, higher-level application structure is where Reactive Coffee
+steps in.</p>
+<p><strong>Why the syntax noise in the template language?</strong></p>
+<p>This is actually not set in stone.  The framework could handle a more concise
+template syntax.  For instance, it&#39;s certainly feasible to support a language
+in which one of the above examples could be rewritten as:</p>
+<div class="highlight"><pre><span class="nx">div</span> <span class="s">&#39;.sidebar&#39;</span><span class="p">,</span> <span class="p">[</span>
+  <span class="nx">h2</span> <span class="s">&#39;Send a message&#39;</span>
+  <span class="nx">form</span> <span class="p">{</span><span class="nv">action: </span><span class="s">&#39;/msg&#39;</span><span class="p">,</span> <span class="nv">method: </span><span class="s">&#39;POST&#39;</span><span class="p">},</span> <span class="p">[</span>
+    <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">name: </span><span class="s">&#39;comment&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Your message&#39;</span><span class="p">}</span>
+    <span class="nx">select</span> <span class="p">{</span><span class="nv">name: </span><span class="s">&#39;recipient&#39;</span><span class="p">},</span> <span class="p">[</span>
+      <span class="nx">option</span> <span class="p">{</span><span class="nv">value: </span><span class="s">&#39;0&#39;</span><span class="p">},</span> <span class="s">&#39;John&#39;</span>
+      <span class="nx">option</span> <span class="p">{</span><span class="nv">value: </span><span class="s">&#39;1&#39;</span><span class="p">},</span> <span class="s">&#39;Jane&#39;</span>
+    <span class="p">]</span>
+  <span class="p">]</span>
+<span class="p">]</span>
+</pre></div>
+
+<p>This would be closer to the concision of languages like Slim and Jade:</p>
+<div class="highlight"><pre><span class="p">.</span><span class="nx">sidebar</span>
+  <span class="nx">h2</span> <span class="nx">Send</span> <span class="nx">a</span> <span class="nx">message</span>
+  <span class="nx">form</span><span class="p">(</span><span class="nx">action</span><span class="o">=</span><span class="s">&#39;/msg&#39;</span> <span class="nx">method</span><span class="o">=</span><span class="s">&#39;POST&#39;</span><span class="p">)</span>
+    <span class="nx">input</span><span class="p">(</span><span class="nx">type</span><span class="o">=</span><span class="s">&#39;text&#39;</span> <span class="nx">name</span><span class="o">=</span><span class="s">&#39;comment&#39;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s">&#39;Your message&#39;</span><span class="p">)</span>
+    <span class="nx">select</span><span class="p">(</span><span class="nx">name</span><span class="o">=</span><span class="s">&#39;recipient&#39;</span><span class="p">)</span>
+      <span class="nx">option</span><span class="p">(</span><span class="nx">value</span><span class="o">=</span><span class="s">&#39;0&#39;</span><span class="p">)</span> <span class="nx">John</span>
+      <span class="nx">option</span><span class="p">(</span><span class="nx">value</span><span class="o">=</span><span class="s">&#39;0&#39;</span><span class="p">)</span> <span class="nx">Jane</span>
+</pre></div>
+
+<p>However, the project currently errs on the side of more conservatively adding
+syntax to the DSL, and defaulting to strictness.</p>
+<p><strong>Why not use Knockout observables?</strong></p>
+<p>Reactive originally tried simply reusing KO, but ultimately divorced itself
+since there are both desired features that are missing (differences in array
+event propagation, topologically ordered batch propagations, etc.) and features
+that are unwanted (mis-matched programming model, larger API surface area,
+etc.).</p>
+<p><strong>Do I need to sprinkle <code>rx.cell()</code> everywhere in my model?</strong></p>
+<p>You actually don&#39;t.  At one extreme, you can always fall back to just wrapping
+your entire model in a single cell, and re-render everything on changes, which
+is sufficient for small/simple applications.</p>
+<p>However, there are other benefits to systematically using <code>rx.cell()</code> besides
+its performance scalability, including debugging and introspection of what the
+DAG of dependencies looks like in a running application (on a finer granularity
+than &quot;views depend on model&quot;).  Additionally, applications may want to manually
+create subscriptions to events only on parts or certain cells of the model, in
+which case referencing cells is the clearest and most direct way to do so,
+rather than needing to compute diffs on your full model.</p>
+<p>An in-between optimization would be to have a system that figures out the diffs
+for you (variants of which are found in other frameworks including Angular and
+React), such that at least DOM changes are localized.  For more complex
+applications, though, where you may have multiple &quot;layers&quot; of models and
+view-models, cells scale.  Also, in the future, we may get the best of both
+worlds—take a look at <code>Object.observe</code>.  For more on these directions, see
+<a href="ideas.html">Ideas</a>.</p>
+<p><strong>Can I use this from JavaScript?</strong></p>
+<p>Yes, you can, with caveats.  The main benefit of using CoffeeScript here is
+that it has a very friendly syntax for declaring UIs and particularly for the
+terse anonymous function syntax to represent the incrementally recomputable
+bindings.  However, if you are willing to drop down to the granularity of whole
+components and let the system diff changes for you, then it&#39;s certainly much
+more pragmatic (this would then be similar to the approach used in React).</p>
+<p>It&#39;s worth showing a quick example of what that would look like:</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">$sidebar</span> <span class="o">=</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span>
+  <span class="nx">div</span><span class="p">({</span><span class="kr">class</span><span class="o">:</span> <span class="s1">&#39;sidebar&#39;</span><span class="p">},</span> <span class="p">[</span>
+    <span class="nx">h2</span><span class="p">({},</span> <span class="s1">&#39;Send a message&#39;</span><span class="p">),</span>
+    <span class="nx">form</span><span class="p">({</span><span class="nx">action</span><span class="o">:</span> <span class="s1">&#39;/msg&#39;</span><span class="p">,</span> <span class="nx">method</span><span class="o">:</span> <span class="s1">&#39;POST&#39;</span><span class="p">},</span> <span class="p">[</span>
+      <span class="nx">input</span><span class="p">({</span><span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;comment&#39;</span><span class="p">,</span> <span class="nx">placeholder</span><span class="o">:</span> <span class="s1">&#39;Your message&#39;</span><span class="p">}),</span>
+      <span class="nx">select</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;recipient&#39;</span><span class="p">},</span> <span class="nx">users</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span>
+        <span class="nx">option</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="o">+</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">},</span> <span class="p">[</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">]);</span>
+      <span class="p">}))</span>
+    <span class="p">])</span>
+  <span class="p">])</span>
+<span class="p">});</span>
+</pre></div>
+
+
+        </section>
+      </div>
+    </div><!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      try {
+        var pageTracker = _gat._getTracker("UA-41900480-1");
+        pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
+  </body>
+</html>

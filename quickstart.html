@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
+    <title>Quickstart Examples - reactive.coffee</title>
+  </head>
+  <body>
+    <header>
+      <div class="overlay"></div>
+      <div class="inner">
+        <h1 class="smaller-title"><a href="/">reactive.coffee</a></h1>
+        <nav class="top-nav">
+          <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
+        </nav>
+      </div>
+    </header>
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <nav class="side-nav">
+          <ul>
+            <li><a href="quickstart.html" class="current">Quickstart Examples</a></li>
+            <li><a href="tutorial.html">Tutorial</a></li>
+            <li><a href="api.html">API Documentation</a></li>
+            <li><a href="changes.html">Change Log</a></li>
+          </ul>
+        </nav>
+        <section id="main-content"><h1>Quickstart Examples</h1>
+<p>Here&#39;s a quick taste of what using Reactive is like.</p>
+<p>To follow these examples, include this into your HTML:</p>
+<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/coffee-script/1.6.3/coffee-script.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/reactive-coffee/0.0.0/reactive-coffee.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</pre></div>
+
+<p>A regular static DOM:</p>
+<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
+  <span class="nx">div</span> <span class="p">{</span> <span class="k">class</span><span class="o">:</span> <span class="s">&#39;main-content&#39;</span> <span class="p">},</span> <span class="p">[</span>
+    <span class="nx">h1</span> <span class="p">{},</span> <span class="p">[</span> <span class="s">&#39;Hello world!&#39;</span> <span class="p">]</span>
+    <span class="nx">ul</span> <span class="p">{</span> <span class="k">class</span><span class="o">:</span> <span class="s">&#39;nav&#39;</span> <span class="p">},</span> <span class="p">[</span>
+      <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span> <span class="s">&#39;Home&#39;</span> <span class="p">]</span>
+      <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span> <span class="s">&#39;About&#39;</span> <span class="p">]</span>
+      <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span> <span class="s">&#39;Contact&#39;</span> <span class="p">]</span>
+    <span class="p">]</span>
+    <span class="nx">input</span> <span class="p">{</span> <span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Your name here&#39;</span> <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+
+<p>A simple reactive example implementing a todo list (you can also find a more
+complete TodoMVC example in <code>examples/</code>):</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nx">Task</span>
+  <span class="nv">constructor: </span><span class="nf">(description, isDone) -&gt;</span>
+    <span class="vi">@description = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">description</span><span class="p">)</span>
+    <span class="vi">@isDone = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">isDone</span><span class="p">)</span>
+
+<span class="nv">tasks = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">([</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Get milk&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Play with Reactive Coffee&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Walk the dog&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+<span class="p">])</span>
+
+<span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
+  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task-manager&#39;</span><span class="p">},</span> <span class="p">[</span>
+    <span class="nx">h1</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&quot;Tasks for today&quot;</span><span class="p">]</span>
+    <span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;tasks&#39;</span><span class="p">},</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(task) -&gt;</span>
+      <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task&#39;</span><span class="p">},</span> <span class="p">[</span>
+        <span class="nx">input</span> <span class="p">{</span>
+          <span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span>
+          <span class="nv">checked: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+          <span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@change</span> <span class="o">=&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">@val</span><span class="p">())</span>
+        <span class="p">}</span>
+        <span class="nx">task</span><span class="p">.</span><span class="nx">description</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+      <span class="p">]</span>
+    <span class="nv">$newTask = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Enter new task&#39;</span><span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="nx">$newTask</span><span class="p">.</span><span class="nx">keydown</span> <span class="nf">(e) -&gt;</span>
+  <span class="k">if</span> <span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">==</span> <span class="mi">13</span>
+    <span class="nx">tasks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">(),</span> <span class="kc">false</span><span class="p">))</span>
+    <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+</pre></div>
+
+<p>Recursively render a tree structure, something that&#39;s a bit more complex to
+incrementally maintain otherwise:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nx">TreeNode</span>
+  <span class="nv">constructor: </span><span class="nf">(value, children) -&gt;</span>
+    <span class="vi">@value = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span>
+    <span class="c1"># Arrays only insert/remove the minimum set into/from the DOM (via the `map` method)</span>
+    <span class="vi">@children = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">(</span><span class="nx">children</span><span class="p">)</span>
+
+<span class="nv">root = </span><span class="k">new</span> <span class="nx">TreeNode</span><span class="p">(</span><span class="s">&#39;root&#39;</span><span class="p">,</span> <span class="p">[</span>
+  <span class="k">new</span> <span class="nx">TreeNode</span><span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="p">[])</span>
+  <span class="k">new</span> <span class="nx">TreeNode</span><span class="p">(</span><span class="s">&#39;beta&#39;</span><span class="p">,</span> <span class="p">[</span>
+    <span class="k">new</span> <span class="nx">TreeNode</span><span class="p">(</span><span class="s">&#39;gamma&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">new</span> <span class="nx">TreeNode</span><span class="p">(</span><span class="s">&#39;delta&#39;</span><span class="p">,</span> <span class="p">[])</span>
+  <span class="p">])</span>
+<span class="p">])</span>
+
+<span class="c1"># Nested `bind`/`map` calls are insulated from parents, re-rendering only</span>
+<span class="c1"># what&#39;s necessary.</span>
+<span class="nv">recurse = </span><span class="nf">(node) -&gt;</span>
+  <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span>
+    <span class="nx">span</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span> <span class="nx">node</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="p">]</span>
+    <span class="nx">ul</span> <span class="p">{},</span> <span class="nx">node</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span> <span class="nf">-&gt;</span> <span class="nx">recurse</span>
+  <span class="p">]</span>
+
+<span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span> <span class="nx">ul</span> <span class="p">{},</span> <span class="p">[</span> <span class="nx">recurse</span><span class="p">(</span><span class="nx">root</span><span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+</pre></div>
+
+<p>You can also have elements depend certain attributes of each other.  Here is a
+text box that searches/filters the given list.</p>
+<div class="highlight"><pre><span class="nv">countries = </span><span class="p">[...]</span>
+<span class="nv">$searchBox = </span><span class="nx">input</span> <span class="p">{</span>
+  <span class="nv">type: </span><span class="s">&#39;text&#39;</span>
+  <span class="nv">placeholder: </span><span class="s">&#39;Type a country name&#39;</span>
+<span class="p">}</span>
+<span class="nx">ul</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
+  <span class="k">for</span> <span class="nx">country</span> <span class="k">in</span> <span class="nx">countries</span>
+    <span class="k">if</span> <span class="nx">_</span><span class="p">(</span><span class="nx">country</span><span class="p">).</span><span class="nx">startsWith</span><span class="p">(</span><span class="nx">$searchBox</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">))</span>
+      <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">country</span><span class="p">]</span>
+</pre></div>
+
+<p>Currently there is a complete <a href="http://todomvc.com/">TodoMVC</a> example in the <code>examples/</code> directory
+(see the <a href="https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade">source</a>) and on <a href="//TODO">jsFiddle</a>.  More examples will be added!</p>
+
+        </section>
+      </div>
+    </div><!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      try {
+        var pageTracker = _gat._getTracker("UA-41900480-1");
+        pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
+  </body>
+</html>

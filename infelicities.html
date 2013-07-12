@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
+    <title>Infelicities - reactive.coffee</title>
+  </head>
+  <body>
+    <header>
+      <div class="overlay"></div>
+      <div class="inner">
+        <h1 class="smaller-title"><a href="/">reactive.coffee</a></h1>
+        <nav class="top-nav">
+          <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
+        </nav>
+      </div>
+    </header>
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <nav class="side-nav">
+          <ul>
+            <li><a href="dev-setup.html">Dev Setup</a></li>
+            <li><a href="infelicities.html" class="current">Infelicities</a><ul class="toc"><li><a href="#lazy-change propagation">Lazy change propagation</a></li><li><a href="#structural-attribute bindings">Structural Attribute Bindings</a></li><li><a href="#topologically-ordered visits">Topologically Ordered Visits</a></li><li><a href="#lazy-event notification">Lazy Event Notification</a></li><li><a href="#text-spans">Text Spans</a></li><li><a href="#transitions">Transitions</a></li><li><a href="#tests">Tests</a></li></ul></li>
+            <li><a href="ideas.html">Ideas</a></li>
+            <li><a href="https://github.com/yang/reactive-coffee">GitHub</a></li>
+          </ul>
+        </nav>
+        <section id="main-content"><h1>Infelicities</h1>
+<p>There are a number of areas for immediate improvement, including but not
+limited to the following:</p>
+<h2><a name="lazy-change propagation">Lazy change propagation</a></h2>
+<p>This one is rather low-hanging fruit: when a cell&#39;s value has been set to the
+same value, we should not propagate events downstream to dependent nodes.</p>
+<h2><a name="structural-attribute bindings">Structural Attribute Bindings</a></h2>
+<p>Currently, attributes are strings.  For most attributes this is fine, but for
+certain attributes such as <code>style</code>, we could have a simple convenience
+preprocessor that takes in an object map of the style names and renders the
+string.  This could be extended to lists for <code>class</code> and so on.</p>
+<h2><a name="topologically-ordered visits">Topologically Ordered Visits</a></h2>
+<p>If we consider the DAG of dependencies among observable nodes, when there&#39;s an
+event being propagated through the system, the notifications currently visit
+nodes in depth-first order.  However, the most efficient order in which to
+propagate changes is by processing the events of the nodes in topologically
+sorted order.  For instance, consider the following DAG:</p>
+<pre><code>A -&gt; B
+A -&gt; C
+B -&gt; D
+C -&gt; D
+D -&gt; E</code></pre>
+<p><img src="https://chart.googleapis.com/chart?chl=digraph+%22classes_No_Name%22+%7B%0D%0AA+-%3E+B%3B%0D%0AA+-%3E+C%3B%0D%0AB+-%3E+D%3B%0D%0AC+-%3E+D%3B%0D%0AD+-%3E+E%3B%0D%0A%7D%0D%0A&amp;cht=gv" alt="DAG"></p>
+<p>If <code>A</code> is updated, then we&#39;d currently perform a recursive descent starting at
+<code>A</code> and visit the nodes in this order:</p>
+<pre><code>A, B, D, E, C, D, E</code></pre>
+<p>However, if we kept track of the DAG, then we could process the nodes in
+topologically sorted order:</p>
+<pre><code>A, B, C, D, E</code></pre>
+<p>This guarantees avoiding multiple visits to the same node.</p>
+<h2><a name="lazy-event notification">Lazy Event Notification</a></h2>
+<p>More flexible-but-still-efficient array (and other data structure) mutations.
+Currently arrays have built-in mechanisms for efficient propagation of events
+such as insertion, removal, splicing, etc.  However, for more involved
+transformations, or if we want to reuse existing array transformation code, we
+can still do better than re-evaluating all dependents downstream by figuring
+out what has changed, and then propagating the diff&#39;s or operations (such as
+reorderings) for more efficient downstream handling.</p>
+<p>This can be extended to arbitrary object types/data structures beyond arrays
+and should be configurable, with the ability to substitute in various change
+detection or diffing algorithms.</p>
+<h2><a name="text-spans">Text Spans</a></h2>
+<p>Text chunks are wrapped in span tags.  There&#39;s no fundamental reason this is
+necessary beyond convenience/speed of implementing the early versions of this
+framework.</p>
+<h2><a name="transitions">Transitions</a></h2>
+<p>Ability to apply animations and effects to things like entrances, exits, and
+reorderings.  See the <a href="https://github.com/mbostock/d3/wiki/Transitions">d3 transitions API</a> for something I&#39;m keen on borrowing
+from.</p>
+<h2><a name="tests">Tests</a></h2>
+<p>And examples.  Need more tests and examples.  &#39;Nuff said.</p>
+
+        </section>
+      </div>
+    </div><!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      try {
+        var pageTracker = _gat._getTracker("UA-41900480-1");
+        pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
+  </body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
+    <title>Development Setup - reactive.coffee</title>
+  </head>
+  <body>
+    <header>
+      <div class="overlay"></div>
+      <div class="inner">
+        <h1 class="smaller-title"><a href="/">reactive.coffee</a></h1>
+        <nav class="top-nav">
+          <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
+        </nav>
+      </div>
+    </header>
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <nav class="side-nav">
+          <ul>
+            <li><a href="dev-setup.html" class="current">Dev Setup</a></li>
+            <li><a href="infelicities.html">Infelicities</a></li>
+            <li><a href="ideas.html">Ideas</a></li>
+            <li><a href="https://github.com/yang/reactive-coffee">GitHub</a></li>
+          </ul>
+        </nav>
+        <section id="main-content"><h1>Development Setup</h1>
+<p>To fetch node dependencies:</p>
+<pre><code>npm install # pull dependencies into ./node_modules
+npm install -g phantomjs # temp workaround for karma phantomjs launcher
+npm install -g grunt-cli # for conveniently running grunt
+npm install -g bower # for conveniently running grunt</code></pre>
+<p>To fetch dependencies:</p>
+<pre><code>bower install</code></pre>
+<p>To build and test:</p>
+<pre><code>grunt</code></pre>
+<p>To test:</p>
+<pre><code>grunt test</code></pre>
+<p>Tests may spew this error after running:</p>
+<pre><code>ERROR [launcher]: Cannot start PhantomJS</code></pre>
+<p>You can ignore this; it was a Karma bug, fixed recently in
+<a href="https://github.com/karma-runner/karma/issues/444">https://github.com/karma-runner/karma/issues/444</a>.</p>
+
+        </section>
+      </div>
+    </div><!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      try {
+        var pageTracker = _gat._getTracker("UA-41900480-1");
+        pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
+  </body>
+</html>

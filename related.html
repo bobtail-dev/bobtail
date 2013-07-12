@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
+    <title>Related Work and Comparisons - reactive.coffee</title>
+  </head>
+  <body>
+    <header>
+      <div class="overlay"></div>
+      <div class="inner">
+        <h1 class="smaller-title"><a href="/">reactive.coffee</a></h1>
+        <nav class="top-nav">
+          <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
+        </nav>
+      </div>
+    </header>
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <nav class="side-nav">
+          <ul>
+            <li><a href="design.html">Motivation/Design</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+            <li><a href="related.html" class="current">Related Work</a></li>
+          </ul>
+        </nav>
+        <section id="main-content"><h1>Related Work and Comparisons</h1>
+<p>There is no shortage of client-side framework for building rich web app UIs.
+This section will mainly focus on trade-offs and differences; to be clear, the
+author deeply respects the work of these other library authors, and liberally
+draws inspiration from them.  Ideally, there wouldn&#39;t have been a need to
+create Reactive.</p>
+<ul>
+<li><p>Any of the multitude of declarative UI toolkits based on reactive
+programming, especially FRP in the Haskell universe, but also <a href="https://bling.codeplex.com/">Bling</a>,
+<a href="http://www.flapjax-lang.org/">FlapJax</a>, and others rooted more in the programming languages community.</p>
+</li>
+<li><p>Specifically in JS land: <a href="http://knockoutjs.com">Knockout</a> in terms of the mechanics behind
+observables and computed observables, but with fewer moving parts and API
+surface (no read/write interception, context management, etc.).  Reactive
+originally tried simply reusing KO, but ultimately divorced itself since
+there are both desired features that are missing (differences in array event
+propagation, topologically ordered batch propagations, etc.) and features
+that are unwanted (mis-matched programming model, larger API surface area,
+etc.).</p>
+<p>For its HTML-based template language it uses a micro-syntax in <code>data-bind</code>
+attributes to bind to element properties to expressions.</p>
+<p>A number of reactive programming libraries in JS besides <a href="http://knockoutjs.com">Knockout</a> including
+<a href="http://www.reactjs.com/">React.js</a>, <a href="https://github.com/fynyky/reactor.js">Reactor</a>, <a href="http://reactive-extensions.github.io/RxJS/">RxJS</a> and <a href="https://github.com/raimohanska/bacon.js">bacon.js</a>.</p>
+<p>Reactive is more similar to <a href="http://knockoutjs.com">Knockout</a> than it is to <a href="http://backbonejs.org">Backbone</a> (see <a href="http://stackoverflow.com/a/6340870/43118">this
+Stack Overflow answer</a> for more).</p>
+</li>
+<li><p><a href="http://angularjs.org">Angular</a> is a popular framework that emphasizes testability that extends
+HTML with its own directives.  Unfortunately it employs a ton of magic and
+has a steep learning curve.  As Khan Academy&#39;s Ben Alpert put it:</p>
+<blockquote>
+<p>Angular documentation for how to write a directive (a reusable component)
+needs to explain directive priorities, the difference between compiling and
+linking, the creation of new scopes, and transclusion, all of which are
+Angular-specific concepts.</p>
+</blockquote>
+<p>Angular eschews change listeners for model diff computation.  This is to be
+distinguished from React&#39;s view diff computation—Angular does not need to
+construct a lightweight DOM to diff since it is aware of the dependencies,
+since its bindings are restricted to simple path-like accessors against the
+current scope (with optional filters).  This shares similar scalability
+worries as the but with an arbitrary </p>
+</li>
+<li><p><a href="http://emberjs.com">Ember</a> offers its own template language that feels right at home if you are
+coming from a server-side templates background.  It has a
+Mustache/Handlbars-ish template language that, like Angular, uses simple
+path-like accessors against the current context.</p>
+</li>
+<li><p><a href="http://www.polymer-project.org/">Polymer</a> for its brazen use of new but unstable technologies such as
+<code>Object.observe</code>, Web Components, and Shadow DOM.  Some good ideas here, but
+there&#39;s still a good deal of platform/tooling immaturity as well as more
+verbose scaffolding around creating components and defining reactive
+behaviors</p>
+</li>
+<li><p><a href="http://facebook.github.io/react/">React</a> shares a similar approach of leveraging a full programming language
+(JS) rather than a more restrictive template language for declaratively
+assembling UI components, as well as a similar focus on only one-way data
+bindings.  Beyond view rendering, React does not provide reactive programming
+primitives for the rest of your application.</p>
+<p>React encourages use of JSX, which is a syntactic transform over JS and comes
+with its own set of <a href="https://groups.google.com/forum/?fromgroups#!topic/reactjs/gcRqGANsy40">subtle</a> <a href="http://facebook.github.io/react/docs/jsx-is-not-html.html">differences</a> from HTML, besides
+the usual <a href="https://groups.google.com/forum/?fromgroups#!topic/reactjs/IzRlS2mBbKs">complexities of integration into existing frameworks and
+pipelines</a>.</p>
+<p>It imposes a more heavyweight component model with a more complex API that
+has a greater surface area.  There are a number of core concepts to learn:
+properties, refs, state, &quot;classes&quot;, mixins, lifecycle management
+(<code>component[Will|Did]Mount</code>, <code>unmountAndReleaseReactRootNode</code>, etc.),
+property transfer, controlling update propagation (<code>shouldComponentUpdate</code>,
+<code>componentWillReceiveProps</code>, etc.), and more.  React also requires its own
+way of doing things such as low-level DOM manipulation—something that
+Reactive intentionally delegates to jQuery.</p>
+<p>Performance-wise, React re-constructs a lightweight representation of the
+entire updated DOM and computes diffs to determine what actual DOM operations
+to execute.  Programmability-wise, this does lead to some awkward situations
+involving the predictability of re-rendering and also the control of things
+such as <a href="https://groups.google.com/forum/#!searchin/reactjs/0.4/reactjs/-XHqDfKN5Ws/KbdNuGTg6IkJ">element focus</a>.  Performance-wise, the approach is adequate for
+certain classes of applications, though the process takes on the order of 1ms
+for simple applications such as TodoMVC.  For other applications performance
+does unfortunately matter, e.g. for more complex views (such as a web page
+editor, where not only the controls but the web page itself is rendered as a
+view) and for when you&#39;re trying to produce smooth responses to mouse
+move/drag events.  It&#39;s also more straightforward to interact with the
+rendered DOM element, as that is the primary representation being worked
+with.  That said, it would be neat to implement this in Reactive anyway (see
+&quot;Cell-Free Re-Rendering Analysis&quot; in <a href="ideas.html">Ideas</a>).</p>
+<p>Feel free to dig into our clone of the React tutorial, under
+<code>examples/react-tut/</code>.</p>
+</li>
+<li><p><a href="http://code.google.com/p/visage">Visage</a>, formerly known as JavaFX, introduces incremental evaluation in a
+statically typed scripting language for the JVM.  It focuses on building
+Swing UIs.  Reactive was actually originally inspired by its approach, which
+is also one of using a full programming language to host the declarative UI
+construction, along with its intuitive syntax for creating bindings.  JavaFX
+used compile-time transforms to implement incremental evaluation.</p>
+</li>
+<li><p><a href="https://github.com/mauricemach/coffeekup">CoffeeKup</a> is another CoffeeScript-embedded DSL for constructing (static)
+DOMs</p>
+</li>
+</ul>
+
+        </section>
+      </div>
+    </div><!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      try {
+        var pageTracker = _gat._getTracker("UA-41900480-1");
+        pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
+  </body>
+</html>
