@@ -13,6 +13,8 @@ popKey = (x, k) ->
   delete x[k]
   v
 
+mkMap = -> Object.create(null)
+
 #
 # Reactivity
 #
