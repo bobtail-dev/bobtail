@@ -256,16 +256,16 @@ $.fn.rx = (prop) ->
         focused = rx.cell($(this).is(':focus'))
         $(this).focus -> focused.set(true)
         $(this).blur -> focused.set(false)
-        bind -> focused.get()
+        focused
       when 'val'
         val = rx.cell($(this).val())
         $(this).change -> val.set($(this).val())
         $(this).on 'input', -> val.set($(this).val())
-        bind -> val.get()
+        val
       when 'checked'
         checked = rx.cell($(this).is(':checked'))
         $(this).change -> checked.set($(this).is(':checked'))
-        bind -> checked.get()
+        checked
       else
         throw 'Unknown reactive property type'
 

@@ -594,9 +594,7 @@
           $(this).blur(function() {
             return focused.set(false);
           });
-          return bind(function() {
-            return focused.get();
-          });
+          return focused;
         case 'val':
           val = rx.cell($(this).val());
           $(this).change(function() {
@@ -605,17 +603,13 @@
           $(this).on('input', function() {
             return val.set($(this).val());
           });
-          return bind(function() {
-            return val.get();
-          });
+          return val;
         case 'checked':
           checked = rx.cell($(this).is(':checked'));
           $(this).change(function() {
             return checked.set($(this).is(':checked'));
           });
-          return bind(function() {
-            return checked.get();
-          });
+          return checked;
         default:
           throw 'Unknown reactive property type';
       }
