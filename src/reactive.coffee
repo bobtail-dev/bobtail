@@ -259,7 +259,8 @@ $.fn.rx = (prop) ->
         bind -> focused.get()
       when 'val'
         val = rx.cell($(this).val())
-        $(this).change -> val.set(val)
+        $(this).change -> val.set($(this).val())
+        $(this).on 'input', -> val.set($(this).val())
         bind -> val.get()
       when 'checked'
         checked = rx.cell($(this).is(':checked'))

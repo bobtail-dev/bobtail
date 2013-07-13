@@ -600,7 +600,10 @@
         case 'val':
           val = rx.cell($(this).val());
           $(this).change(function() {
-            return val.set(val);
+            return val.set($(this).val());
+          });
+          $(this).on('input', function() {
+            return val.set($(this).val());
           });
           return bind(function() {
             return val.get();
