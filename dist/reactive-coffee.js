@@ -581,7 +581,7 @@
     if (map == null) {
       map = $(this).data('rx-map', mkMap());
     }
-    if (__indexOf.call(map, prop) >= 0) {
+    if (prop in map) {
       return map[prop];
     }
     return map[prop] = (function() {

@@ -249,7 +249,7 @@ _.extend(rx, {
 $.fn.rx = (prop) ->
   map = $(this).data('rx-map')
   if not map? then map = $(this).data('rx-map', mkMap())
-  if prop in map then return map[prop]
+  if prop of map then return map[prop]
   map[prop] =
     switch prop
       when 'focused'
