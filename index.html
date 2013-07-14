@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
     <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
     <title>
       Reactive Coffee - A Lightweight CoffeeScript library/DSL for reactive
@@ -42,41 +42,76 @@
 <li>MIT license</li>
 </ul>
 <h2>Example: To-Do List</h2>
-<p>You can <a href="http://jsfiddle.net/yang/SGvuy/">play with this example on jsFiddle</a> or <a href="https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade">see a complete
-TodoMVC example</a>.</p>
-<div class="highlight"><pre><span class="k">class</span> <span class="nx">Task</span>
-  <span class="nv">constructor: </span><span class="nf">(description, isDone) -&gt;</span>
-    <span class="vi">@description = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">description</span><span class="p">)</span>
+<p>You can <a href="http://jsfiddle.net/yang/SGvuy/">play with this example on jsFiddle</a>, see a <a href="https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade">complete
+TodoMVC example</a>, or head directly to the <a href="tutorial.html">tutorial</a>.</p>
+<div class="highlight"><pre><span class="c1"># This is our core data model, an array of Task objects.</span>
+
+<span class="k">class</span> <span class="nx">Task</span>
+  <span class="nv">constructor: </span><span class="nf">(descrip, priority, isDone) -&gt;</span>
+    <span class="vi">@descrip = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">descrip</span><span class="p">)</span>
+    <span class="vi">@priority = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">priority</span><span class="p">)</span>
     <span class="vi">@isDone = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">isDone</span><span class="p">)</span>
 
 <span class="nv">tasks = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">([</span>
-  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Get milk&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
-  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Play with Reactive Coffee&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
-  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Walk the dog&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Get milk&#39;</span><span class="p">,</span> <span class="s">&#39;important&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Play with Reactive Coffee&#39;</span><span class="p">,</span> <span class="s">&#39;critical&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Walk the dog&#39;</span><span class="p">,</span> <span class="s">&#39;meh&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
 <span class="p">])</span>
 
-<span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
-  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task-manager&#39;</span><span class="p">},</span> <span class="p">[</span>
-    <span class="nx">h1</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&quot;Tasks for today&quot;</span><span class="p">]</span>
-    <span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;tasks&#39;</span><span class="p">},</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(task) -&gt;</span>
-      <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task&#39;</span><span class="p">},</span> <span class="p">[</span>
-        <span class="nx">input</span> <span class="p">{</span>
-          <span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span>
-          <span class="nv">checked: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
-          <span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@change</span> <span class="o">=&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">@val</span><span class="p">())</span>
-        <span class="p">}</span>
-        <span class="nx">span</span> <span class="p">{</span> <span class="nv">style: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;opacity: </span><span class="si">#{</span><span class="k">if</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="p">.</span><span class="mi">5</span> <span class="k">else</span> <span class="mi">1</span><span class="si">}</span><span class="s">&quot;</span> <span class="p">},</span> <span class="p">[</span>
-          <span class="nx">task</span><span class="p">.</span><span class="nx">description</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
-        <span class="p">]</span>
-      <span class="p">]</span>
-    <span class="nv">$newTask = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Enter new task&#39;</span><span class="p">}</span>
-  <span class="p">]</span>
-<span class="p">)</span>
+<span class="c1"># Our main view: a checklist of tasks, a button to add a new task, and a task</span>
+<span class="c1"># editor component (defined further down).</span>
 
-<span class="nx">$newTask</span><span class="p">.</span><span class="nx">keydown</span> <span class="nf">(e) -&gt;</span>
-  <span class="k">if</span> <span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">==</span> <span class="mi">13</span>
-    <span class="nx">tasks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">(),</span> <span class="kc">false</span><span class="p">))</span>
-    <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+<span class="nv">main = </span><span class="nf">-&gt;</span>
+  <span class="nv">currentTask = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">tasks</span><span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="c1"># &quot;View model&quot; of currently selected task</span>
+
+  <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
+    <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task-manager&#39;</span><span class="p">},</span> <span class="p">[</span>
+      <span class="nx">h1</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">tasks</span><span class="p">.</span><span class="nx">length</span><span class="p">()</span><span class="si">}</span><span class="s"> task(s) for today&quot;</span><span class="p">]</span>
+      <span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;tasks&#39;</span><span class="p">},</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(task) -&gt;</span>
+        <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task&#39;</span><span class="p">},</span> <span class="p">[</span>
+          <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span><span class="p">,</span> <span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@change</span> <span class="o">=&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">@</span><span class="o">is</span><span class="p">(</span><span class="s">&#39;:checked&#39;</span><span class="p">))}</span>
+          <span class="nx">span</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;descrip&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span>
+            <span class="s">&quot;</span><span class="si">#{</span><span class="nx">task</span><span class="p">.</span><span class="nx">descrip</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s"> (</span><span class="si">#{</span><span class="nx">task</span><span class="p">.</span><span class="nx">priority</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">)&quot;</span>
+          <span class="p">]</span>
+          <span class="nx">a</span> <span class="p">{</span><span class="nv">href: </span><span class="s">&#39;javascript: void 0&#39;</span><span class="p">,</span> <span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@click</span> <span class="o">=&gt;</span> <span class="nx">currentTask</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">task</span><span class="p">)},</span> <span class="p">[</span>
+            <span class="s">&#39;Edit&#39;</span>
+          <span class="p">]</span>
+        <span class="p">]</span>
+      <span class="nx">button</span> <span class="p">{</span><span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@click</span> <span class="o">=&gt;</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Task&#39;</span><span class="p">,</span> <span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">))},</span> <span class="p">[</span>
+        <span class="s">&#39;Add new task&#39;</span>
+      <span class="p">]</span>
+      <span class="nx">taskEditor</span> <span class="p">{</span>
+        <span class="nv">task: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">currentTask</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+        <span class="nv">onSubmit: </span><span class="nf">(descrip, priority) -&gt;</span>
+          <span class="nx">currentTask</span><span class="p">.</span><span class="nx">get</span><span class="p">().</span><span class="nx">descrip</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">descrip</span><span class="p">)</span>
+          <span class="nx">currentTask</span><span class="p">.</span><span class="nx">get</span><span class="p">().</span><span class="nx">priority</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">priority</span><span class="p">)</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">)</span>
+
+<span class="c1"># The task editor demonstrates how to define a simple component.</span>
+
+<span class="nv">taskEditor = </span><span class="nf">(opts) -&gt;</span>
+  <span class="nv">task = </span><span class="nf">-&gt;</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">task</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+  <span class="nv">theForm = </span><span class="nx">form</span> <span class="p">{},</span> <span class="p">[</span>
+    <span class="nx">h2</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Edit Task&#39;</span><span class="p">]</span>
+    <span class="nx">label</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Description&#39;</span><span class="p">]</span>
+    <span class="nv">descrip = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">value: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">task</span><span class="p">().</span><span class="nx">descrip</span><span class="p">.</span><span class="nx">get</span><span class="p">()}</span>
+    <span class="nx">br</span> <span class="p">{}</span>
+    <span class="nx">label</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Priority&#39;</span><span class="p">]</span>
+    <span class="nv">priority = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">value: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">task</span><span class="p">().</span><span class="nx">priority</span><span class="p">.</span><span class="nx">get</span><span class="p">()}</span>
+    <span class="nx">br</span> <span class="p">{}</span>
+    <span class="nx">label</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Status&#39;</span><span class="p">]</span>
+    <span class="nx">span</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="k">if</span> <span class="nx">task</span><span class="p">().</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="s">&#39;Done&#39;</span> <span class="k">else</span> <span class="s">&#39;Not done&#39;</span><span class="p">]</span>
+    <span class="nx">br</span> <span class="p">{}</span>
+    <span class="nx">button</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Update&#39;</span><span class="p">]</span>
+  <span class="p">]</span>
+  <span class="nx">theForm</span><span class="p">.</span><span class="nx">submit</span> <span class="nf">-&gt;</span>
+    <span class="nx">opts</span><span class="p">.</span><span class="nx">onSubmit</span><span class="p">(</span><span class="nx">descrip</span><span class="p">.</span><span class="nx">val</span><span class="p">().</span><span class="nx">trim</span><span class="p">(),</span> <span class="nx">priority</span><span class="p">.</span><span class="nx">val</span><span class="p">().</span><span class="nx">trim</span><span class="p">())</span>
+    <span class="nx">@reset</span><span class="p">()</span>
+    <span class="kc">false</span>
+
+<span class="nx">$</span><span class="p">(</span><span class="nx">main</span><span class="p">)</span>
 </pre></div>
 
 <h2>Next steps</h2>
@@ -85,9 +120,10 @@ TodoMVC example</a>.</p>
 rationale</a>.</p>
 
         </section>
-        <aside id="sidebar"><a href="https://github.com/yang/reactive-coffee/zipball/master" class="button"><small>Download</small> .zip file</a><a href="https://github.com/yang/reactive-coffee/tarball/master" class="button"><small>Download</small> .tar.gz file</a>
-          <p class="repo-owner"><a href="https://github.com/yang/reactive-coffee">reactive.coffee</a> is maintained by <a href="https://github.com/yang">yang</a>.</p>
-          <p>Based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        <aside id="sidebar"><a href="https://github.com/yang/reactive-coffee/zipball/0.0.0" class="button"><small>Download version 0.0.0</small> .zip file</a><a href="https://github.com/yang/reactive-coffee/tarball/0.0.0" class="button"><small>Download version 0.0.0</small> .tar.gz file</a>
+          <p class="repo-owner">Latest release is v0.0.0. <a href="changes.html">Changes</a>.</p><p>Minified: 10KB.</p>
+<p>Stay updated on <a href="https://twitter.com/reactivecoffee">Twitter</a>.</p>
+
         </aside>
       </div>
     </div><!--[if lt IE 9]>
@@ -100,5 +136,10 @@ rationale</a>.</p>
         pageTracker._trackPageview();
       } catch(err) {}
     </script>
+    <footer>
+      <div class="inner"><p>Copyright 2013 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+
+      </div>
+    </footer>
   </body>
 </html>

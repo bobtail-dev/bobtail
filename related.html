@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
     <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
     <title>Related Work and Comparisons - reactive.coffee</title>
   </head>
@@ -33,6 +33,7 @@ This section will mainly focus on trade-offs and differences; to be clear, the
 author deeply respects the work of these other library authors, and liberally
 draws inspiration from them.  Ideally, there wouldn&#39;t have been a need to
 create Reactive.</p>
+<p>More to be written here in time!</p>
 <ul>
 <li><p>Any of the multitude of declarative UI toolkits based on reactive
 programming, especially FRP in the Haskell universe, but also <a href="https://bling.codeplex.com/">Bling</a>,
@@ -66,19 +67,23 @@ Angular-specific concepts.</p>
 distinguished from React&#39;s view diff computation—Angular does not need to
 construct a lightweight DOM to diff since it is aware of the dependencies,
 since its bindings are restricted to simple path-like accessors against the
-current scope (with optional filters).  This shares similar scalability
-worries as the but with an arbitrary </p>
+current scope (with optional filters).  However, it must compute changes
+in the model in a process it calls <em>dirty checking</em>, which does not scale
+and has historically been source of code complexity.</p>
 </li>
 <li><p><a href="http://emberjs.com">Ember</a> offers its own template language that feels right at home if you are
 coming from a server-side templates background.  It has a
-Mustache/Handlbars-ish template language that, like Angular, uses simple
-path-like accessors against the current context.</p>
+Mustache-ish template language that, like Angular, uses simple
+path-like accessors against the current context, but with a mix of
+Ember-specific directives such as action, link, bindAttr, outlet,
+helpers, etc.  The framework introduces its own class/object model, and
+also uses explicit Controller objects to tie together models and views.</p>
 </li>
 <li><p><a href="http://www.polymer-project.org/">Polymer</a> for its brazen use of new but unstable technologies such as
 <code>Object.observe</code>, Web Components, and Shadow DOM.  Some good ideas here, but
 there&#39;s still a good deal of platform/tooling immaturity as well as more
 verbose scaffolding around creating components and defining reactive
-behaviors</p>
+behaviors.</p>
 </li>
 <li><p><a href="http://facebook.github.io/react/">React</a> shares a similar approach of leveraging a full programming language
 (JS) rather than a more restrictive template language for declaratively
@@ -138,5 +143,10 @@ DOMs</p>
         pageTracker._trackPageview();
       } catch(err) {}
     </script>
+    <footer>
+      <div class="inner"><p>Copyright 2013 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+
+      </div>
+    </footer>
   </body>
 </html>

@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
     <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
-    <title>API Documentation - reactive.coffee</title>
+    <title>API Reference - reactive.coffee</title>
   </head>
   <body>
     <header>
@@ -24,11 +24,11 @@
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
             <li><a href="tutorial.html">Tutorial</a></li>
-            <li><a href="api.html" class="current">API Documentation</a><ul class="toc"><li><a href="#rx-namespace">rx Namespace</a></li><li><a href="#rxt-namespace">rxt Namespace</a></li></ul></li>
+            <li><a href="api.html" class="current">API Reference</a><ul class="toc"><li><a href="#rx-namespace"><code>rx</code> Namespace</a></li><li><a href="#rxt-namespace"><code>rxt</code> Namespace</a></li></ul></li>
             <li><a href="changes.html">Change Log</a></li>
           </ul>
         </nav>
-        <section id="main-content"><h1>API Documentation</h1>
+        <section id="main-content"><h1>API Reference</h1>
 <h2><a name="rx-namespace"><code>rx</code> Namespace</a></h2>
 <p>This contains the core reactive programming primitives.  These are the core
 data structures:</p>
@@ -108,8 +108,15 @@ configurable parameter)</li>
 function</em>, which is what constructs a DOM element.</p>
 <p><strong>Free functions</strong></p>
 <ul>
-<li><code>mktag(tag)</code>: returns a tag function of the given tag name.  The other tags
-are simply aliases to this, e.g.: <code>div = mktag(&#39;div&#39;)</code>.</li>
+<li><code>mktag(tag)</code>: returns a tag function of the given tag name.  The various
+tags like <code>div</code> and <code>h2</code> are simply aliases; e.g., <code>div =
+mktag(&#39;div&#39;)</code>.  Tag functions themselves take <code>(attrs, children)</code>, where
+<code>attrs</code> is a JavaScript object of HTML attributes and <code>children</code> is an
+optional list of child elements (jQuery-wrapped) and/or strings (for text
+nodes).  It returns an instance of the specified element wrapped in a
+jQuery object.  <code>attrs</code>, besides normal HTML attributes, takes a special
+<code>init</code> attribute, which is a 0-ary function that is run immediately upon
+instantiation of the element.</li>
 <li><code>importTags()</code>: populate the global namespace with the tag symbols, so you
 don&#39;t need have <code>rxt</code> all over your templates.  Useful for quickly throwing
 something together.</li>
@@ -123,8 +130,7 @@ example: <code>div {}, [rawHtml(&#39;&lt;span&gt;hello&lt;/span&gt;&#39;)]</code
 <ul>
 <li><code>rx(property)</code>: lazily create (or take the cached instance) of a cell whose
 value is maintained to reflect the desired property on the element.
-<code>property</code> can be <code>&#39;checked&#39;</code>, <code>&#39;focused&#39;</code>, or <code>&#39;val&#39;</code>.  Returns not the cell
-but the value from <code>get</code> on the cell.</li>
+<code>property</code> can be <code>&#39;checked&#39;</code>, <code>&#39;focused&#39;</code>, or <code>&#39;val&#39;</code>.  Returns the cell.</li>
 </ul>
 
         </section>
@@ -139,5 +145,10 @@ but the value from <code>get</code> on the cell.</li>
         pageTracker._trackPageview();
       } catch(err) {}
     </script>
+    <footer>
+      <div class="inner"><p>Copyright 2013 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+
+      </div>
+    </footer>
   </body>
 </html>

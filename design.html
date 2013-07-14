@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
     <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
     <title>Motivation and Design Rationale - reactive.coffee</title>
   </head>
@@ -30,22 +30,22 @@
         <section id="main-content"><h1>Motivation and Design Rationale</h1>
 <p>With so many client-side model-view web frameworks out there, why create yet
 another one?  What&#39;s so special about this one?</p>
-<p>The goals of this particular framework are to strive for elegance and
-simplicity of mechanism in a package that minimizes &quot;magic,&quot; while at the same
-time achieving the expressiveness of frameworks that allow for declarative
-specification of data-bound template views which react immediately to changes
-in the model.  Another core goal is to have foundations in composable core
-primitives that scale well in both performance and code architecture to complex
-applications involving both large numbers of bindings and deep/complex model
-structures.</p>
+<p>The goals of this particular framework include:</p>
+<ul>
+<li>have simple foundations in composable primitives</li>
+<li>minimize &quot;magic&quot;</li>
+<li>enable declarative expressiveness even for complex data-bound views</li>
+<li>scale well in both performance and code architecture to large/complex
+applications</li>
+</ul>
 <p>Reactive actually consists of two layers.  At its core, it provides reactive
-programming primitives that allows users to declaratively specify arbitrary
+programming primitives that allow users to declaratively specify arbitrary
 dataflow DAGs, where data structures are automatically updated in response to
-updates in their dependencies.  This is in lieu of the more complex event
-systems powering systems like <a href="http://backbonejs.org/">Backbone</a>.  The idea is that all application
+updates in their dependencies.  This is in lieu of the more complex first-class-event
+systems like <a href="http://backbonejs.org/">Backbone</a>.  The idea is that all application
 dependencies, including high-level business logic and domain-specific concepts,
 are conveniently represented by (potentially complex) data types built out of
-observable nodes.</p>
+observable cells.</p>
 <p>The second layer in Reactive is that of the &quot;template language,&quot; the DSL for
 constructing UIs out of not only DOM elements but arbitrary user-defined
 components as well.</p>
@@ -77,8 +77,9 @@ for the views as well as for specifying component behavior.</p>
 developer-centric framework that does not pretend to be something that is used
 by designers or tools (which is not to say it does not fit in a workflow
 involving both developers and designers).  Rather than focusing on the division
-between markup and logic, Reactive focuses on separating models from views and
-on the component abstraction.  Components must encapsulate not just markup, but
+between markup and logic, Reactive focuses on separating models from views,
+enabling complex UIs (such as recursively structured DOMs), and on the
+component abstraction.  Components must encapsulate not just markup, but
 also behavior.  The two should be coupled, not separated.</p>
 <p>The framework needs to scale well to more complex front-ends, including:</p>
 <ul>
@@ -89,10 +90,17 @@ itself</em></li>
 visualizations over the data, where individual data points are represented in
 the visualizations</li>
 </ul>
-<p>Finally, Reactive also aims to be a compact framework.  The documentation
-you&#39;re now reading is significantly longer than the code.</p>
-<p>For more on design choices and to juxtapose this framework against others in
-this space, refer to <a href="faq.html">FAQ</a> and <a href="related.html">Related Work</a>.</p>
+<p>Finally, Reactive also aims to be a compact framework.  The
+documentation/website you&#39;re now reading is significantly longer than the
+code.  Reactive focuses only on bindings and templates, and nothing else.
+This is the &quot;Flask-over-Django&quot; approach of choosing best-of-breed
+libraries for different concerns.  For instance, certain frameworks also
+include a routing subsystem; we recommend using instead a <a href="http://stackoverflow.com/questions/6315505/preferred-client-side-routing-solution">stand-alone,
+dedicated library for routing</a>, of which we recommend
+<a href="http://millermedeiros.github.io/crossroads.js/">Crossroads</a>.</p>
+<p>For more on design choices and to juxtapose this framework against specific
+other frameworks in, refer to <a href="faq.html">FAQ</a> and <a href="related.html">Related
+Work</a>.</p>
 
         </section>
       </div>
@@ -106,5 +114,10 @@ this space, refer to <a href="faq.html">FAQ</a> and <a href="related.html">Relat
         pageTracker._trackPageview();
       } catch(err) {}
     </script>
+    <footer>
+      <div class="inner"><p>Copyright 2013 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+
+      </div>
+    </footer>
   </body>
 </html>

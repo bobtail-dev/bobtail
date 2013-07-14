@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="styles/b8f1a187.main.css" media="screen">
+    <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
     <link rel="stylesheet" type="text/css" href="styles/print.css" media="print">
     <title>Tutorial - reactive.coffee</title>
   </head>
@@ -24,29 +24,45 @@
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
             <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to dom element attributes">Binding To DOM Element Attributes</a></li></ul></li>
-            <li><a href="api.html">API Documentation</a></li>
+            <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
           </ul>
         </nav>
         <section id="main-content"><h1>Tutorial</h1>
 <h2><a name="getting-started">Getting Started</a></h2>
-<p>Reactive depends on jQuery and Underscore.</p>
+<p>Reactive depends on jQuery and Underscore:</p>
 <div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/coffeescript/0.0.0/coffeescript.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </pre></div>
 
-<p>If you&#39;re using <code>bower</code>, you can also add Reactive as a dependency for your
+<p>Reactive is hosted on <a href="http://cdnjs.com/">cdnjs</a> as well, so you can source directly from there:</p>
+<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/reactive-coffee/0.0.0/reactive-coffee.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</pre></div>
+
+<p>If you&#39;re using <a href="http://bower.io/">Bower</a>, you can also add Reactive as a dependency for your
 project:</p>
 <pre><code>bower install --save reactive-coffee</code></pre>
 <p>This will transitively pull in the above dependencies for
 Reactive (temp. note: bower <a href="https://github.com/bower/bower/issues/540">has issues solving dependency version
 constraints</a>).</p>
+<p>If you are not using server-side CoffeeScript compilation (recommended for
+production), you can get started quickly with client-side compilation:</p>
+<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/coffee-script/1.6.3/coffee-script.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/coffeescript&quot;</span><span class="nt">&gt;</span>
+  <span class="err">#</span> <span class="nx">Your</span> <span class="nx">code</span> <span class="nx">goes</span> <span class="nx">here</span><span class="o">!</span>
+<span class="nt">&lt;/script&gt;</span>
+</pre></div>
+
 <p>To start using the tags directly without having to prefix them with the <code>rxt</code>
-namespace, use:</p>
+namespace, include this at the top of your CoffeeScript:</p>
 <div class="highlight"><pre><span class="nx">rxt</span><span class="p">.</span><span class="nx">importTags</span><span class="p">()</span>
 </pre></div>
 
+<p>The following examples also lift <code>rx.bind</code> out of its namespace:</p>
+<div class="highlight"><pre><span class="nv">bind = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">bind</span>
+</pre></div>
+
+<p>You can play with the following examples in this <a href="http://jsfiddle.net/yang/fcJxP/">minimal jsFiddle</a>.</p>
 <h2><a name="cells">Cells</a></h2>
 <p>The core building block is an <em>observable cell</em>, <code>ObsCell</code>.</p>
 <div class="highlight"><pre><span class="nv">x = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">()</span>
@@ -55,7 +71,8 @@ namespace, use:</p>
 <p>A cell is just a container for a value (initialized to <code>undefined</code> above, but
 you could also have passed in an initial value).  You can <code>get</code>/<code>set</code> this
 value:</p>
-<div class="highlight"><pre><span class="nx">x</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<div class="highlight"><pre><span class="nv">x = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="nx">x</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="nx">x</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="c1"># 3</span>
 </pre></div>
 
@@ -63,7 +80,7 @@ value:</p>
 <p>The special thing about observables is that you can <em>subscribe</em> to events on
 them, where events are fired when the value of the cell changes in some way.
 For simple cells like the above, there&#39;s just a single <em>on-set</em> event type:</p>
-<div class="highlight"><pre><span class="nv">subscription = </span><span class="nx">x</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([oldVal, newVal]) -&gt;</span>
+<div class="highlight"><pre><span class="nv">subscriptionId = </span><span class="nx">x</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([oldVal, newVal]) -&gt;</span>
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;x was set from </span><span class="si">#{</span><span class="nx">oldVal</span><span class="si">}</span><span class="s"> to </span><span class="si">#{</span><span class="nx">newVal</span><span class="si">}</span><span class="s">&quot;</span>
 </pre></div>
 
@@ -72,7 +89,7 @@ single argument—the type of that argument is event-specific, and in the case o
 <code>onSet</code> it&#39;s a pair of <code>[old value, new value]</code>.  The <code>sub</code> method returns a
 unique identifier for this subscription, which can later be used to unsubscribe
 a listener:</p>
-<div class="highlight"><pre><span class="nx">x</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">unsub</span><span class="p">(</span><span class="nx">subscription</span><span class="p">)</span>
+<div class="highlight"><pre><span class="nx">x</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">unsub</span><span class="p">(</span><span class="nx">subscriptionId</span><span class="p">)</span>
 </pre></div>
 
 <p>You can now start reacting to these events.  For instance:</p>
@@ -115,7 +132,7 @@ more complex dependencies, and is more readable/declarative:</p>
   <span class="k">if</span> <span class="nx">showRealName</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
     <span class="s">&quot;Full name: </span><span class="si">#{</span><span class="nx">fullName</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
   <span class="k">else</span>
-    <span class="s">&quot;Fake naem: </span><span class="si">#{</span><span class="nx">fakeName</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
+    <span class="s">&quot;Fake name: </span><span class="si">#{</span><span class="nx">fakeName</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
 </pre></div>
 
 <p>The bindings are managed such that only the dependent cells that could possibly
@@ -189,6 +206,7 @@ well</a> to expressing the template structure.</p>
 <span class="o">&lt;/</span><span class="nx">div</span><span class="o">&gt;</span>
 </pre></div>
 
+<p>Note how the children of a DOM node are always lists, even when it&#39;s just a single text node.</p>
 <p>Since this is CoffeeScript, you can embed arbitrary logic:</p>
 <div class="highlight"><pre><span class="c1"># Loops:</span>
 
@@ -212,6 +230,11 @@ well</a> to expressing the template structure.</p>
 <span class="p">]</span>
 </pre></div>
 
+<p>Side note: for loops, it&#39;s generally better to prefer using <code>.map()</code>, since
+it&#39;s the same interface for both <code>Array</code> and <code>rx.array</code>, and it also
+creates a unique binding for the element, avoiding a <a href="http://stackoverflow.com/questions/750486/javascript-closure-inside-loops-simple-practical-example">common pitfall</a> with
+JavaScript/CoffeeScript loops and closures (you can also use CoffeeScript&#39;s
+handy <code>do</code> keyword).</p>
 <p>Tags are really just functions that return DOM elements (wrapped in jQuery
 objects), so you are free to attach behaviors to them:</p>
 <div class="highlight"><pre><span class="nv">$button = </span><span class="nx">button</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;submit-btn&#39;</span><span class="p">},</span> <span class="p">[</span><span class="s">&#39;Click Me!&#39;</span><span class="p">]</span>
@@ -279,7 +302,7 @@ that consistently reflects the bindings you&#39;re interested in.  For instance:
 <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span><span class="nv">$nameList = </span><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;name-list&#39;</span><span class="p">})</span>
 <span class="nv">spans = </span><span class="nx">names</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(name) -&gt;</span> <span class="nx">span</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">name</span><span class="p">]</span>
 <span class="nx">spans</span><span class="p">.</span><span class="nx">onChange</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([index, added, removed]) -&gt;</span>
-  <span class="c1"># Homework: fill in logic heer for efficiently inserting/removing DOM</span>
+  <span class="c1"># Homework: fill in logic here for efficiently inserting/removing DOM</span>
   <span class="c1"># nodes!</span>
 </pre></div>
 
@@ -389,7 +412,11 @@ what&#39;s necessary.</p>
 </pre></div>
 
 <p>Now we can use this with:</p>
-<div class="highlight"><pre><span class="nx">tabs</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nv">modifyTab = </span><span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&#39;MODIFY&#39;</span><span class="p">]</span>
+<span class="nv">createTab = </span><span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&#39;CREATE&#39;</span><span class="p">]</span>
+<span class="nv">stylesTab = </span><span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&#39;STYLES&#39;</span><span class="p">]</span>
+
+<span class="nx">tabs</span> <span class="p">{</span>
   <span class="nv">activeClass: </span><span class="s">&#39;my-active-tab&#39;</span>
   <span class="nv">tabs: </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">([</span>
     <span class="p">[</span><span class="s">&#39;Properties&#39;</span><span class="p">,</span> <span class="nx">modifyTab</span><span class="p">()]</span>
@@ -410,25 +437,36 @@ binding to them as well.</p>
 items that prefix-match the given query.  Furthermore, we want the completion
 list to only show up if it&#39;s enabled by the checkbox and when we actually have
 focused on the input text field:</p>
-<div class="highlight"><pre><span class="nv">docs = </span><span class="p">[...]</span>
-<span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;search&#39;</span><span class="p">},</span> <span class="p">[</span>
-  <span class="nv">$query = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Enter query&#39;</span><span class="p">}</span>
-  <span class="nv">$showResults = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span><span class="p">,</span> <span class="nv">id: </span><span class="s">&#39;show-results&#39;</span><span class="p">}</span>
-  <span class="nx">label</span> <span class="p">{</span><span class="k">for</span><span class="o">:</span> <span class="s">&#39;show-results&#39;</span><span class="p">},</span> <span class="p">[</span><span class="s">&#39;Show type-ahead results&#39;</span><span class="p">]</span>
-  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;results&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
-    <span class="k">if</span> <span class="nx">$query</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;focused&#39;</span><span class="p">)</span> <span class="o">and</span> <span class="nx">$showResults</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;checked&#39;</span><span class="p">)</span>
-      <span class="k">for</span> <span class="nx">doc</span> <span class="k">in</span> <span class="nx">docs</span> <span class="k">when</span> <span class="nx">_</span><span class="p">(</span><span class="nx">doc</span><span class="p">.</span><span class="nx">title</span><span class="p">).</span><span class="nx">startsWith</span><span class="p">(</span><span class="nx">$query</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;val&#39;</span><span class="p">))</span>
-        <span class="nx">a</span> <span class="p">{</span><span class="nv">href: </span><span class="nx">doc</span><span class="p">.</span><span class="nx">url</span><span class="p">},</span> <span class="p">[</span><span class="nx">doc</span><span class="p">.</span><span class="nx">title</span><span class="p">]</span>
-    <span class="k">else</span>
-      <span class="p">[]</span>
-  <span class="p">]</span>
+<div class="highlight"><pre><span class="k">class</span> <span class="nx">Doc</span>
+  <span class="nv">constructor: </span><span class="nf">(@title, @url) -&gt;</span>
+
+<span class="nv">docs = </span><span class="p">[</span>
+  <span class="k">new</span> <span class="nx">Doc</span><span class="p">(</span><span class="s">&#39;An axiomatic basis for computer programming&#39;</span><span class="p">,</span> <span class="s">&#39;http://sigpl.or.kr/school/2005w/slides/2_17_1.pdf&#39;</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Doc</span><span class="p">(</span><span class="s">&#39;The next 700 programming languages&#39;</span><span class="p">,</span> <span class="s">&#39;http://www.thecorememory.com/Next_700.pdf&#39;</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Doc</span><span class="p">(</span><span class="s">&#39;A theory of type polymorphism in programming&#39;</span><span class="p">,</span> <span class="s">&#39;http://courses.engr.illinois.edu/cs421/sp2012/project/milner-polymorphism.pdf&#39;</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Doc</span><span class="p">(</span><span class="s">&#39;A semantics of multiple inheritance&#39;</span><span class="p">,</span> <span class="s">&#39;http://lucacardelli.name/Papers/Inheritance.pdf&#39;</span><span class="p">)</span>
 <span class="p">]</span>
+
+<span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
+  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;search&#39;</span><span class="p">},</span> <span class="p">[</span>
+    <span class="nv">$query = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Enter query&#39;</span><span class="p">}</span>
+    <span class="nv">$showResults = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span><span class="p">,</span> <span class="nv">id: </span><span class="s">&#39;show-results&#39;</span><span class="p">}</span>
+    <span class="nx">label</span> <span class="p">{</span><span class="k">for</span><span class="o">:</span> <span class="s">&#39;show-results&#39;</span><span class="p">},</span> <span class="p">[</span><span class="s">&#39;Show type-ahead results&#39;</span><span class="p">]</span>
+    <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;results&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
+      <span class="nv">focused = </span><span class="nx">$query</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;focused&#39;</span><span class="p">)</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&#39;firing&#39;</span><span class="p">,</span> <span class="nx">focused</span>
+      <span class="k">if</span> <span class="nx">focused</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">and</span> <span class="nx">$showResults</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;checked&#39;</span><span class="p">).</span><span class="nx">get</span><span class="p">()</span>
+        <span class="k">for</span> <span class="nx">doc</span> <span class="k">in</span> <span class="nx">docs</span> <span class="k">when</span> <span class="nx">doc</span><span class="p">.</span><span class="nx">title</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">$query</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;val&#39;</span><span class="p">).</span><span class="nx">get</span><span class="p">())</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+          <span class="nx">div</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">a</span> <span class="p">{</span><span class="nv">href: </span><span class="nx">doc</span><span class="p">.</span><span class="nx">url</span><span class="p">},</span> <span class="p">[</span><span class="nx">doc</span><span class="p">.</span><span class="nx">title</span><span class="p">]]</span>
+      <span class="k">else</span>
+        <span class="p">[]</span>
+  <span class="p">]</span>
+<span class="p">)</span>
 </pre></div>
 
 <p>We are using three different types of reactive element attributes.
-<code>rx(property)</code> treats the value of the given property (focused, checked, val)
-as a cell and returns <code>get</code> on that cell; the <code>bind</code> is reactive to any of
-them.</p>
+<code>rx(property)</code> returns the value of the given property (<code>focused</code>,
+<code>checked</code>, <code>val</code>) as a cell.</p>
 
         </section>
       </div>
@@ -442,5 +480,10 @@ them.</p>
         pageTracker._trackPageview();
       } catch(err) {}
     </script>
+    <footer>
+      <div class="inner"><p>Copyright 2013 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+
+      </div>
+    </footer>
   </body>
 </html>
