@@ -247,24 +247,24 @@ _.extend(rx, {
 #
 
 $.fn.rx = (prop) ->
-  map = $(this).data('rx-map')
-  if not map? then $(this).data('rx-map', map = mkMap())
+  map = @data('rx-map')
+  if not map? then @data('rx-map', map = mkMap())
   if prop of map then return map[prop]
   map[prop] =
     switch prop
       when 'focused'
-        focused = rx.cell($(this).is(':focus'))
-        $(this).focus -> focused.set(true)
-        $(this).blur -> focused.set(false)
+        focused = rx.cell(@is(':focus'))
+        @focus -> focused.set(true)
+        @blur -> focused.set(false)
         focused
       when 'val'
-        val = rx.cell($(this).val())
-        $(this).change -> val.set($(this).val())
-        $(this).on 'input', -> val.set($(this).val())
+        val = rx.cell(@val())
+        @change => val.set(@val())
+        @on 'input', => val.set(@val())
         val
       when 'checked'
-        checked = rx.cell($(this).is(':checked'))
-        $(this).change -> checked.set($(this).is(':checked'))
+        checked = rx.cell(@is(':checked'))
+        @change => checked.set(@is(':checked'))
         checked
       else
         throw 'Unknown reactive property type'

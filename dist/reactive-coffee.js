@@ -577,37 +577,39 @@
   $.fn.rx = function(prop) {
     var checked, focused, map, val;
 
-    map = $(this).data('rx-map');
+    map = this.data('rx-map');
     if (map == null) {
-      $(this).data('rx-map', map = mkMap());
+      this.data('rx-map', map = mkMap());
     }
     if (prop in map) {
       return map[prop];
     }
     return map[prop] = (function() {
+      var _this = this;
+
       switch (prop) {
         case 'focused':
-          focused = rx.cell($(this).is(':focus'));
-          $(this).focus(function() {
+          focused = rx.cell(this.is(':focus'));
+          this.focus(function() {
             return focused.set(true);
           });
-          $(this).blur(function() {
+          this.blur(function() {
             return focused.set(false);
           });
           return focused;
         case 'val':
-          val = rx.cell($(this).val());
-          $(this).change(function() {
-            return val.set($(this).val());
+          val = rx.cell(this.val());
+          this.change(function() {
+            return val.set(_this.val());
           });
-          $(this).on('input', function() {
-            return val.set($(this).val());
+          this.on('input', function() {
+            return val.set(_this.val());
           });
           return val;
         case 'checked':
-          checked = rx.cell($(this).is(':checked'));
-          $(this).change(function() {
-            return checked.set($(this).is(':checked'));
+          checked = rx.cell(this.is(':checked'));
+          this.change(function() {
+            return checked.set(_this.is(':checked'));
           });
           return checked;
         default:
