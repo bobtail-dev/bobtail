@@ -248,7 +248,7 @@ _.extend(rx, {
 
 $.fn.rx = (prop) ->
   map = $(this).data('rx-map')
-  if not map? then map = $(this).data('rx-map', mkMap())
+  if not map? then $(this).data('rx-map', map = mkMap())
   if prop of map then return map[prop]
   map[prop] =
     switch prop

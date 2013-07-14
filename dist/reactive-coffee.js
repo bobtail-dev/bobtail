@@ -579,7 +579,7 @@
 
     map = $(this).data('rx-map');
     if (map == null) {
-      map = $(this).data('rx-map', mkMap());
+      $(this).data('rx-map', map = mkMap());
     }
     if (prop in map) {
       return map[prop];
