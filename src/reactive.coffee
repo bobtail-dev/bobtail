@@ -281,6 +281,21 @@ else
 RawHtml = class rxt.RawHtml
   constructor: (@html) ->
 
+# jQuery events are special attrs, along with `init`
+
+events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin",
+  "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown",
+  "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup",
+  "ready", "resize", "scroll", "select", "submit", "toggle", "unload"]
+
+specialAttrs = {
+  init: (elt, fn) -> fn.call(elt)
+}
+
+for ev in events
+  do (ev) ->
+    specialAttrs[ev] = (elt, fn) -> elt[ev]((e) -> fn.call(elt, e))
+
 rxt.mktag = mktag = (tag) ->
   (arg1, arg2) ->
     # arguments are either (), (attrs: Object), (contents: non-Object), or
@@ -297,7 +312,7 @@ rxt.mktag = mktag = (tag) ->
         [arg1, null]
 
     elt = $("<#{tag}/>")
-    for name, value of _.omit(attrs, 'init')
+    for name, value of _.omit(attrs, _.keys(specialAttrs))
       if value instanceof ObsCell
         do (name) ->
           value.onSet.sub ([old, val]) ->
@@ -335,7 +350,8 @@ rxt.mktag = mktag = (tag) ->
           updateContents(val))
       else
         updateContents(contents)
-    attrs.init?.call(elt)
+    for key of attrs when key of specialAttrs
+      specialAttrs[key](elt, attrs[key], attrs, contents)
     elt
 
 # From <https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list>

@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, lagBind, mkMap, mktag, mkuid, nextUid, popKey, recorder, rx, rxt, tag, tags, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, lagBind, mkMap, mktag, mkuid, nextUid, popKey, recorder, rx, rxt, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -633,13 +633,33 @@
 
   })();
 
+  events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "ready", "resize", "scroll", "select", "submit", "toggle", "unload"];
+
+  specialAttrs = {
+    init: function(elt, fn) {
+      return fn.call(elt);
+    }
+  };
+
+  _fn = function(ev) {
+    return specialAttrs[ev] = function(elt, fn) {
+      return elt[ev](function(e) {
+        return fn.call(elt, e);
+      });
+    };
+  };
+  for (_i = 0, _len = events.length; _i < _len; _i++) {
+    ev = events[_i];
+    _fn(ev);
+  }
+
   rxt.mktag = mktag = function(tag) {
     return function(arg1, arg2) {
-      var attrs, contents, elt, name, updateContents, value, _ref4, _ref5, _ref6;
+      var attrs, contents, elt, key, name, updateContents, value, _ref4, _ref5;
 
       _ref4 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof RawHtml || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref4[0], contents = _ref4[1];
       elt = $("<" + tag + "/>");
-      _ref5 = _.omit(attrs, 'init');
+      _ref5 = _.omit(attrs, _.keys(specialAttrs));
       for (name in _ref5) {
         value = _ref5[name];
         if (value instanceof ObsCell) {
@@ -657,13 +677,13 @@
       }
       if (contents != null) {
         updateContents = function(contents) {
-          var child, _i, _len, _results;
+          var child, _j, _len1, _results;
 
           elt.html('');
           if (_.isArray(contents)) {
             _results = [];
-            for (_i = 0, _len = contents.length; _i < _len; _i++) {
-              child = contents[_i];
+            for (_j = 0, _len1 = contents.length; _j < _len1; _j++) {
+              child = contents[_j];
               if (_.isString(child)) {
                 child = $('<span/>').text(child);
               } else if (child instanceof RawHtml) {
@@ -685,11 +705,11 @@
             index = _arg[0], removed = _arg[1], added = _arg[2];
             elt.children().slice(index, index + removed.length).remove();
             toAdd = $((function() {
-              var _i, _len, _results;
+              var _j, _len1, _results;
 
               _results = [];
-              for (_i = 0, _len = added.length; _i < _len; _i++) {
-                child = added[_i];
+              for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
+                child = added[_j];
                 _results.push(child.get(0));
               }
               return _results;
@@ -711,8 +731,10 @@
           updateContents(contents);
         }
       }
-      if ((_ref6 = attrs.init) != null) {
-        _ref6.call(elt);
+      for (key in attrs) {
+        if (key in specialAttrs) {
+          specialAttrs[key](elt, attrs[key], attrs, contents);
+        }
       }
       return elt;
     };
@@ -721,11 +743,11 @@
   tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script', 'noscript', 'body', 'body', 'section', 'nav', 'article', 'aside', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h1', 'h6', 'header', 'footer', 'address', 'main', 'main', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'dd', 'figure', 'figcaption', 'div', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'object', 'param', 'object', 'video', 'audio', 'source', 'video', 'audio', 'track', 'video', 'audio', 'canvas', 'map', 'area', 'area', 'map', 'svg', 'math', 'table', 'caption', 'colgroup', 'col', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details', 'menuitem', 'menu'];
 
   rxt.tags = _.object((function() {
-    var _i, _len, _results;
+    var _j, _len1, _results;
 
     _results = [];
-    for (_i = 0, _len = tags.length; _i < _len; _i++) {
-      tag = tags[_i];
+    for (_j = 0, _len1 = tags.length; _j < _len1; _j++) {
+      tag = tags[_j];
       _results.push([tag, rxt.mktag(tag)]);
     }
     return _results;
