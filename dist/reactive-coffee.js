@@ -635,7 +635,7 @@
 
   events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "ready", "resize", "scroll", "select", "submit", "toggle", "unload"];
 
-  specialAttrs = {
+  specialAttrs = rxt.specialAttrs = {
     init: function(elt, fn) {
       return fn.call(elt);
     }

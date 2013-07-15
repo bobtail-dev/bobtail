@@ -288,7 +288,7 @@ events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin",
   "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup",
   "ready", "resize", "scroll", "select", "submit", "toggle", "unload"]
 
-specialAttrs = {
+specialAttrs = rxt.specialAttrs = {
   init: (elt, fn) -> fn.call(elt)
 }
 
