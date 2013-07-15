@@ -331,10 +331,8 @@ rxt.mktag = mktag = (tag) ->
         # propagate the minimal change set)
         contents.onSet.sub(([old, val]) ->
           updateContents(val))
-      else if _.isArray(contents)
-        updateContents(contents)
       else
-        throw 'Unknown type for contents: ' + contents.constructor.name
+        updateContents(contents)
     attrs.init?.call(elt)
     elt
 

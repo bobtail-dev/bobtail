@@ -705,10 +705,8 @@
             old = _arg[0], val = _arg[1];
             return updateContents(val);
           });
-        } else if (_.isArray(contents)) {
-          updateContents(contents);
         } else {
-          throw 'Unknown type for contents: ' + contents.constructor.name;
+          updateContents(contents);
         }
       }
       if ((_ref6 = attrs.init) != null) {
