@@ -634,13 +634,14 @@
   })();
 
   rxt.mktag = mktag = function(tag) {
-    return function(attrs, contents) {
-      var elt, name, updateContents, value, _ref4, _ref5;
+    return function(arg1, arg2) {
+      var attrs, contents, elt, name, updateContents, value, _ref4, _ref5, _ref6;
 
+      _ref4 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof RawHtml || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref4[0], contents = _ref4[1];
       elt = $("<" + tag + "/>");
-      _ref4 = _.omit(attrs, 'init');
-      for (name in _ref4) {
-        value = _ref4[name];
+      _ref5 = _.omit(attrs, 'init');
+      for (name in _ref5) {
+        value = _ref5[name];
         if (value instanceof ObsCell) {
           (function(name) {
             return value.onSet.sub(function(_arg) {
@@ -710,8 +711,8 @@
           throw 'Unknown type for contents: ' + contents.constructor.name;
         }
       }
-      if ((_ref5 = attrs.init) != null) {
-        _ref5.call(elt);
+      if ((_ref6 = attrs.init) != null) {
+        _ref6.call(elt);
       }
       return elt;
     };

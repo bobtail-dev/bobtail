@@ -282,7 +282,20 @@ RawHtml = class rxt.RawHtml
   constructor: (@html) ->
 
 rxt.mktag = mktag = (tag) ->
-  (attrs, contents) ->
+  (arg1, arg2) ->
+    # arguments are either (), (attrs: Object), (contents: non-Object), or
+    # (attrs: Object, contents: non-Object)
+    [attrs, contents] =
+      if not arg1? and not arg2?
+        [{}, null]
+      else if arg2?
+        [arg1, arg2]
+      else if _.isString(arg1) or arg1 instanceof RawHtml or _.isArray(arg1) or
+              arg1 instanceof ObsCell or arg1 instanceof ObsArray
+        [{}, arg1]
+      else
+        [arg1, null]
+
     elt = $("<#{tag}/>")
     for name, value of _.omit(attrs, 'init')
       if value instanceof ObsCell
