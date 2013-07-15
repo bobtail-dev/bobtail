@@ -314,6 +314,8 @@ rxt.mktag = mktag = (tag) ->
             else if child instanceof RawHtml
               child = $('<span/>').html(child.html)
             elt.append(child)
+        else if _.isString(contents) or contents instanceof RawHtml
+          updateContents([contents])
         else
           throw 'Unknown type for contents: ' + contents.constructor.name
       if contents instanceof ObsArray

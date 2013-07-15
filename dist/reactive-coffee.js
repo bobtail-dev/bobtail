@@ -672,6 +672,8 @@
               _results.push(elt.append(child));
             }
             return _results;
+          } else if (_.isString(contents) || contents instanceof RawHtml) {
+            return updateContents([contents]);
           } else {
             throw 'Unknown type for contents: ' + contents.constructor.name;
           }
