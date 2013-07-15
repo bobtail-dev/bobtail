@@ -56,11 +56,11 @@ your HTML, which just compiles your CoffeeScript client-side (see also
 <p>Here&#39;s a static DOM, just showing regular elements, attributes, and text:</p>
 <div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
   <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;main-content&#39;</span><span class="p">},</span> <span class="p">[</span>
-    <span class="nx">h1</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Hello world!&#39;</span><span class="p">]</span>
+    <span class="nx">h1</span> <span class="s">&#39;Hello world!&#39;</span>
     <span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;nav&#39;</span><span class="p">},</span> <span class="p">[</span>
-      <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Home&#39;</span><span class="p">]</span>
-      <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;About&#39;</span><span class="p">]</span>
-      <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Contact&#39;</span><span class="p">]</span>
+      <span class="nx">li</span> <span class="s">&#39;Home&#39;</span>
+      <span class="nx">li</span> <span class="s">&#39;About&#39;</span>
+      <span class="nx">li</span> <span class="s">&#39;Contact&#39;</span>
     <span class="p">]</span>
     <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Your name here&#39;</span><span class="p">}</span>
   <span class="p">]</span>
@@ -91,10 +91,10 @@ components are bound to reflect:</p>
 <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
   <span class="nx">div</span> <span class="p">{},</span> <span class="p">[</span>
     <span class="nx">ul</span> <span class="p">{},</span> <span class="nx">contacts</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(contact) -&gt;</span>
-      <span class="nx">li</span> <span class="p">{</span><span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@click</span> <span class="o">=&gt;</span> <span class="nx">selected</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">contact</span><span class="p">)},</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">contact</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
+      <span class="nx">li</span> <span class="p">{</span><span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">selected</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">contact</span><span class="p">)},</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">contact</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span>
     <span class="nx">div</span> <span class="p">{</span><span class="nv">contact: </span><span class="s">&#39;details&#39;</span><span class="p">},</span> <span class="p">[</span>
-      <span class="nx">div</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;Name: </span><span class="si">#{</span><span class="nx">selected</span><span class="p">.</span><span class="nx">get</span><span class="p">().</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
-      <span class="nx">div</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;Phone: </span><span class="si">#{</span><span class="nx">selected</span><span class="p">.</span><span class="nx">get</span><span class="p">().</span><span class="nx">phone</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
+      <span class="nx">div</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;Name: </span><span class="si">#{</span><span class="nx">selected</span><span class="p">.</span><span class="nx">get</span><span class="p">().</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span>
+      <span class="nx">div</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;Phone: </span><span class="si">#{</span><span class="nx">selected</span><span class="p">.</span><span class="nx">get</span><span class="p">().</span><span class="nx">phone</span><span class="si">}</span><span class="s">&quot;</span>
     <span class="p">]</span>
   <span class="p">]</span>
 <span class="p">)</span>
@@ -129,9 +129,9 @@ cell.</p>
   <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;display&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
     <span class="nv">sel = </span><span class="nx">opts</span><span class="p">.</span><span class="nx">signal</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
     <span class="p">[</span>
-      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;time&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;Time: </span><span class="si">#{</span><span class="nx">secs</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
-      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;name&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;Signal name: </span><span class="si">#{</span><span class="nx">sel</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
-      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;reading&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;Reading: </span><span class="si">#{</span><span class="nx">sel</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
+      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;time&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;Time: </span><span class="si">#{</span><span class="nx">secs</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
+      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;name&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;Signal name: </span><span class="si">#{</span><span class="nx">sel</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span>
+      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;reading&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;Reading: </span><span class="si">#{</span><span class="nx">sel</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
       <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;position: relative; width: 110px&#39;</span><span class="p">},</span> <span class="p">[</span>
         <span class="nx">div</span> <span class="p">{</span>
           <span class="nv">style: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;&quot;&quot;</span>
@@ -151,13 +151,12 @@ cell.</p>
 <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
   <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;display&#39;</span><span class="p">},</span> <span class="p">[</span>
     <span class="nx">selectionDisplay</span> <span class="p">{</span><span class="nv">signal: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">selected</span><span class="p">.</span><span class="nx">get</span><span class="p">()}</span>
-    <span class="nx">ul</span> <span class="p">{},</span> <span class="nx">signals</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(signal) -&gt;</span>
-      <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span>
-        <span class="nx">a</span> <span class="p">{</span><span class="nv">href: </span><span class="s">&#39;javascript: void 0&#39;</span><span class="p">,</span> <span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@click</span> <span class="o">=&gt;</span> <span class="nx">selected</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">signal</span><span class="p">)},</span> <span class="p">[</span>
+    <span class="nx">ul</span> <span class="nx">signals</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(signal) -&gt;</span>
+      <span class="nx">li</span> <span class="p">[</span>
+        <span class="nx">a</span> <span class="p">{</span><span class="nv">href: </span><span class="s">&#39;javascript: void 0&#39;</span><span class="p">,</span> <span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">selected</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">signal</span><span class="p">)},</span>
           <span class="s">&#39;Show signal&#39;</span>
-        <span class="p">]</span>
         <span class="s">&#39; &#39;</span>
-        <span class="nx">span</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">signal</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">: </span><span class="si">#{</span><span class="nx">signal</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
+        <span class="nx">span</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">signal</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">: </span><span class="si">#{</span><span class="nx">signal</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
       <span class="p">]</span>
   <span class="p">]</span>
 <span class="p">)</span>
@@ -189,17 +188,16 @@ tree set.</p>
 <span class="c1"># what&#39;s necessary.  Clicking a node appends a child under it.</span>
 
 <span class="nv">recurse = </span><span class="nf">(node) -&gt;</span>
-  <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span>
-    <span class="nx">span</span> <span class="p">{</span><span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@click</span> <span class="o">=&gt;</span> <span class="nx">node</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">TreeNode</span><span class="p">(</span><span class="s">&quot;new node&quot;</span><span class="p">,</span> <span class="p">[]))},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span>
-      <span class="nx">node</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
-    <span class="p">]</span>
+  <span class="nx">li</span> <span class="p">[</span>
+    <span class="nx">span</span> <span class="p">{</span><span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">node</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">TreeNode</span><span class="p">(</span><span class="s">&quot;new node&quot;</span><span class="p">,</span> <span class="p">[]))},</span>
+      <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">node</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
     <span class="nx">ul</span> <span class="p">{},</span> <span class="nx">node</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span> <span class="nx">recurse</span>
   <span class="p">]</span>
 
 <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
-  <span class="nx">div</span> <span class="p">{},</span> <span class="p">[</span>
-    <span class="nx">ul</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">recurse</span><span class="p">(</span><span class="nx">root</span><span class="p">)]</span>
-    <span class="nx">button</span> <span class="p">{</span><span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@click</span> <span class="o">=&gt;</span> <span class="nx">addRandNode</span><span class="p">()},</span> <span class="p">[</span><span class="s">&#39;Add random node&#39;</span><span class="p">]</span>
+  <span class="nx">div</span> <span class="p">[</span>
+    <span class="nx">ul</span> <span class="p">[</span><span class="nx">recurse</span><span class="p">(</span><span class="nx">root</span><span class="p">)]</span>
+    <span class="nx">button</span> <span class="p">{</span><span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">addRandNode</span><span class="p">()},</span> <span class="s">&#39;Add random node&#39;</span>
   <span class="p">]</span>
 <span class="p">)</span>
 </pre></div>
@@ -213,10 +211,10 @@ reactive cell that the list binds to.</p>
 <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
   <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;completion&#39;</span><span class="p">},</span> <span class="p">[</span>
     <span class="nv">$searchBox = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Type a country name&#39;</span><span class="p">}</span>
-    <span class="nx">ul</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
+    <span class="nx">ul</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
       <span class="nv">query = </span><span class="nx">$searchBox</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;val&#39;</span><span class="p">).</span><span class="nx">get</span><span class="p">().</span><span class="nx">toLowerCase</span><span class="p">()</span>
       <span class="k">for</span> <span class="nx">country</span> <span class="k">in</span> <span class="nx">countries</span> <span class="k">when</span> <span class="nx">_</span><span class="p">(</span><span class="nx">country</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()).</span><span class="nx">startsWith</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span>
-        <span class="nx">li</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">country</span><span class="p">]</span>
+        <span class="nx">li</span> <span class="nx">country</span>
   <span class="p">]</span>
 <span class="p">)</span>
 </pre></div>

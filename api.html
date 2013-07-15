@@ -111,12 +111,10 @@ function</em>, which is what constructs a DOM element.</p>
 <li><code>mktag(tag)</code>: returns a tag function of the given tag name.  The various
 tags like <code>div</code> and <code>h2</code> are simply aliases; e.g., <code>div =
 mktag(&#39;div&#39;)</code>.  Tag functions themselves take <code>(attrs, children)</code>, where
-<code>attrs</code> is a JavaScript object of HTML attributes and <code>children</code> is an
-optional list of child elements (jQuery-wrapped) and/or strings (for text
-nodes).  It returns an instance of the specified element wrapped in a
-jQuery object.  <code>attrs</code>, besides normal HTML attributes, takes a special
-<code>init</code> attribute, which is a 0-ary function that is run immediately upon
-instantiation of the element.</li>
+<code>attrs</code> is a JavaScript object of HTML attributes and/or <em>special
+attributes</em> and <code>children</code> is an optional list of child elements
+(jQuery-wrapped) and/or strings (for text nodes).  They return an
+instance of the specified element wrapped in a jQuery object.  See also <code>specialAttrs</code> below for more on special attributes.</li>
 <li><code>importTags()</code>: populate the global namespace with the tag symbols, so you
 don&#39;t need have <code>rxt</code> all over your templates.  Useful for quickly throwing
 something together.</li>
@@ -132,6 +130,79 @@ example: <code>div {}, [rawHtml(&#39;&lt;span&gt;hello&lt;/span&gt;&#39;)]</code
 value is maintained to reflect the desired property on the element.
 <code>property</code> can be <code>&#39;checked&#39;</code>, <code>&#39;focused&#39;</code>, or <code>&#39;val&#39;</code>.  Returns the cell.</li>
 </ul>
+<p><strong>Special attributes</strong></p>
+<p><em>Special attributes</em> are handled differently from normal.  The built-in
+special attributes are primarily events like <code>click</code>:</p>
+<div class="highlight"><pre><span class="nx">button</span> <span class="p">{</span><span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)},</span> <span class="s">&#39;Hello&#39;</span>
+</pre></div>
+
+<p>Special attributes are really just a convenient short-hand for running the
+handler functions after constructing object.  The above example is equivalent to:</p>
+<div class="highlight"><pre><span class="nv">$button = </span><span class="nx">button</span> <span class="s">&#39;Hello&#39;</span>
+<span class="nx">$button</span><span class="p">.</span><span class="nx">click</span> <span class="nf">-&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">)</span>
+</pre></div>
+
+<p>The built-in special attributes available include:</p>
+<ul>
+<li><p><code>init</code>: which is a 0-ary function that is run immediately upon
+instantiation of the element.</p>
+</li>
+<li><p>events like <code>click</code>, <code>focus</code>, <code>mouseleave</code>, <code>keyup</code>, <code>load</code>, etc.,:
+these are available for all jQuery events.  The handlers are similar to
+those you would pass to a jQuery event method—they take a jQuery event
+and return false to stop propagation—but the context is the
+jQuery-wrapped element instead of the raw element.  The full list:</p>
+<ul>
+<li><code>blur</code></li>
+<li><code>change</code></li>
+<li><code>click</code></li>
+<li><code>dblclick</code></li>
+<li><code>error</code></li>
+<li><code>focus</code></li>
+<li><code>focusin</code></li>
+<li><code>focusout</code></li>
+<li><code>hover</code></li>
+<li><code>keydown</code></li>
+<li><code>keypress</code></li>
+<li><code>keyup</code></li>
+<li><code>load</code></li>
+<li><code>mousedown</code></li>
+<li><code>mouseenter</code></li>
+<li><code>mouseleave</code></li>
+<li><code>mousemove</code></li>
+<li><code>mouseout</code></li>
+<li><code>mouseover</code></li>
+<li><code>mouseup</code></li>
+<li><code>ready</code></li>
+<li><code>resize</code></li>
+<li><code>scroll</code></li>
+<li><code>select</code></li>
+<li><code>submit</code></li>
+<li><code>toggle</code></li>
+<li><code>unload</code></li>
+</ul>
+</li>
+</ul>
+<p><code>specialAttrs</code>: an object mapping special attribute names to the functions
+that handle them.  When an element specifies a special attribute, this
+handler function is invoked.  The handler function takes <code>(element, value,
+attrs, contents)</code>, where:</p>
+<ul>
+<li><code>element</code> is the element being operated on</li>
+<li><code>value</code> is the value of this special attribute for <code>element</code></li>
+<li><code>attrs</code> is the full map of attributes for <code>element</code></li>
+<li><code>contents</code> is the content/children for <code>element</code> (which can be a
+string, <code>RawHtml</code>, array, <code>ObsCell</code>, or <code>ObsArray</code>)</li>
+</ul>
+<p>So for instance, we can create a special attribute <code>drag</code> that just
+forwards to the jQuery <code>[jdragdrop]</code> plug-in:</p>
+<div class="highlight"><pre><span class="nv">rxt.specialAttrs.drag = </span><span class="nf">(elt, fn, attrs, contents) -&gt;</span> <span class="nx">elt</span><span class="p">.</span><span class="nx">drag</span><span class="p">(</span><span class="nx">fn</span><span class="p">)</span>
+</pre></div>
+
+<p>and then use it like so in your templates:</p>
+<div class="highlight"><pre><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;block&#39;</span><span class="p">,</span> <span class="nv">drag: </span><span class="nf">-&gt;</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">css</span><span class="p">(</span><span class="s">&#39;top&#39;</span><span class="p">,</span> <span class="nx">e</span><span class="p">.</span><span class="nx">offsetY</span><span class="p">)}</span>
+</pre></div>
+
 
         </section>
       </div>

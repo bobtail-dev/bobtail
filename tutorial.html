@@ -182,7 +182,7 @@ well</a> to expressing the template structure.</p>
 <div class="highlight"><pre><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;sidebar&#39;</span><span class="p">},</span> <span class="p">[</span>
   <span class="nx">h2</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Send a message&#39;</span><span class="p">]</span>
   <span class="nx">form</span> <span class="p">{</span><span class="nv">action: </span><span class="s">&#39;/msg&#39;</span><span class="p">,</span> <span class="nv">method: </span><span class="s">&#39;POST&#39;</span><span class="p">},</span> <span class="p">[</span>
-    <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">name: </span><span class="s">&#39;comment&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Your message&#39;</span><span class="p">}</span>
+    <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">name: </span><span class="s">&#39;comment&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Your message&#39;</span><span class="p">},</span> <span class="p">[]</span>
     <span class="nx">select</span> <span class="p">{</span><span class="nv">name: </span><span class="s">&#39;recipient&#39;</span><span class="p">},</span> <span class="p">[</span>
       <span class="nx">option</span> <span class="p">{</span><span class="nv">value: </span><span class="s">&#39;0&#39;</span><span class="p">},</span> <span class="p">[</span><span class="s">&#39;John&#39;</span><span class="p">]</span>
       <span class="nx">option</span> <span class="p">{</span><span class="nv">value: </span><span class="s">&#39;1&#39;</span><span class="p">},</span> <span class="p">[</span><span class="s">&#39;Jane&#39;</span><span class="p">]</span>
@@ -222,7 +222,7 @@ well</a> to expressing the template structure.</p>
 <span class="c1"># Conditionals:</span>
 
 <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;profile&#39;</span><span class="p">},</span> <span class="p">[</span>
-  <span class="nx">img</span> <span class="p">{</span><span class="nv">src: </span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">picUrl</span><span class="si">}</span><span class="s">&quot;</span><span class="p">}</span>
+  <span class="nx">img</span> <span class="p">{</span><span class="nv">src: </span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">picUrl</span><span class="si">}</span><span class="s">&quot;</span><span class="p">},</span> <span class="p">[]</span>
   <span class="k">if</span> <span class="nx">signedIn</span>
     <span class="nx">button</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&quot;Add </span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span> <span class="nx">as</span> <span class="nx">a</span> <span class="nx">friend</span><span class="p">.</span><span class="s">&quot;]</span>
 <span class="s">  else</span>
@@ -235,9 +235,23 @@ it&#39;s the same interface for both <code>Array</code> and <code>rx.array</code
 creates a unique binding for the element, avoiding a <a href="http://stackoverflow.com/questions/750486/javascript-closure-inside-loops-simple-practical-example">common pitfall</a> with
 JavaScript/CoffeeScript loops and closures (you can also use CoffeeScript&#39;s
 handy <code>do</code> keyword).</p>
+<p>So far we&#39;ve been feeding full explicit arguments to each tag.  They are
+actually more flexible in what they take.  We can clean up a bunch of the
+syntactic noise in the last example by replacing <code>[&#39;string&#39;]</code> with just
+<code>&#39;string&#39;</code>, and omitting empty arguments like <code>{}</code> and <code>[]</code> (the remaining
+argument is treated as the attributes or the contents based on its type):</p>
+<div class="highlight"><pre><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;profile&#39;</span><span class="p">},</span> <span class="p">[</span>
+  <span class="nx">img</span> <span class="p">{</span><span class="nv">src: </span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">picUrl</span><span class="si">}</span><span class="s">&quot;</span><span class="p">}</span>
+  <span class="k">if</span> <span class="nx">signedIn</span>
+    <span class="nx">button</span> <span class="s">&quot;Add </span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span> <span class="nx">as</span> <span class="nx">a</span> <span class="nx">friend</span><span class="p">.</span><span class="s">&quot;</span>
+<span class="s">  else</span>
+<span class="s">    p &quot;</span><span class="nx">Sign</span> <span class="nx">up</span> <span class="nx">to</span> <span class="nx">connect</span> <span class="nx">with</span> <span class="c1">#{user.name}!&quot;</span>
+<span class="p">]</span>
+</pre></div>
+
 <p>Tags are really just functions that return DOM elements (wrapped in jQuery
 objects), so you are free to attach behaviors to them:</p>
-<div class="highlight"><pre><span class="nv">$button = </span><span class="nx">button</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;submit-btn&#39;</span><span class="p">},</span> <span class="p">[</span><span class="s">&#39;Click Me!&#39;</span><span class="p">]</span>
+<div class="highlight"><pre><span class="nv">$button = </span><span class="nx">button</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;submit-btn&#39;</span><span class="p">},</span> <span class="s">&#39;Click Me!&#39;</span>
 <span class="nx">$button</span><span class="p">.</span><span class="nx">click</span> <span class="nf">-&gt;</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s">&#39;I been clicked.&#39;</span><span class="p">)</span>
 </pre></div>
 
@@ -246,9 +260,9 @@ structures where it&#39;s clumsy to tack on behaviors afterward, you can for
 convenience supply a function in an attribute named <code>init</code>, which is
 immediately invoked with the current element bound to <code>this</code>:</p>
 <div class="highlight"><pre><span class="nx">table</span> <span class="p">{},</span> <span class="nx">properties</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(prop) -&gt;</span>
-  <span class="nx">tr</span> <span class="p">{},</span> <span class="p">[</span>
-    <span class="nx">td</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">prop</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span>
-    <span class="nx">td</span> <span class="p">{},</span> <span class="p">[</span>
+  <span class="nx">tr</span> <span class="p">[</span>
+    <span class="nx">td</span> <span class="nx">prop</span><span class="p">.</span><span class="nx">name</span>
+    <span class="nx">td</span> <span class="p">[</span>
       <span class="nx">input</span> <span class="p">{</span>
         <span class="nv">type: </span><span class="s">&#39;text&#39;</span>
         <span class="nv">value: </span><span class="nx">prop</span><span class="p">.</span><span class="nx">value</span>
@@ -259,12 +273,13 @@ immediately invoked with the current element bound to <code>this</code>:</p>
   <span class="p">]</span>
 </pre></div>
 
-<p>Since CoffeeScript assignments are expressions, we also have a convenient way
-of naming elements:</p>
+<p>Since CoffeeScript assignments are expressions and it automatically manages
+variable scoping, we also have a convenient way of naming elements
+anywhere in a template structure:</p>
 <div class="highlight"><pre><span class="nx">table</span> <span class="p">{},</span> <span class="nx">properties</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(prop) -&gt;</span>
-  <span class="nv">$row = </span><span class="nx">tr</span> <span class="p">{},</span> <span class="p">[</span>
-    <span class="nx">td</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">prop</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span>
-    <span class="nx">td</span> <span class="p">{},</span> <span class="p">[</span>
+  <span class="nv">$row = </span><span class="nx">tr</span> <span class="p">[</span>
+    <span class="nx">td</span> <span class="nx">prop</span><span class="p">.</span><span class="nx">name</span>
+    <span class="nx">td</span> <span class="p">[</span>
       <span class="nx">input</span> <span class="p">{</span>
         <span class="nv">type: </span><span class="s">&#39;text&#39;</span>
         <span class="nv">value: </span><span class="nx">prop</span><span class="p">.</span><span class="nx">value</span>
@@ -277,6 +292,26 @@ of naming elements:</p>
   <span class="p">]</span>
 </pre></div>
 
+<p><code>init</code> was an example of a <em>special attribute</em>.  These are just attributes
+that are intercepted and handled differently from others, which are simply
+passed on as regular HTML attributes on the DOM element.  Besides <code>init</code>,
+built-in special attributes include all jQuery events: <code>click</code>, <code>focus</code>,
+<code>mouseleave</code>, <code>keyup</code>, <code>load</code>, etc.  So we ould have bound the blur event
+directly (note it also takes a jQuery object as <code>this</code>):</p>
+<div class="highlight"><pre><span class="p">...</span>
+      <span class="nx">input</span> <span class="p">{</span>
+        <span class="nv">type: </span><span class="s">&#39;text&#39;</span>
+        <span class="nv">value: </span><span class="nx">prop</span><span class="p">.</span><span class="nx">value</span>
+        <span class="nv">placeholder: </span><span class="s">&#39;Enter property value&#39;</span>
+        <span class="nv">blur: </span><span class="nf">-&gt;</span>
+          <span class="nx">$row</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s">&#39;opacity&#39;</span><span class="p">,</span> <span class="p">.</span><span class="mi">5</span><span class="p">)</span>
+          <span class="nx">setProperty</span><span class="p">(</span><span class="nx">prop</span><span class="p">,</span> <span class="nx">@val</span><span class="p">())</span>
+      <span class="p">}</span>
+<span class="p">...</span>
+</pre></div>
+
+<p>You can also add your own special attribute by inserting a function into
+the <code>specialAttrs</code> global structure.</p>
 <h2><a name="reactive-templates">Reactive Templates</a></h2>
 <p>Reactive templates tie together the UI-building style from the previous section
 with the reactive programming primitives from earlier.</p>
@@ -300,7 +335,7 @@ that consistently reflects the bindings you&#39;re interested in.  For instance:
 <p>However, more complex transformations can become more involved.</p>
 <div class="highlight"><pre><span class="nv">names = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">([</span><span class="s">&#39;1&#39;</span><span class="p">,</span><span class="s">&#39;2&#39;</span><span class="p">,</span><span class="s">&#39;3&#39;</span><span class="p">,</span><span class="s">&#39;4&#39;</span><span class="p">,</span><span class="s">&#39;5&#39;</span><span class="p">])</span>
 <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span><span class="nv">$nameList = </span><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;name-list&#39;</span><span class="p">})</span>
-<span class="nv">spans = </span><span class="nx">names</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(name) -&gt;</span> <span class="nx">span</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">name</span><span class="p">]</span>
+<span class="nv">spans = </span><span class="nx">names</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(name) -&gt;</span> <span class="nx">span</span> <span class="nx">name</span>
 <span class="nx">spans</span><span class="p">.</span><span class="nx">onChange</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([index, added, removed]) -&gt;</span>
   <span class="c1"># Homework: fill in logic here for efficiently inserting/removing DOM</span>
   <span class="c1"># nodes!</span>
@@ -320,7 +355,7 @@ declaratively:</p>
 
 <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
   <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;name-list&#39;</span><span class="p">},</span> <span class="nx">names</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(name) -&gt;</span>
-    <span class="nx">span</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">name</span><span class="p">]</span>
+    <span class="nx">span</span> <span class="nx">name</span>
 <span class="p">)</span>
 </pre></div>
 
@@ -333,26 +368,37 @@ as efficient in the face of large arrays.</p>
 <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
   <span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;tasks&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
     <span class="k">for</span> <span class="nx">task</span> <span class="k">in</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
-      <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task&#39;</span><span class="p">},</span> <span class="p">[</span><span class="s">&quot;User: </span><span class="si">#{</span><span class="nx">task</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
+      <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task&#39;</span><span class="p">},</span> <span class="s">&quot;User: </span><span class="si">#{</span><span class="nx">task</span><span class="si">}</span><span class="s">&quot;</span>
 <span class="p">)</span>
 </pre></div>
 
 <p>Any attribute can be a cell:</p>
-<div class="highlight"><pre><span class="nx">input</span> <span class="p">{</span> <span class="nv">value: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">displayName</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="p">}</span>
+<div class="highlight"><pre><span class="nx">input</span> <span class="p">{</span><span class="nv">value: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">displayName</span><span class="p">.</span><span class="nx">get</span><span class="p">()}</span>
 </pre></div>
 
-<p>the contents can be a cell that returns an array (of strings or elements):</p>
+<p>Contents can be a cell that returns an array (of strings or elements):</p>
 <div class="highlight"><pre><span class="nx">span</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="nx">displayName</span><span class="p">.</span><span class="nx">get</span><span class="p">()]</span>
 <span class="nx">div</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">names</span><span class="p">.</span><span class="nx">all</span><span class="p">()</span>
+
+<span class="c1"># shorthand:</span>
+<span class="nx">span</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">displayName</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+<span class="nx">div</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">names</span><span class="p">.</span><span class="nx">all</span><span class="p">()</span>
 </pre></div>
 
 <p>or an observable array:</p>
 <div class="highlight"><pre><span class="nx">div</span> <span class="p">{},</span> <span class="nx">names</span>
 <span class="c1"># results in: &lt;div&gt;01234&lt;/div&gt;</span>
 
+<span class="c1"># shorthand:</span>
+<span class="nx">div</span> <span class="nx">names</span>
+
 <span class="nx">div</span> <span class="p">{},</span> <span class="nx">names</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(name) -&gt;</span>
   <span class="nx">span</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">name</span><span class="p">]</span>
 <span class="c1"># results in: &lt;div&gt;&lt;span&gt;0&lt;/span&gt;&lt;span&gt;1&lt;/span&gt;...&lt;/div&gt;</span>
+
+<span class="c1"># shorthand:</span>
+<span class="nx">div</span> <span class="nx">names</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(name) -&gt;</span>
+  <span class="nx">span</span> <span class="nx">name</span>
 </pre></div>
 
 <p>You have very fine-grained control over the re-rendering process.  For
@@ -373,13 +419,13 @@ instance, say we had a model like the following:</p>
 </pre></div>
 
 <p>If we wanted to just re-render individual elements, we could do that with:</p>
-<div class="highlight"><pre><span class="nx">select</span> <span class="p">{},</span> <span class="nx">app</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(user) -&gt;</span>
+<div class="highlight"><pre><span class="nx">select</span> <span class="nx">app</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(user) -&gt;</span>
   <span class="nx">option</span> <span class="p">{</span><span class="nv">value: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
 </pre></div>
 
 <p>On the other hand, if we wanted to re-render the entire section whenever
 anything changed, we could do so with:</p>
-<div class="highlight"><pre><span class="nx">select</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">app</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">all</span><span class="p">().</span><span class="nx">map</span> <span class="nf">(user) -&gt;</span>
+<div class="highlight"><pre><span class="nx">select</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">app</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">all</span><span class="p">().</span><span class="nx">map</span> <span class="nf">(user) -&gt;</span>
   <span class="nx">option</span> <span class="p">{</span><span class="nv">value: </span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">},</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
 </pre></div>
 
@@ -403,7 +449,7 @@ what&#39;s necessary.</p>
             <span class="s">&quot;nav-tab&quot;</span>
             <span class="s">&quot;</span><span class="si">#{</span><span class="k">if</span> <span class="nx">activeTabIndex</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">==</span> <span class="nx">i</span> <span class="k">then</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">activeClass</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="si">}</span><span class="s">&quot;</span>
           <span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
-        <span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@click</span> <span class="o">=&gt;</span> <span class="nx">activeTabIndex</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+        <span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">activeTabIndex</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
       <span class="p">},</span> <span class="p">[</span><span class="nx">tabName</span><span class="p">]</span>
     <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;tab-content&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
       <span class="p">[</span><span class="nx">tabName</span><span class="p">,</span> <span class="nx">tabContents</span><span class="p">]</span> <span class="o">=</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">tabs</span><span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="nx">activeTabIndex</span><span class="p">.</span><span class="nx">get</span><span class="p">())</span>
@@ -451,13 +497,15 @@ focused on the input text field:</p>
   <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;search&#39;</span><span class="p">},</span> <span class="p">[</span>
     <span class="nv">$query = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">placeholder: </span><span class="s">&#39;Enter query&#39;</span><span class="p">}</span>
     <span class="nv">$showResults = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span><span class="p">,</span> <span class="nv">id: </span><span class="s">&#39;show-results&#39;</span><span class="p">}</span>
-    <span class="nx">label</span> <span class="p">{</span><span class="k">for</span><span class="o">:</span> <span class="s">&#39;show-results&#39;</span><span class="p">},</span> <span class="p">[</span><span class="s">&#39;Show type-ahead results&#39;</span><span class="p">]</span>
+    <span class="nx">label</span> <span class="p">{</span><span class="k">for</span><span class="o">:</span> <span class="s">&#39;show-results&#39;</span><span class="p">},</span> <span class="s">&#39;Show type-ahead results&#39;</span>
     <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;results&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
       <span class="nv">focused = </span><span class="nx">$query</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;focused&#39;</span><span class="p">)</span>
       <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&#39;firing&#39;</span><span class="p">,</span> <span class="nx">focused</span>
       <span class="k">if</span> <span class="nx">focused</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">and</span> <span class="nx">$showResults</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;checked&#39;</span><span class="p">).</span><span class="nx">get</span><span class="p">()</span>
         <span class="k">for</span> <span class="nx">doc</span> <span class="k">in</span> <span class="nx">docs</span> <span class="k">when</span> <span class="nx">doc</span><span class="p">.</span><span class="nx">title</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">$query</span><span class="p">.</span><span class="nx">rx</span><span class="p">(</span><span class="s">&#39;val&#39;</span><span class="p">).</span><span class="nx">get</span><span class="p">())</span> <span class="o">&gt;=</span> <span class="mi">0</span>
-          <span class="nx">div</span> <span class="p">{},</span> <span class="p">[</span><span class="nx">a</span> <span class="p">{</span><span class="nv">href: </span><span class="nx">doc</span><span class="p">.</span><span class="nx">url</span><span class="p">},</span> <span class="p">[</span><span class="nx">doc</span><span class="p">.</span><span class="nx">title</span><span class="p">]]</span>
+          <span class="nx">div</span> <span class="p">[</span>
+            <span class="nx">a</span> <span class="p">{</span><span class="nv">href: </span><span class="nx">doc</span><span class="p">.</span><span class="nx">url</span><span class="p">},</span> <span class="nx">doc</span><span class="p">.</span><span class="nx">title</span>
+          <span class="p">]</span>
       <span class="k">else</span>
         <span class="p">[]</span>
   <span class="p">]</span>

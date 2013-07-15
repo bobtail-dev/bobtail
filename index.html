@@ -66,20 +66,15 @@ TodoMVC example</a>, or head directly to the <a href="tutorial.html">tutorial</a
 
   <span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
     <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task-manager&#39;</span><span class="p">},</span> <span class="p">[</span>
-      <span class="nx">h1</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">tasks</span><span class="p">.</span><span class="nx">length</span><span class="p">()</span><span class="si">}</span><span class="s"> task(s) for today&quot;</span><span class="p">]</span>
+      <span class="nx">h1</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">tasks</span><span class="p">.</span><span class="nx">length</span><span class="p">()</span><span class="si">}</span><span class="s"> task(s) for today&quot;</span>
       <span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;tasks&#39;</span><span class="p">},</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(task) -&gt;</span>
         <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task&#39;</span><span class="p">},</span> <span class="p">[</span>
-          <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span><span class="p">,</span> <span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@change</span> <span class="o">=&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">@</span><span class="o">is</span><span class="p">(</span><span class="s">&#39;:checked&#39;</span><span class="p">))}</span>
-          <span class="nx">span</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;descrip&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span>
+          <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span><span class="p">,</span> <span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">@</span><span class="o">is</span><span class="p">(</span><span class="s">&#39;:checked&#39;</span><span class="p">))}</span>
+          <span class="nx">span</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;descrip&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
             <span class="s">&quot;</span><span class="si">#{</span><span class="nx">task</span><span class="p">.</span><span class="nx">descrip</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s"> (</span><span class="si">#{</span><span class="nx">task</span><span class="p">.</span><span class="nx">priority</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">)&quot;</span>
-          <span class="p">]</span>
-          <span class="nx">a</span> <span class="p">{</span><span class="nv">href: </span><span class="s">&#39;javascript: void 0&#39;</span><span class="p">,</span> <span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@click</span> <span class="o">=&gt;</span> <span class="nx">currentTask</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">task</span><span class="p">)},</span> <span class="p">[</span>
-            <span class="s">&#39;Edit&#39;</span>
-          <span class="p">]</span>
+          <span class="nx">a</span> <span class="p">{</span><span class="nv">href: </span><span class="s">&#39;javascript: void 0&#39;</span><span class="p">,</span> <span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">currentTask</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">task</span><span class="p">)},</span> <span class="s">&#39;Edit&#39;</span>
         <span class="p">]</span>
-      <span class="nx">button</span> <span class="p">{</span><span class="nv">init: </span><span class="nf">-&gt;</span> <span class="nx">@click</span> <span class="o">=&gt;</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Task&#39;</span><span class="p">,</span> <span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">))},</span> <span class="p">[</span>
-        <span class="s">&#39;Add new task&#39;</span>
-      <span class="p">]</span>
+      <span class="nx">button</span> <span class="p">{</span><span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Task&#39;</span><span class="p">,</span> <span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">))},</span> <span class="s">&#39;Add new task&#39;</span>
       <span class="nx">taskEditor</span> <span class="p">{</span>
         <span class="nv">task: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">currentTask</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
         <span class="nv">onSubmit: </span><span class="nf">(descrip, priority) -&gt;</span>
@@ -93,18 +88,18 @@ TodoMVC example</a>, or head directly to the <a href="tutorial.html">tutorial</a
 
 <span class="nv">taskEditor = </span><span class="nf">(opts) -&gt;</span>
   <span class="nv">task = </span><span class="nf">-&gt;</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">task</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
-  <span class="nv">theForm = </span><span class="nx">form</span> <span class="p">{},</span> <span class="p">[</span>
-    <span class="nx">h2</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Edit Task&#39;</span><span class="p">]</span>
-    <span class="nx">label</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Description&#39;</span><span class="p">]</span>
+  <span class="nv">theForm = </span><span class="nx">form</span> <span class="p">[</span>
+    <span class="nx">h2</span> <span class="s">&#39;Edit Task&#39;</span>
+    <span class="nx">label</span> <span class="s">&#39;Description&#39;</span>
     <span class="nv">descrip = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">value: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">task</span><span class="p">().</span><span class="nx">descrip</span><span class="p">.</span><span class="nx">get</span><span class="p">()}</span>
-    <span class="nx">br</span> <span class="p">{}</span>
-    <span class="nx">label</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Priority&#39;</span><span class="p">]</span>
+    <span class="nx">br</span><span class="p">()</span>
+    <span class="nx">label</span> <span class="s">&#39;Priority&#39;</span>
     <span class="nv">priority = </span><span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">value: </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">task</span><span class="p">().</span><span class="nx">priority</span><span class="p">.</span><span class="nx">get</span><span class="p">()}</span>
-    <span class="nx">br</span> <span class="p">{}</span>
-    <span class="nx">label</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Status&#39;</span><span class="p">]</span>
-    <span class="nx">span</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="k">if</span> <span class="nx">task</span><span class="p">().</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="s">&#39;Done&#39;</span> <span class="k">else</span> <span class="s">&#39;Not done&#39;</span><span class="p">]</span>
-    <span class="nx">br</span> <span class="p">{}</span>
-    <span class="nx">button</span> <span class="p">{},</span> <span class="p">[</span><span class="s">&#39;Update&#39;</span><span class="p">]</span>
+    <span class="nx">br</span><span class="p">()</span>
+    <span class="nx">label</span> <span class="s">&#39;Status&#39;</span>
+    <span class="nx">span</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="k">if</span> <span class="nx">task</span><span class="p">().</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="s">&#39;Done&#39;</span> <span class="k">else</span> <span class="s">&#39;Not done&#39;</span>
+    <span class="nx">br</span><span class="p">()</span>
+    <span class="nx">button</span> <span class="s">&#39;Update&#39;</span>
   <span class="p">]</span>
   <span class="nx">theForm</span><span class="p">.</span><span class="nx">submit</span> <span class="nf">-&gt;</span>
     <span class="nx">opts</span><span class="p">.</span><span class="nx">onSubmit</span><span class="p">(</span><span class="nx">descrip</span><span class="p">.</span><span class="nx">val</span><span class="p">().</span><span class="nx">trim</span><span class="p">(),</span> <span class="nx">priority</span><span class="p">.</span><span class="nx">val</span><span class="p">().</span><span class="nx">trim</span><span class="p">())</span>
@@ -120,8 +115,8 @@ TodoMVC example</a>, or head directly to the <a href="tutorial.html">tutorial</a
 rationale</a>.</p>
 
         </section>
-        <aside id="sidebar"><a href="https://github.com/yang/reactive-coffee/zipball/0.0.0" class="button"><small>Download version 0.0.0</small> .zip file</a><a href="https://github.com/yang/reactive-coffee/tarball/0.0.0" class="button"><small>Download version 0.0.0</small> .tar.gz file</a>
-          <p class="repo-owner">Latest release is v0.0.0. <a href="changes.html">Changes</a>.</p><p>Minified: 10KB.</p>
+        <aside id="sidebar"><a href="https://github.com/yang/reactive-coffee/zipball/0.0.1" class="button"><small>Download version 0.0.1</small> .zip file</a><a href="https://github.com/yang/reactive-coffee/tarball/0.0.1" class="button"><small>Download version 0.0.1</small> .tar.gz file</a>
+          <p class="repo-owner">Latest release is v0.0.1. <a href="changes.html">Changes</a>.</p><p>Minified: 10KB.</p>
 <p>Stay updated on <a href="https://twitter.com/reactivecoffee">Twitter</a>.</p>
 
         </aside>
