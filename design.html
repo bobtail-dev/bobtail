@@ -92,7 +92,10 @@ the visualizations</li>
 </ul>
 <p>This is achieved by enabling large/deep model dependencies to be built out
 of the reactive programming primitives, as well as allowing for precise
-control over the binding and re-rendering of the DOM templates.</p>
+control over the binding and re-rendering of the DOM templates.  Reactive
+avoids relying on computing diffs between models or between generated
+views, so as to minimize latency for UI updates even for large, complex
+applications.</p>
 <p>Finally, Reactive also aims to be a compact framework.  The
 documentation/website you&#39;re now reading is significantly longer than the
 code.  Reactive focuses only on bindings and templates, and nothing else.
