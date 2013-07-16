@@ -51,6 +51,8 @@ another observable array</li>
 another observable object</li>
 </ul>
 </li>
+<li><code>Ev</code>: an event node; serves as a pub-sub node for events of a certain
+type</li>
 </ul>
 <p><strong>Free functions</strong></p>
 <ul>
@@ -67,22 +69,34 @@ subsequently trigger future re-evaluations.</li>
 update before the <code>DepCell</code> updates itself (yes, this needs to be a
 configurable parameter)</li>
 </ul>
-<p><strong><code>ObsCell</code></strong></p>
+<p><strong><code>ObsCell</code> members</strong></p>
 <ul>
 <li><code>get()</code>: return current value of the cell</li>
+<li><code>onSet</code>: the event that is fired after the value of the cell is
+changed.  The event data is an array of two elements, <code>[oldVal, newVal]</code>.</li>
 </ul>
-<p><strong><code>SrcCell</code></strong></p>
+<p><strong><code>SrcCell</code> members</strong></p>
 <ul>
-<li><code>set(x)</code>: set value of cell to <code>x</code></li>
+<li><code>set(x)</code>: set value of cell to <code>x</code> and return old value of <code>x</code></li>
+<li>inherits <code>ObsCell</code></li>
 </ul>
-<p><strong><code>ObsArray</code></strong></p>
+<p><strong><code>DepCell</code> members</strong></p>
+<ul>
+<li>inherits <code>ObsCell</code></li>
+</ul>
+<p><strong><code>ObsArray</code> members</strong></p>
 <ul>
 <li><code>at(i)</code>: return element at <code>i</code></li>
 <li><code>all()</code>: return raw array copy of all elements</li>
 <li><code>length()</code>: return size of the array</li>
 <li><code>map(fn)</code>: return <code>DepArray</code> of given function mapped over this array</li>
+<li><code>onChange</code>: the event that is fired after any part of the array is
+changed.  The event data is an array of three elements: <code>[index, added,
+removed]</code>, where <code>index</code> is the index where the change occurred, <code>added</code>
+is the sub-array of elements that were added, and <code>removed</code> is the
+sub-array of elements that were removed.</li>
 </ul>
-<p><strong><code>SrcArray</code></strong></p>
+<p><strong><code>SrcArray</code> members</strong></p>
 <ul>
 <li><code>splice(index, count, additions...)</code>: replace <code>count</code> elements starting at
 <code>index</code> with <code>additions</code></li>
@@ -92,16 +106,43 @@ configurable parameter)</li>
 <li><code>push(x)</code>: append <code>x</code> to the end of the array</li>
 <li><code>put(i, x)</code>: replace element <code>i</code> with value <code>x</code></li>
 <li><code>replace(xs)</code>: replace entire array with raw array <code>xs</code></li>
+<li>inherits <code>ObsArray</code></li>
 </ul>
-<p><strong><code>ObsMap</code></strong></p>
+<p><strong><code>DepArray</code> members</strong></p>
+<ul>
+<li>inherits <code>ObsArray</code></li>
+</ul>
+<p><strong><code>ObsMap</code> members</strong></p>
 <ul>
 <li><code>get(k)</code>: return value associated with key <code>k</code></li>
 <li><code>all()</code>: return raw object copy</li>
+<li><code>onAdd</code>: the event that is fired after an element is added.  The event
+data is <code>[key, newVal]</code>.</li>
+<li><code>onRemove</code>: the event that is fired after an element is removed.  The
+event data is <code>[key, oldVal]</code>.</li>
+<li><code>onChange</code>: the event that is fired after a key&#39;s value is changed.  The
+event data is <code>[key, oldVal, newVal]</code>.</li>
 </ul>
-<p><strong><code>SrcMap</code></strong></p>
+<p><strong><code>SrcMap</code> members</strong></p>
 <ul>
 <li><code>put(k, v)</code>: associate value <code>v</code> with key <code>k</code> and return any prior value associated with <code>k</code></li>
 <li><code>remove(k)</code>: remove the entry associated at key <code>k</code></li>
+<li>inherits <code>ObsMap</code></li>
+</ul>
+<p><strong><code>DepMap</code> members</strong></p>
+<ul>
+<li>inherits <code>ObsMap</code></li>
+</ul>
+<p><strong><code>Ev</code> members</strong></p>
+<ul>
+<li><code>sub(listener)</code>: subscribes a listener function for events from this
+event node and returns a unique ID for this subscription, which can be used
+as the handle by which to unsubscribe later.  The listener takes a single
+argument, whose type depends on the event, and is called every time an
+event is fired on this event node.</li>
+<li><code>pub(data)</code>: publish an event, described by the data in <code>data</code>.  <code>data</code>
+is what will be passed to all the subscribed listeners.</li>
+<li><code>unsub(subscriptionId)</code>: detaches a listener from this event.</li>
 </ul>
 <h2><a name="rxt-namespace"><code>rxt</code> Namespace</a></h2>
 <p>This contains the template DSL constructs.  Main thing here is the <em>tag
@@ -118,8 +159,8 @@ instance of the specified element wrapped in a jQuery object.  See also <code>sp
 <li><code>importTags()</code>: populate the global namespace with the tag symbols, so you
 don&#39;t need have <code>rxt</code> all over your templates.  Useful for quickly throwing
 something together.</li>
-<li><code>rawHtml(html)</code>: wrapper for strings that tags won&#39;t escape when rendering;
-example: <code>div {}, [rawHtml(&#39;&lt;span&gt;hello&lt;/span&gt;&#39;)]</code></li>
+<li><code>rawHtml(html)</code>: returns a <code>RawHtml</code> wrapper for strings that tags won&#39;t
+escape when rendering; example: <code>div {}, [rawHtml(&#39;&lt;span&gt;hello&lt;/span&gt;&#39;)]</code></li>
 <li>Tags: <code>p</code>, <code>br</code>, <code>ul</code>, <code>li</code>, <code>span</code>, <code>anchor</code>, <code>div</code>, <code>input</code>, <code>select</code>,
 <code>option</code>, <code>label</code>, <code>button</code>, <code>fieldset</code>, <code>legend</code>, <code>section</code>, <code>header</code>,
 <code>footer</code>, <code>strong</code>, <code>h1</code>, <code>h2</code>, <code>h3</code>, <code>h4</code>, <code>h5</code>, <code>h6</code>, <code>h7</code></li>
