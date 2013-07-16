@@ -55,11 +55,11 @@ the system now inherits the abstractions and expressive power of the host
 language for free.  For instance, defining reusable component abstractions is
 as simple as.  The ability to define reusable components, and the manner in
 which they are assembled together, is at the core of what makes for scalable
-architecture, and this is an area where Reactive is very simple.  Plus, we
+architecture, and this is an aspect that Reactive makes very simple/natural.  Plus, we
 inherit all the expressivity of the host language, control flow (loops and
 conditionals), variables, expressions, and so forth.</p>
 <p>Furthermore, by avoiding the creation of a new language (even simple syntactic
-transforms), you retain all the benefits of the tooling around an established
+transforms), we retain all the benefits of the tooling around an established
 host language, such as source maps, syntax highlighting, linting, comment doc
 processing, compiler implementations, etc.</p>
 <p>The syntax leverages some features of CoffeeScript to achieve the expressive
@@ -90,6 +90,9 @@ itself</em></li>
 visualizations over the data, where individual data points are represented in
 the visualizations</li>
 </ul>
+<p>This is achieved by enabling large/deep model dependencies to be built out
+of the reactive programming primitives, as well as allowing for precise
+control over the binding and re-rendering of the DOM templates.</p>
 <p>Finally, Reactive also aims to be a compact framework.  The
 documentation/website you&#39;re now reading is significantly longer than the
 code.  Reactive focuses only on bindings and templates, and nothing else.
