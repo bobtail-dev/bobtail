@@ -23,6 +23,7 @@ CommentForm = (args) ->
   $form = form {name: 'commentForm', class: 'commentForm'}, [
     $name = input {type: 'text', placeholder: 'Your name'}
     $text = input {type: 'text', placeholder: 'Say something...'}
+    input {type: 'submit', value: 'Post'}
   ]
   $form.submit ->
     [name, text] = ($x.val().trim() for $x in [$name, $text])
