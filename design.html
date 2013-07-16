@@ -32,16 +32,16 @@
 another one?  What&#39;s so special about this one?</p>
 <p>The goals of this particular framework include:</p>
 <ul>
-<li>have simple foundations in composable primitives</li>
-<li>minimize &quot;magic&quot;</li>
-<li>enable declarative expressiveness even for complex data-bound views</li>
-<li>scale well in both performance and code architecture to large/complex
+<li>scaling well in both performance and code architecture to large/complex
 applications</li>
+<li>having simple foundations in composable primitives</li>
+<li>minimizing &quot;magic&quot;</li>
+<li>enabling declarative expressiveness even for complex data-bound views</li>
 </ul>
 <p>Reactive actually consists of two layers.  At its core, it provides reactive
 programming primitives that allow users to declaratively specify arbitrary
 dataflow DAGs, where data structures are automatically updated in response to
-updates in their dependencies.  This is in lieu of the more complex first-class-event
+updates in their dependencies.  This is in lieu of the heftier first-class-event
 systems like <a href="http://backbonejs.org/">Backbone</a>.  The idea is that all application
 dependencies, including high-level business logic and domain-specific concepts,
 are conveniently represented by (potentially complex) data types built out of
