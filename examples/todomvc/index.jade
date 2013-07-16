@@ -30,13 +30,13 @@ html
         $('body').prepend(
           section {id: 'todoapp'}, [
             header {id: 'header'}, [
-              h1 {}, ['todos']
+              h1 'todos'
               input {
                 id: 'new-todo'
                 type: 'text'
                 placeholder: 'What needs to be done?'
                 autofocus: true
-                init: -> @keydown (e) =>
+                keydown: (e) ->
                   if e.which == 13
                     tasks.push(new Task(@val().trim()))
                     @val('')
@@ -44,7 +44,7 @@ html
                     # <http://stackoverflow.com/questions/12325066/button-click-event-fires-when-pressing-enter-key-in-different-input-no-forms>
               }
             ]
-            div {}, bind ->
+            div bind ->
               if tasks.length() == 0
                 []
               else
@@ -53,11 +53,11 @@ html
                     input {
                       id: 'toggle-all'
                       type: 'checkbox'
-                      init: -> @change =>
+                      change: ->
                         for task in tasks.all()
                           task.isCompleted.set(@is(':checked'))
                     }
-                    label {for: 'toggle-all'}, ['Mark all as complete']
+                    label {for: 'toggle-all'}, 'Mark all as complete'
                     ul {id: 'todo-list'}, tasks.map (task) ->
                       editBox = null
                       li {
@@ -72,42 +72,41 @@ html
                             class: 'edit'
                             autofocus: true
                             value: task.title.get()
-                            init: ->
-                              @keyup (e) =>
-                                if e.which == 13
-                                  @blur()
-                              @blur =>
-                                task.title.set(@val())
-                                task.isEditing.set(false)
+                            keyup: (e) ->
+                              if e.which == 13
+                                @blur()
+                            blur: ->
+                              task.title.set(@val())
+                              task.isEditing.set(false)
                           }
                         ] else [
                           input {
                             class: 'toggle'
                             type: 'checkbox'
                             checked: bind -> task.isCompleted.get()
-                            init: -> @change => task.isCompleted.set(@is(':checked'))
+                            change: -> task.isCompleted.set(@is(':checked'))
                           }
                           label {
-                            init: -> @dblclick =>
+                            dblclick: ->
                               task.isEditing.set(true)
                               editBox.focus()
-                          }, bind -> ["#{task.title.get()}"]
+                          }, bind -> "#{task.title.get()}"
                           button {
                             class: 'destroy'
-                            init: -> @click -> tasks.remove(task)
+                            click: -> tasks.remove(task)
                           }
                         ]
                   ]
                   footer {id: 'footer'}, [
                     span {id: 'todo-count'}, bind -> [
-                      strong {}, ["#{incomplete()}"]
+                      strong "#{incomplete()}"
                       if incomplete() == 1 then ' item left' else ' items left'
                     ]
                     button {
                       id: 'clear-completed'
-                      init: -> @click =>
+                      click: ->
                         tasks.replace(task for task in tasks.all() when not task.isCompleted.get())
-                    }, ['Clear completed']
+                    }, 'Clear completed'
                   ]
                 ]
           ]
