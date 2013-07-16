@@ -12,7 +12,7 @@ markdown = (x) -> rxt.rawHtml(mdConverter.makeHtml(x))
 Comment = (args) ->
   div {class: 'comment'}, [
     h2 {class: 'commentAuthor'}, [args.author]
-    span {}, [markdown(args.text)]
+    span [markdown(args.text)]
   ]
 
 CommentList = (args) ->
@@ -51,7 +51,7 @@ CommentBox = (args) ->
       success: (data) -> comments.replace(data.comments)
     })
   $base = div {class: 'commentBox'}, [
-    h1 {}, ['Comments']
+    h1 'Comments'
     CommentList {comments: comments}
     CommentForm {onCommentSubmit: handleCommentSubmit}
   ]
