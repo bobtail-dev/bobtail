@@ -28,7 +28,7 @@ CommentForm = (args) ->
   $form.submit ->
     [name, text] = ($x.val().trim() for $x in [$name, $text])
     return false if name == '' or text == ''
-    args.onCommentSubmit({name, text})
+    args.onCommentSubmit({author: name, text: text})
     $x.val('') for $x in [$name, $text]
     false
   $form
