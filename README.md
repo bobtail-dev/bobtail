@@ -2,12 +2,11 @@ reactive.coffee
 ===============
 
 A lightweight CoffeeScript library/DSL for [reactive programming] and for
-declaratively building dynamic web UIs.
-
-[reactive programming]: http://en.wikipedia.org/wiki/Reactive_programming
+declaratively building scalable web UIs.
 
 See the [website], which has an overview, tutorial, comparisons, and more.
 
+[reactive programming]: http://en.wikipedia.org/wiki/Reactive_programming
 [website]: http://yang.github.io/reactive-coffee/
 
 Highlights
@@ -15,8 +14,8 @@ Highlights
 
 - Library of reactive programming primitives
 - Declarative DOM construction
-- Simple, no magic, no new template language, all CoffeeScript
 - Scalable in both performance and application architecture
+- Simple, no magic, no new template language, all CoffeeScript
 - Tested with Chrome, Firefox, Safari, and IE10
 - Available via [Bower] and [cdnjs]
 - Works with jQuery
@@ -103,6 +102,8 @@ taskEditor = (opts) ->
 $(main)
 ```
 
+[TodoMVC]: https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade
+
 Next steps
 ----------
 
@@ -114,5 +115,3 @@ rationale][design].
 [tutorial]: http://yang.github.io/reactive-coffee/tutorial.html
 [design]: http://yang.github.io/reactive-coffee/design.html
 [related]: http://yang.github.io/reactive-coffee/related.html
-
-[TodoMVC]: https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade
