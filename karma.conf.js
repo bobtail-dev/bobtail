@@ -7,8 +7,8 @@ basePath = '';
 files = [
   JASMINE,
   JASMINE_ADAPTER,
-  'components/underscore/underscore.js',
-  'components/jquery/jquery.js',
+  'bower_components/underscore/underscore.js',
+  'bower_components/jquery/jquery.js',
   'src/*.coffee',
   'src/**/*.js',
   'test/mock/**/*.js',
