@@ -655,7 +655,7 @@
 
   rxt.mktag = mktag = function(tag) {
     return function(arg1, arg2) {
-      var attrs, contents, elt, key, name, updateContents, value, _ref4, _ref5;
+      var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref4, _ref5;
 
       _ref4 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof RawHtml || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref4[0], contents = _ref4[1];
       elt = $("<" + tag + "/>");
@@ -676,22 +676,32 @@
         }
       }
       if (contents != null) {
-        updateContents = function(contents) {
-          var child, _j, _len1, _results;
+        toNodes = function(contents) {
+          var child, parsed, _j, _len1, _results;
 
+          _results = [];
+          for (_j = 0, _len1 = contents.length; _j < _len1; _j++) {
+            child = contents[_j];
+            if (_.isString(child)) {
+              _results.push(document.createTextNode(child));
+            } else if (child instanceof RawHtml) {
+              parsed = $(child.html);
+              if (parsed.length) {
+                throw 'Cannot insert RawHtml of multiple elements';
+              }
+              _results.push(parsed[0]);
+            } else if (child instanceof $) {
+              _results.push(child[0]);
+            } else {
+              throw 'Unknown element type in array: ' + child.constructor.name;
+            }
+          }
+          return _results;
+        };
+        updateContents = function(contents) {
           elt.html('');
           if (_.isArray(contents)) {
-            _results = [];
-            for (_j = 0, _len1 = contents.length; _j < _len1; _j++) {
-              child = contents[_j];
-              if (_.isString(child)) {
-                child = $('<span/>').text(child);
-              } else if (child instanceof RawHtml) {
-                child = $('<span/>').html(child.html);
-              }
-              _results.push(elt.append(child));
-            }
-            return _results;
+            return elt.append(toNodes(contents));
           } else if (_.isString(contents) || contents instanceof RawHtml) {
             return updateContents([contents]);
           } else {
@@ -700,24 +710,15 @@
         };
         if (contents instanceof ObsArray) {
           contents.onChange.sub(function(_arg) {
-            var added, child, index, removed, toAdd;
+            var added, index, removed, toAdd;
 
             index = _arg[0], removed = _arg[1], added = _arg[2];
-            elt.children().slice(index, index + removed.length).remove();
-            toAdd = $((function() {
-              var _j, _len1, _results;
-
-              _results = [];
-              for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
-                child = added[_j];
-                _results.push(child.get(0));
-              }
-              return _results;
-            })());
-            if (index === elt.children().length) {
+            elt.contents().slice(index, index + removed.length).remove();
+            toAdd = toNodes(added);
+            if (index === elt.contents().length) {
               return elt.append(toAdd);
             } else {
-              return elt.children().slice(index, index + 1).before(toAdd);
+              return elt.contents().eq(index).before(toAdd);
             }
           });
         } else if (contents instanceof ObsCell) {

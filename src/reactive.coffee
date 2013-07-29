@@ -320,27 +320,34 @@ rxt.mktag = mktag = (tag) ->
       else
         elt.attr(name, value)
     if contents?
+      toNodes = (contents) ->
+        for child in contents
+          if _.isString(child)
+            document.createTextNode(child)
+          else if child instanceof RawHtml
+            parsed = $(child.html)
+            throw 'Cannot insert RawHtml of multiple elements' if parsed.length
+            parsed[0]
+          else if child instanceof $
+            child[0]
+          else
+            throw 'Unknown element type in array: ' + child.constructor.name
       updateContents = (contents) ->
         elt.html('')
         if _.isArray(contents)
-          for child in contents
-            if _.isString(child)
-              child = $('<span/>').text(child)
-            else if child instanceof RawHtml
-              child = $('<span/>').html(child.html)
-            elt.append(child)
+          elt.append(toNodes(contents))
         else if _.isString(contents) or contents instanceof RawHtml
           updateContents([contents])
         else
           throw 'Unknown type for contents: ' + contents.constructor.name
       if contents instanceof ObsArray
         contents.onChange.sub(([index, removed, added]) ->
-          elt.children().slice(index, index + removed.length).remove()
-          toAdd = $(child.get(0) for child in added)
-          if index == elt.children().length
+          elt.contents().slice(index, index + removed.length).remove()
+          toAdd = toNodes(added)
+          if index == elt.contents().length
             elt.append(toAdd)
           else
-            elt.children().slice(index, index + 1).before(toAdd)
+            elt.contents().eq(index).before(toAdd)
         )
       else if contents instanceof ObsCell
         # TODO: make this more efficient by checking each element to see if it

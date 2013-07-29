@@ -55,9 +55,38 @@ describe 'tag', ->
   it 'should have the given child contents', ->
     cont = elt.contents()
     expect(cont.length).toBe(2)
-    expect(cont.first().text()).toBe('hello world')
+    expect(cont[0]).toEqual(jasmine.any(Text))
+    expect(cont[0].textContent).toBe('hello world')
     expect(cont.last().is('button')).toBe(true)
     expect(cont.last().text()).toBe('click me')
   it 'should not have special attrs set', ->
     expect(elt.attr('init')).toBe(undefined)
     expect(elt.attr('click')).toBe(undefined)
+
+describe 'rxt of observable array', ->
+  xs = elt = null
+  beforeEach ->
+    xs = rx.array([1,2,3])
+    elt = rxt.tags.ul xs.map (x) ->
+      if x % 2 == 0
+        "plain #{x}"
+      else
+        rxt.tags.li "item #{x}"
+  it 'should be initialized to the given contents', ->
+    cont = elt.contents()
+    expect(cont.length).toBe(3)
+    expect(cont.eq(0).is('li')).toBe(true)
+    expect(cont.eq(0).text()).toBe('item 1')
+    expect(cont[1]).toEqual(jasmine.any(Text))
+    expect(cont.eq(1).text()).toBe('plain 2')
+    expect(cont.eq(2).is('li')).toBe(true)
+    expect(cont.eq(2).text()).toBe('item 3')
+  it 'should update contents in response to array changes', ->
+    xs.splice(0, 3, 0, 1, 2)
+    cont = elt.contents()
+    expect(cont[0]).toEqual(jasmine.any(Text))
+    expect(cont.eq(0).text()).toBe('plain 0')
+    expect(cont.eq(1).is('li')).toBe(true)
+    expect(cont.eq(1).text()).toBe('item 1')
+    expect(cont[2]).toEqual(jasmine.any(Text))
+    expect(cont.eq(2).text()).toBe('plain 2')
