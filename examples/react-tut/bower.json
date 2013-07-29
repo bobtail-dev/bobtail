@@ -7,7 +7,7 @@
     "components"
   ],
   "dependencies": {
-    "reactive-coffee": "~0.0.0",
+    "reactive-coffee": "~0.0.2",
     "showdown": "~0.3.1"
   }
 }

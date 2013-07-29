@@ -10,7 +10,7 @@
     "components"
   ],
   "dependencies": {
-    "reactive-coffee": "~0.0.0",
+    "reactive-coffee": "~0.0.2",
     "todomvc-common": "~0.1.7"
   }
 }
