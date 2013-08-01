@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="dev-setup.html">Dev Setup</a></li>
-            <li><a href="infelicities.html" class="current">Infelicities</a><ul class="toc"><li><a href="#lazy-change propagation">Lazy change propagation</a></li><li><a href="#structural-attribute bindings">Structural Attribute Bindings</a></li><li><a href="#topologically-ordered visits">Topologically Ordered Visits</a></li><li><a href="#lazy-event notification">Lazy Event Notification</a></li><li><a href="#text-spans">Text Spans</a></li><li><a href="#transitions">Transitions</a></li><li><a href="#tests">Tests</a></li></ul></li>
+            <li><a href="infelicities.html" class="current">Infelicities</a><ul class="toc"><li><a href="#lazy-change propagation">Lazy change propagation</a></li><li><a href="#structural-attribute bindings">Structural Attribute Bindings</a></li><li><a href="#topologically-ordered visits">Topologically Ordered Visits</a></li><li><a href="#lazy-event notification">Lazy Event Notification</a></li><li><a href="#transitions">Transitions</a></li><li><a href="#tests">Tests</a></li></ul></li>
             <li><a href="ideas.html">Ideas</a></li>
             <li><a href="https://github.com/yang/reactive-coffee">GitHub</a></li>
           </ul>
@@ -68,10 +68,6 @@ reorderings) for more efficient downstream handling.</p>
 <p>This can be extended to arbitrary object types/data structures beyond arrays
 and should be configurable, with the ability to substitute in various change
 detection or diffing algorithms.</p>
-<h2><a name="text-spans">Text Spans</a></h2>
-<p>Text chunks are wrapped in span tags.  There&#39;s no fundamental reason this is
-necessary beyond convenience/speed of implementing the early versions of this
-framework.</p>
 <h2><a name="transitions">Transitions</a></h2>
 <p>Ability to apply animations and effects to things like entrances, exits, and
 reorderings.  See the <a href="https://github.com/mbostock/d3/wiki/Transitions">d3 transitions API</a> for something I&#39;m keen on borrowing
