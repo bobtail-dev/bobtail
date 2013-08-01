@@ -90,3 +90,17 @@ describe 'rxt of observable array', ->
     expect(cont.eq(1).text()).toBe('item 1')
     expect(cont[2]).toEqual(jasmine.any(Text))
     expect(cont.eq(2).text()).toBe('plain 2')
+
+describe 'DepArray', ->
+  x = xs = ys = null
+  beforeEach ->
+    x = rx.cell([1,2,3])
+    xs = new rx.DepArray(-> x.get())
+    ys = xs.map (x) -> 2 * x
+  it 'should initialize to cell array contents', ->
+    expect(xs.all()).toEqual([1,2,3])
+    expect(ys.all()).toEqual([2,4,6])
+  it 'should update in response to cell updates', ->
+    x.set([2,3,4])
+    expect(xs.all()).toEqual([2,3,4])
+    expect(ys.all()).toEqual([4,6,8])

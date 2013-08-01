@@ -13,6 +13,17 @@ popKey = (x, k) ->
   delete x[k]
   v
 
+nthWhere = (xs, n, f) ->
+  for x,i in xs
+    if f(x) and (n -= 1) < 0
+      return [x, i]
+  [null, -1]
+
+maybe = (f,x) ->
+  if x? then f(x) else x
+
+firstWhere = (xs, f) -> nthWhere(xs, 0, f)
+
 mkMap = -> Object.create(null)
 
 #
@@ -173,14 +184,17 @@ MappedDepArray = class rx.MappedDepArray extends ObsArray
 DepArray = class rx.DepArray extends ObsArray
   constructor: (@f) ->
     super()
-    new DepCell(@f).onSet.sub(([old, val]) ->
-      # TODO use diff algo so shifts aren't catastrophic
-      [index, index] = firstWhere(
-        [0..Math.min(old.length, val.length)],
-        (i) -> old[i] != val[i]
-      )
+    (bind => @f()).onSet.sub(([old, val]) =>
+      if old?
+        # TODO use diff algo so shifts aren't catastrophic
+        [index, index] = firstWhere(
+          [0..Math.min(old.length, val.length)],
+          (i) -> old[i] != val[i]
+        )
+      else
+        index = 0
       if index > -1 # if found any diffs
-        count = old.length - index
+        count = if old? then old.length - index else 0
         additions = val[index..]
         @realSplice(index, count, additions)
     )

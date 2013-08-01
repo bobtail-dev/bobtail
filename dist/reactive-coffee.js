@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, lagBind, mkMap, mktag, mkuid, nextUid, popKey, recorder, rx, rxt, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, firstWhere, lagBind, maybe, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, recorder, rx, rxt, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -27,6 +27,30 @@
     v = x[k];
     delete x[k];
     return v;
+  };
+
+  nthWhere = function(xs, n, f) {
+    var i, x, _i, _len;
+
+    for (i = _i = 0, _len = xs.length; _i < _len; i = ++_i) {
+      x = xs[i];
+      if (f(x) && (n -= 1) < 0) {
+        return [x, i];
+      }
+    }
+    return [null, -1];
+  };
+
+  maybe = function(f, x) {
+    if (x != null) {
+      return f(x);
+    } else {
+      return x;
+    }
+  };
+
+  firstWhere = function(xs, f) {
+    return nthWhere(xs, 0, f);
   };
 
   mkMap = function() {
@@ -397,23 +421,31 @@
     __extends(DepArray, _super);
 
     function DepArray(f) {
+      var _this = this;
+
       this.f = f;
       DepArray.__super__.constructor.call(this);
-      new DepCell(this.f).onSet.sub(function(_arg) {
+      (bind(function() {
+        return _this.f();
+      })).onSet.sub(function(_arg) {
         var additions, count, index, old, val, _i, _ref3, _ref4, _results;
 
         old = _arg[0], val = _arg[1];
-        _ref4 = firstWhere((function() {
-          _results = [];
-          for (var _i = 0, _ref3 = Math.min(old.length, val.length); 0 <= _ref3 ? _i <= _ref3 : _i >= _ref3; 0 <= _ref3 ? _i++ : _i--){ _results.push(_i); }
-          return _results;
-        }).apply(this), function(i) {
-          return old[i] !== val[i];
-        }), index = _ref4[0], index = _ref4[1];
+        if (old != null) {
+          _ref4 = firstWhere((function() {
+            _results = [];
+            for (var _i = 0, _ref3 = Math.min(old.length, val.length); 0 <= _ref3 ? _i <= _ref3 : _i >= _ref3; 0 <= _ref3 ? _i++ : _i--){ _results.push(_i); }
+            return _results;
+          }).apply(this), function(i) {
+            return old[i] !== val[i];
+          }), index = _ref4[0], index = _ref4[1];
+        } else {
+          index = 0;
+        }
         if (index > -1) {
-          count = old.length - index;
+          count = old != null ? old.length - index : 0;
           additions = val.slice(index);
-          return this.realSplice(index, count, additions);
+          return _this.realSplice(index, count, additions);
         }
       });
     }
