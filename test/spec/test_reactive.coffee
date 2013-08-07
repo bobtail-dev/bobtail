@@ -33,7 +33,7 @@ describe 'tag', ->
       style: bind -> "font-size: #{size.get()}px"
       id: 'my-elt'
       click: ->
-      init: -> @attr('data-foo', 'bar')
+      init: -> @data('foo', 'bar')
     }, bind -> [
       'hello world'
       rxt.tags.button ['click me']
@@ -41,10 +41,9 @@ describe 'tag', ->
   it 'should have the right tag', ->
     expect(elt.is('header')).toBe(true)
   it 'should have the set attributes', ->
-    expect(elt.attr('class')).toBe('my-class')
+    expect(elt.prop('class')).toBe('my-class')
     expect(elt.attr('style')).toBe('font-size: 10px')
-    expect(elt.attr('id')).toBe('my-elt')
-    expect(elt.attr('data-foo')).toBe('bar')
+    expect(elt.prop('id')).toBe('my-elt')
     expect(elt.hasClass('my-class')).toBe(true)
     expect(elt.css('font-size')).toBe('10px')
     expect(elt.data('foo')).toBe('bar')

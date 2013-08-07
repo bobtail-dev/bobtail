@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, firstWhere, lagBind, maybe, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, recorder, rx, rxt, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, firstWhere, lagBind, maybe, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, prop, propSet, props, recorder, rx, rxt, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -685,6 +685,29 @@
     _fn(ev);
   }
 
+  props = ['async', 'autofocus', 'checked', 'location', 'multiple', 'readOnly', 'selected', 'selectedIndex', 'tagName', 'nodeName', 'nodeType', 'ownerDocument', 'defaultChecked', 'defaultSelected'];
+
+  propSet = _.object((function() {
+    var _j, _len1, _results;
+
+    _results = [];
+    for (_j = 0, _len1 = props.length; _j < _len1; _j++) {
+      prop = props[_j];
+      _results.push([prop, null]);
+    }
+    return _results;
+  })());
+
+  setProp = function(elt, prop, val) {
+    if (prop === 'value') {
+      return elt.val(val);
+    } else if (prop in propSet) {
+      return elt.prop(prop, val);
+    } else {
+      return elt.attr(prop, val);
+    }
+  };
+
   rxt.mktag = mktag = function(tag) {
     return function(arg1, arg2) {
       var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref4, _ref5;
@@ -700,11 +723,11 @@
               var old, val;
 
               old = _arg[0], val = _arg[1];
-              return elt.attr(name, val);
+              return setProp(elt, name, val);
             });
           })(name);
         } else {
-          elt.attr(name, value);
+          setProp(elt, name, value);
         }
       }
       if (contents != null) {

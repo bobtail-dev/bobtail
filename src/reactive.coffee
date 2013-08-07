@@ -310,6 +310,23 @@ for ev in events
   do (ev) ->
     specialAttrs[ev] = (elt, fn) -> elt[ev]((e) -> fn.call(elt, e))
 
+# attr vs prop:
+# http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
+# http://api.jquery.com/prop/
+
+props = ['async', 'autofocus', 'checked', 'location', 'multiple', 'readOnly',
+  'selected', 'selectedIndex', 'tagName', 'nodeName', 'nodeType',
+  'ownerDocument', 'defaultChecked', 'defaultSelected']
+propSet = _.object([prop, null] for prop in props)
+
+setProp = (elt, prop, val) ->
+  if prop == 'value'
+    elt.val(val)
+  else if prop of propSet
+    elt.prop(prop, val)
+  else
+    elt.attr(prop, val)
+
 rxt.mktag = mktag = (tag) ->
   (arg1, arg2) ->
     # arguments are either (), (attrs: Object), (contents: non-Object), or
@@ -330,9 +347,9 @@ rxt.mktag = mktag = (tag) ->
       if value instanceof ObsCell
         do (name) ->
           value.onSet.sub ([old, val]) ->
-            elt.attr(name, val)
+            setProp(elt, name, val)
       else
-        elt.attr(name, value)
+        setProp(elt, name, value)
     if contents?
       toNodes = (contents) ->
         for child in contents
