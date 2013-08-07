@@ -44,7 +44,9 @@
 <p>Get a quick taste of reactive.coffee.  You can <a href="http://jsfiddle.net/yang/SGvuy/">play with this example on
 jsFiddle</a>, see a <a href="https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade">complete TodoMVC example</a>, or head
 directly to the <a href="tutorial.html">tutorial</a>.</p>
-<div class="highlight"><pre><span class="c1"># This is our core data model, an array of Task objects.</span>
+<div class="highlight"><pre><span class="c1"># This is our application&#39;s core data model, an array of Task objects.</span>
+<span class="c1"># `cell` and `array` are our primitive reactive data structures.  You can</span>
+<span class="c1"># listen for (and react to) changes to their values.</span>
 
 <span class="k">class</span> <span class="nx">Task</span>
   <span class="nv">constructor: </span><span class="nf">(descrip, priority, isDone) -&gt;</span>
@@ -58,8 +60,14 @@ directly to the <a href="tutorial.html">tutorial</a>.</p>
   <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Walk the dog&#39;</span><span class="p">,</span> <span class="s">&#39;meh&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
 <span class="p">])</span>
 
-<span class="c1"># Our main view: a checklist of tasks, a button to add a new task, and a task</span>
-<span class="c1"># editor component (defined further down).</span>
+<span class="c1"># Our main view: a checklist of tasks, a button to add a new task, and a</span>
+<span class="c1"># task editor component (defined further down).</span>
+<span class="c1">#</span>
+<span class="c1"># `bind` (and `array.map`) are the central mechanisms by which you can</span>
+<span class="c1"># declare cells that are always bound to the current value of some</span>
+<span class="c1"># expression over other cells.  `z = bind -&gt; x.get() + y.get()` says `z`</span>
+<span class="c1"># should always reflect the sum even as `x` and `y` change.  Subscription</span>
+<span class="c1"># management is handled automatically.</span>
 
 <span class="nv">main = </span><span class="nf">-&gt;</span>
   <span class="nv">currentTask = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">tasks</span><span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="c1"># &quot;View model&quot; of currently selected task</span>
@@ -68,7 +76,7 @@ directly to the <a href="tutorial.html">tutorial</a>.</p>
     <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task-manager&#39;</span><span class="p">},</span> <span class="p">[</span>
       <span class="nx">h1</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">tasks</span><span class="p">.</span><span class="nx">length</span><span class="p">()</span><span class="si">}</span><span class="s"> task(s) for today&quot;</span>
       <span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;tasks&#39;</span><span class="p">},</span> <span class="nx">tasks</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(task) -&gt;</span>
-        <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;task&#39;</span><span class="p">},</span> <span class="p">[</span>
+        <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;task-</span><span class="si">#{</span><span class="k">if</span> <span class="nx">task</span> <span class="o">==</span> <span class="nx">currentTask</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="s">&#39;selected&#39;</span> <span class="k">else</span> <span class="s">&#39;unselected&#39;</span><span class="si">}</span><span class="s">&quot;</span><span class="p">},</span> <span class="p">[</span>
           <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;checkbox&#39;</span><span class="p">,</span> <span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">task</span><span class="p">.</span><span class="nx">isDone</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">@</span><span class="o">is</span><span class="p">(</span><span class="s">&#39;:checked&#39;</span><span class="p">));</span> <span class="kc">true</span><span class="p">}</span>
           <span class="nx">span</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;descrip&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
             <span class="s">&quot;</span><span class="si">#{</span><span class="nx">task</span><span class="p">.</span><span class="nx">descrip</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s"> (</span><span class="si">#{</span><span class="nx">task</span><span class="p">.</span><span class="nx">priority</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">)&quot;</span>
@@ -85,6 +93,8 @@ directly to the <a href="tutorial.html">tutorial</a>.</p>
   <span class="p">)</span>
 
 <span class="c1"># The task editor demonstrates how to define a simple component.</span>
+<span class="c1"># Reusable components, encapsulating both view and behavior, are key to</span>
+<span class="c1"># application scalability.</span>
 
 <span class="nv">taskEditor = </span><span class="nf">(opts) -&gt;</span>
   <span class="nv">task = </span><span class="nf">-&gt;</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">task</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
@@ -101,9 +111,13 @@ directly to the <a href="tutorial.html">tutorial</a>.</p>
     <span class="nx">br</span><span class="p">()</span>
     <span class="nx">button</span> <span class="s">&#39;Update&#39;</span>
   <span class="p">]</span>
+  <span class="c1"># Here we are munging the strings a bit before updating the model.  The</span>
+  <span class="c1"># displayed text will instantly reflect the munged data (try</span>
+  <span class="c1"># appending/prepending spaces).  We could&#39;ve also made this a `submit`</span>
+  <span class="c1"># property on the `form` element above; the point is that these are</span>
+  <span class="c1"># normal jQuery objects that you can flexibly manipulate.</span>
   <span class="nx">theForm</span><span class="p">.</span><span class="nx">submit</span> <span class="nf">-&gt;</span>
     <span class="nx">opts</span><span class="p">.</span><span class="nx">onSubmit</span><span class="p">(</span><span class="nx">descrip</span><span class="p">.</span><span class="nx">val</span><span class="p">().</span><span class="nx">trim</span><span class="p">(),</span> <span class="nx">priority</span><span class="p">.</span><span class="nx">val</span><span class="p">().</span><span class="nx">trim</span><span class="p">())</span>
-    <span class="nx">@reset</span><span class="p">()</span>
     <span class="kc">false</span>
 
 <span class="nx">$</span><span class="p">(</span><span class="nx">main</span><span class="p">)</span>
@@ -115,8 +129,8 @@ directly to the <a href="tutorial.html">tutorial</a>.</p>
 rationale</a>.</p>
 
         </section>
-        <aside id="sidebar"><a href="https://github.com/yang/reactive-coffee/zipball/0.0.2" class="button"><small>Download version 0.0.2</small> .zip file</a><a href="https://github.com/yang/reactive-coffee/tarball/0.0.2" class="button"><small>Download version 0.0.2</small> .tar.gz file</a>
-          <p class="repo-owner">Latest release is v0.0.2. <a href="changes.html">Changes</a>.</p><p>Minified: 11KB.</p>
+        <aside id="sidebar"><a href="https://github.com/yang/reactive-coffee/zipball/0.0.3" class="button"><small>Download version 0.0.3</small> .zip file</a><a href="https://github.com/yang/reactive-coffee/tarball/0.0.3" class="button"><small>Download version 0.0.3</small> .tar.gz file</a>
+          <p class="repo-owner">Latest release is v0.0.3. <a href="changes.html">Changes</a>.</p><p>Minified: 11KB.</p>
 <p>Stay updated on <a href="https://twitter.com/reactivecoffee">Twitter</a>.</p>
 
         </aside>

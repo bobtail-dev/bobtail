@@ -23,33 +23,11 @@
           <ul>
             <li><a href="dev-setup.html">Dev Setup</a></li>
             <li><a href="infelicities.html">Infelicities</a></li>
-            <li><a href="ideas.html" class="current">Ideas</a><ul class="toc"><li><a href="#dirty-tracking re-rendering analysis">Dirty-Tracking Re-Rendering Analysis</a></li><li><a href="#object-observe">Object.observe</a></li><li><a href="#dom-diff re-rendering analysis">DOM-Diff Re-Rendering Analysis</a></li><li><a href="#network-data bindings">Network Data Bindings</a></li></ul></li>
+            <li><a href="ideas.html" class="current">Ideas</a><ul class="toc"><li><a href="#object-observe">Object.observe</a></li><li><a href="#dirty-tracking re-rendering analysis">Dirty-Tracking Re-Rendering Analysis</a></li><li><a href="#network-data bindings">Network Data Bindings</a></li></ul></li>
             <li><a href="https://github.com/yang/reactive-coffee">GitHub</a></li>
           </ul>
         </nav>
         <section id="main-content"><h1>Ideas</h1>
-<h2><a name="dirty-tracking re-rendering analysis">Dirty-Tracking Re-Rendering Analysis</a></h2>
-<p>The fine-grained control over re-rendering and bindings is powerful, but for
-bindings that are non-performance-critical or don&#39;t need to scale, it&#39;s less
-effort to not have to selectively decide where those bindings exist.  Simply
-make everything dynamically bound, and then with events being used only to
-determine what parts of the model have been dirtied, we can instead let the
-framework compute optimal set(s) of the DOM to re-render automatically.</p>
-<p>Once everything is a binding, slightly modified/more scalable syntax and idioms
-may be warranted, so that instead of:</p>
-<div class="highlight"><pre><span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="p">(</span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;biglist&quot;</span><span class="p">),</span> <span class="nv">style: </span><span class="p">(</span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;display: </span><span class="si">#{</span><span class="nx">shown</span><span class="si">}</span><span class="s">&quot;</span><span class="p">)},</span> <span class="nx">xs</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(x) -&gt;</span>
-  <span class="nx">li</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">x</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
-</pre></div>
-
-<p>we write:</p>
-<div class="highlight"><pre><span class="nx">ul</span> <span class="p">{</span>
-  <span class="k">class</span><span class="o">:</span> <span class="nf">-&gt;</span> <span class="s">&quot;biglist&quot;</span>
-  <span class="nv">style: </span><span class="nf">-&gt;</span> <span class="s">&quot;display: </span><span class="si">#{</span><span class="nx">shown</span><span class="si">}</span><span class="s">&quot;</span>
-  <span class="nv">contents: </span><span class="nx">xs</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(x) -&gt;</span>
-    <span class="nx">li</span> <span class="p">{</span> <span class="nv">contents: </span><span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">x</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span> <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
 <h2><a name="object-observe">Object.observe</a></h2>
 <p>A platform feature looming on the horizon of ECMAScript is that of
 <a href="http://updates.html5rocks.com/2012/11/Respond-to-change-with-Object-observe"><code>Object.observe</code></a>, which allows for reacting to mutation events on objects
@@ -73,11 +51,34 @@ work to re-compute what has actually changed.  The [Polymer] framework
 pioneered support for <code>Object.observe</code>, but as of this writing it&#39;s not a
 widely supported feature (only available in Chrome Canary) and the framework
 has a more expensive fallback.</p>
-<h2><a name="dom-diff re-rendering analysis">DOM-Diff Re-Rendering Analysis</a></h2>
-<p>Throw away all observables and bindings, and re-build the entire view on every
+<h2><a name="dirty-tracking re-rendering analysis">Dirty-Tracking Re-Rendering Analysis</a></h2>
+<p>The fine-grained control over re-rendering and bindings is powerful, but for
+bindings that are non-performance-critical or don&#39;t need to scale, it&#39;s less
+effort to not have to selectively decide where those bindings exist.  Simply
+make everything dynamically bound, and then with events being used only to
+determine what parts of the model have been dirtied, we can instead let the
+framework compute optimal set(s) of the DOM to re-render automatically.</p>
+<p>Once everything is a binding, slightly modified/more scalable syntax and idioms
+may be warranted, so that instead of:</p>
+<div class="highlight"><pre><span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="p">(</span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;biglist&quot;</span><span class="p">),</span> <span class="nv">style: </span><span class="p">(</span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;display: </span><span class="si">#{</span><span class="nx">shown</span><span class="si">}</span><span class="s">&quot;</span><span class="p">)},</span> <span class="nx">xs</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(x) -&gt;</span>
+  <span class="nx">li</span> <span class="p">{},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">x</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span>
+</pre></div>
+
+<p>we write:</p>
+<div class="highlight"><pre><span class="nx">ul</span> <span class="p">{</span>
+  <span class="k">class</span><span class="o">:</span> <span class="nf">-&gt;</span> <span class="s">&quot;biglist&quot;</span>
+  <span class="nv">style: </span><span class="nf">-&gt;</span> <span class="s">&quot;display: </span><span class="si">#{</span><span class="nx">shown</span><span class="si">}</span><span class="s">&quot;</span>
+  <span class="nv">contents: </span><span class="nx">xs</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(x) -&gt;</span>
+    <span class="nx">li</span> <span class="p">{</span> <span class="nv">contents: </span><span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">x</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span><span class="p">]</span> <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>A related idea for even simpler applications is to
+throw away all observables and bindings, and re-build the entire view on every
 change to the model via an API that mirrors <code>rxt</code> except for returning
-lightweight DOM representations.  By computing the diff between
-representations, the actual DOM operations can be computed.</p>
+lightweight DOM representations.  By computing the diff between DOM
+representations (rather than tracking dirtiness of bindings), the actual
+DOM operations can be determined.</p>
 <h2><a name="network-data bindings">Network Data Bindings</a></h2>
 <p>This is flexible, but it would be convenient to have some implementations of
 Comet- or WebSocket-based push mechanisms that works well with various

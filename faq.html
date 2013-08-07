@@ -82,6 +82,11 @@ since there are both desired features that are missing (differences in array
 event propagation, topologically ordered batch propagations, etc.) and features
 that are unwanted (mis-matched programming model, larger API surface area,
 etc.).</p>
+<p><strong>Why did you choose to use <code>rx</code> as the namespace?  You know about Reactive
+Extensions, right?</strong></p>
+<p>Yes, it&#39;s cited in the list of <a href="related.html">Related Work</a>.  We chose <code>rx</code> because short
+namespaces are convenient and it&#39;s unlikely you&#39;re using RxJS if you&#39;re
+using reactive.coffee, but please correct us if we&#39;re wrong.</p>
 <p><strong>Do I need to sprinkle <code>rx.cell()</code> everywhere in my model?</strong></p>
 <p>You actually don&#39;t.  At one extreme, you can always fall back to just wrapping
 your entire model in a single cell, and re-render everything on changes, which
@@ -101,12 +106,10 @@ view-models, cells scale.  Also, in the future, we may get the best of both
 worlds—take a look at <code>Object.observe</code>.  For more on these directions, see
 <a href="ideas.html">Ideas</a>.</p>
 <p><strong>Can I use this from JavaScript?</strong></p>
-<p>Yes, you can, with caveats.  The main benefit of using CoffeeScript here is
-that it has a very friendly syntax for declaring UIs and particularly for the
-terse anonymous function syntax to represent the incrementally recomputable
-bindings.  However, if you are willing to drop down to the granularity of whole
-components and let the system diff changes for you, then it&#39;s certainly much
-more pragmatic (this would then be similar to the approach used in React).</p>
+<p>Yes, you can.  The main benefit of using CoffeeScript here is that it has a
+very DSL-friendly syntax for Reactive&#39;s declarative UIs, and particularly
+for the terse anonymous function syntax to represent the incrementally
+recomputable bindings.  Otherwise, it&#39;s pretty similar.</p>
 <p>It&#39;s worth showing a quick example of what that would look like:</p>
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">$sidebar</span> <span class="o">=</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span>
   <span class="nx">div</span><span class="p">({</span><span class="kr">class</span><span class="o">:</span> <span class="s1">&#39;sidebar&#39;</span><span class="p">},</span> <span class="p">[</span>
