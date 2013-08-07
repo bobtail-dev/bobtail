@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="dev-setup.html">Dev Setup</a></li>
-            <li><a href="infelicities.html" class="current">Infelicities</a><ul class="toc"><li><a href="#lazy-change propagation">Lazy change propagation</a></li><li><a href="#structural-attribute bindings">Structural Attribute Bindings</a></li><li><a href="#topologically-ordered visits">Topologically Ordered Visits</a></li><li><a href="#garbage-collection">Garbage Collection</a></li><li><a href="#lazy-event notification">Lazy Event Notification</a></li><li><a href="#transitions">Transitions</a></li><li><a href="#dag-debugger">DAG Debugger</a></li><li><a href="#tests">Tests</a></li></ul></li>
+            <li><a href="infelicities.html" class="current">Infelicities</a><ul class="toc"><li><a href="#lazy-change propagation">Lazy Change Propagation</a></li><li><a href="#structural-attribute bindings">Structural Attribute Bindings</a></li><li><a href="#more-combinators">More Combinators</a></li><li><a href="#topologically-ordered visits">Topologically Ordered Visits</a></li><li><a href="#garbage-collection">Garbage Collection</a></li><li><a href="#lazy-event notification">Lazy Event Notification</a></li><li><a href="#transitions">Transitions</a></li><li><a href="#dag-debugger">DAG Debugger</a></li><li><a href="#tests">Tests</a></li></ul></li>
             <li><a href="ideas.html">Ideas</a></li>
             <li><a href="https://github.com/yang/reactive-coffee">GitHub</a></li>
           </ul>
@@ -30,7 +30,7 @@
         <section id="main-content"><h1>Infelicities</h1>
 <p>There are a number of areas for immediate improvement, including but not
 limited to the following:</p>
-<h2><a name="lazy-change propagation">Lazy change propagation</a></h2>
+<h2><a name="lazy-change propagation">Lazy Change Propagation</a></h2>
 <p>This one is rather low-hanging fruit: when a cell&#39;s value has been set to the
 same value, we should not propagate events downstream to dependent nodes.</p>
 <h2><a name="structural-attribute bindings">Structural Attribute Bindings</a></h2>
@@ -38,6 +38,10 @@ same value, we should not propagate events downstream to dependent nodes.</p>
 certain attributes such as <code>style</code>, we could have a simple convenience
 preprocessor that takes in an object map of the style names and renders the
 string.  This could be extended to lists for <code>class</code> and so on.</p>
+<h2><a name="more-combinators">More Combinators</a></h2>
+<p>There are only a few combinators right now.  Besides <code>map</code>, we also are
+interested in adding (efficient implementations of) <code>filter</code>, <code>sort</code>,
+<code>fold</code>/<code>reduce</code>, etc.</p>
 <h2><a name="topologically-ordered visits">Topologically Ordered Visits</a></h2>
 <p>If we consider the DAG of dependencies among observable nodes, when there&#39;s an
 event being propagated through the system, the notifications currently visit
@@ -85,7 +89,8 @@ memory leak.</p>
 re-evaluation, these inner <code>bind</code>s should be <em>disposed</em> of, unsubscribing
 themselves from all their dependencies (thus dependency tracking is a
 pre-requisite).  This disposal should also occur recursively down to
-<em>their</em> nested <code>bind</code>s, and so on.</p>
+<em>their</em> nested <code>bind</code>s, and so on.  Languages with weak references have an
+easier time about this.</p>
 <h2><a name="lazy-event notification">Lazy Event Notification</a></h2>
 <p>More flexible-but-still-efficient array (and other data structure) mutations.
 Currently arrays have built-in mechanisms for efficient propagation of events
