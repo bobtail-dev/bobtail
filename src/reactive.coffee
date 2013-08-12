@@ -234,7 +234,7 @@ SrcMap = class rx.SrcMap extends ObsMap
     recorder.warnMutate()
     @realRemove(key)
 
-Depmap = class rx.DepMap extends ObsMap
+DepMap = class rx.DepMap extends ObsMap
   constructor: (@f) ->
     super()
     new DepCell(@f).onSet.sub(([old, val]) ->
