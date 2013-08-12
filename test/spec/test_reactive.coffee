@@ -103,3 +103,21 @@ describe 'DepArray', ->
     x.set([2,3,4])
     expect(xs.all()).toEqual([2,3,4])
     expect(ys.all()).toEqual([4,6,8])
+
+describe 'ObsMap', ->
+  x = cb = null
+  beforeEach ->
+    x = new rx.map({a:0})
+    cb = jasmine.createSpy('cb')
+  it 'should fire onChange event for replaced keys', ->
+    x.onChange.sub cb
+    x.put('a', 1)
+    expect(cb).toHaveBeenCalledWith(['a',0,1])
+  it 'should fire onAdd event for new keys', ->
+    x.onAdd.sub cb
+    x.put('b', 2)
+    expect(cb).toHaveBeenCalledWith(['b', 2])
+  it 'should fire onRemove event for deleted keys', ->
+    x.onRemove.sub cb
+    x.remove('a')
+    expect(cb).toHaveBeenCalledWith(['a', 0])

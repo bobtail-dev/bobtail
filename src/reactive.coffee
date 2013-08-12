@@ -212,7 +212,7 @@ ObsMap = class rx.ObsMap
     recorder.sub((target) => @onChange.sub(-> target.refresh()))
     _.clone(@x)
   realPut: (key, val) ->
-    if key in @x
+    if key of @x
       old = @x[key]
       @x[key] = val
       @onChange.pub([key, old, val])
