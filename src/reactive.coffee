@@ -205,11 +205,17 @@ ObsMap = class rx.ObsMap
     @onRemove = new Ev() # [key, old]
     @onChange = new Ev() # [key, old, new]
   get: (key) ->
+    recorder.sub((target) => @onAdd.sub(([subkey, val]) ->
+      target.refresh() if key == subkey))
     recorder.sub((target) => @onChange.sub(([subkey, old, val]) ->
+      target.refresh() if key == subkey))
+    recorder.sub((target) => @onRemove.sub(([subkey, old]) ->
       target.refresh() if key == subkey))
     @x[key]
   all: ->
+    recorder.sub((target) => @onAdd.sub(-> target.refresh()))
     recorder.sub((target) => @onChange.sub(-> target.refresh()))
+    recorder.sub((target) => @onRemove.sub(-> target.refresh()))
     _.clone(@x)
   realPut: (key, val) ->
     if key of @x

@@ -105,10 +105,13 @@ describe 'DepArray', ->
     expect(ys.all()).toEqual([4,6,8])
 
 describe 'ObsMap', ->
-  x = cb = null
+  x = cb = a = b = all = null
   beforeEach ->
     x = new rx.map({a:0})
     cb = jasmine.createSpy('cb')
+    a = bind -> x.get('a')
+    b = bind -> x.get('b')
+    all = bind -> x.all()
   it 'should fire onChange event for replaced keys', ->
     x.onChange.sub cb
     x.put('a', 1)
@@ -121,3 +124,42 @@ describe 'ObsMap', ->
     x.onRemove.sub cb
     x.remove('a')
     expect(cb).toHaveBeenCalledWith(['a', 0])
+  it 'should re-evaluate .get() binds on any change', ->
+    expect(a.get()).toBe(0)
+    expect(b.get()).toBeUndefined()
+    x.put('a', 1)
+    expect(a.get()).toBe(1)
+    expect(b.get()).toBeUndefined()
+    x.put('b', 2)
+    expect(a.get()).toBe(1)
+    expect(b.get()).toBe(2)
+    x.remove('a')
+    expect(a.get()).toBeUndefined()
+    expect(b.get()).toBe(2)
+  it 'should re-evaluate .all() binds on any change', ->
+    expect(all.get()).toEqual({a:0})
+    x.put('a', 1)
+    expect(all.get()).toEqual({a:1})
+    x.put('b', 2)
+    expect(all.get()).toEqual({a:1,b:2})
+    x.remove('a')
+    expect(all.get()).toEqual({b:2})
+
+#describe 'nested bindings', ->
+#  x = a = elt = null
+#  beforeEach ->
+#    x = rx.cell('')
+#    a =
+#      bind ->
+#        bind -> x.get()
+#        bind ->
+#          bind -> x.get()
+#          x.get()
+#        x.get()
+#  it 'should not leak memory via subscription references', ->
+#    # FIXME
+#    console.log x.onSet.subs
+#    x.set(' ')
+#    console.log x.onSet.subs
+#    x.set(' ')
+#    console.log x.onSet.subs
