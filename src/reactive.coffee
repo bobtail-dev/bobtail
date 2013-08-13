@@ -33,13 +33,19 @@ mkMap = -> Object.create(null)
 Recorder = class rx.Recorder
   constructor: ->
     @stack = []
-  # takes a dep cell
+  # takes a dep cell and push it onto the stack as the current invalidation
+  # listener, so that calls to .sub (e.g. by ObsCell.get) can establish a
+  # dependency
   start: (dep) ->
     @stack.push(dep)
   stop: ->
     @stack.pop()
   # Takes a subscriber function that adds the current cell as an invalidation
-  # listener
+  # listener; the subscriber function is responsible for actually subscribing
+  # the current listener to the appropriate events; note that we are
+  # establishing both directions of the dependency tracking here (subscribing
+  # to the dependency's events as well as registering the subscription UID with
+  # the current listener)
   sub: (sub) ->
     if @stack.length > 0
       topCell = _(@stack).last()
@@ -61,13 +67,17 @@ rx.lagBind = lagBind = (init, f) ->
   dep.refresh()
   dep
 
+# Just a global mapping from subscription UIDs to source Evs; this essentially
+# enables us to follow subscription UIDs up the dependency graph (from
+# dependents)
 DepMgr = class rx.DepMgr
   constructor: ->
     @uid2src = {}
-  # called by source Ev
+  # called by source Ev to register a new subscription
   sub: (uid, src) ->
     @uid2src[uid] = src
-  # called by destination
+  # called by destination (who's responsible for remembering what he's
+  # subscribed to, or else...memory leak!)
   unsub: (uid) ->
     @uid2src[uid].unsub(uid)
     popKey(@uid2src, uid)
