@@ -52,12 +52,12 @@ Recorder = class rx.Recorder
 recorder = new Recorder()
 
 rx.bind = bind = (f) ->
-  dep = rx.depCell(f)
+  dep = new DepCell(f)
   dep.refresh()
   dep
 
 rx.lagBind = lagBind = (init, f) ->
-  dep = rx.lagDepCell(f, init)
+  dep = new DepCell(f, init)
   dep.refresh()
   dep
 
@@ -256,10 +256,6 @@ _.extend(rx, {
   cell: (x) -> new SrcCell(x)
   array: (xs) -> new SrcArray(xs)
   map: (x) -> new SrcMap(x)
-  depCell: (f) -> new DepCell(f)
-  lagDepCell: (f, init) -> new DepCell(f, init, true)
-  depMap: (f) -> new DepMap(f)
-  depArray: (f) -> new DepArray(f)
 })
 
 #
