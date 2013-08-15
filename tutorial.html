@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
-            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to dom element attributes">Binding To DOM Element Attributes</a></li></ul></li>
+            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#garbage-collection">Garbage Collection</a></li></ul></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
           </ul>
@@ -35,7 +35,7 @@
 </pre></div>
 
 <p>Reactive is hosted on <a href="http://cdnjs.com/">cdnjs</a> as well, so you can source directly from there:</p>
-<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/reactive-coffee/0.0.3/reactive-coffee.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/reactive-coffee/0.0.4/reactive-coffee.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </pre></div>
 
 <p>If you&#39;re using <a href="http://bower.io/">Bower</a>, you can also add Reactive as a dependency for your
@@ -100,9 +100,10 @@ a listener:</p>
 </pre></div>
 
 <h2><a name="dependent-cells">Dependent Cells</a></h2>
-<p>The above is a simple way of updating but it&#39;s a bit verbose.  In most UI
-frameworks, you have fewer models but many more visual representations of the
-model.</p>
+<p>The above is a simple way of observing and responding to events on cells,
+but it&#39;s a bit verbose.  In most UIs, you really just want to be able to
+declaratively express your views in terms of a model (data binding), rather
+than explicitly manage listeners.</p>
 <p>To extend the above example, let&#39;s say you now had a displayed name that
 depended on two cells (comprising your &quot;model&quot;).  You could just create
 explicit subscriptions and listeners:</p>
@@ -153,7 +154,7 @@ frameworks—which is an effective paradigm for frontend UI development—but
 instead of being exclusively applied to view components, typically confined to
 a template language, this is generalized to be a generic way of expressing
 arbitrary time-varying data structures.</p>
-<h2><a name="arrays-and maps">Arrays and Maps</a></h2>
+<h2><a name="arrays-and-maps">Arrays and Maps</a></h2>
 <p>Cells are the most general type of observable container.  However, there are
 also observable containers with special support for arrays and objects.  This
 special support is to support more efficient and fine-grained event types
@@ -475,7 +476,7 @@ what&#39;s necessary.</p>
 making everything dynamic, since you can always opt-out of dynamism by stopping
 propagation, whereas you cannot later reintroduce dynamism into places with no
 dynamic bindings.</p>
-<h2><a name="binding-to dom element attributes">Binding To DOM Element Attributes</a></h2>
+<h2><a name="binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></h2>
 <p>We can treat certain interactive DOM elements&#39; attributes as cells, thus
 binding to them as well.</p>
 <p>Consider a type-ahead search component, where the completion list only displays
@@ -514,6 +515,71 @@ focused on the input text field:</p>
 <p>We are using three different types of reactive element attributes.
 <code>rx(property)</code> returns the value of the given property (<code>focused</code>,
 <code>checked</code>, <code>val</code>) as a cell.</p>
+<h2><a name="garbage-collection">Garbage Collection</a></h2>
+<p>Dependencies hold references to their dependents in order to know who to
+propagate updates to.  We do currently unsubscribe a dependent observable
+from its dependencies whenever that dependent is refreshed, but if the
+dependent observable itself creates nested binds, those nested binds must
+also be disconnected, and so on, recursively.</p>
+<p>For instance, say we have:</p>
+<div class="highlight"><pre><span class="nv">showUnread = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+<span class="nv">unread = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;scoreboard&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span>
+  <span class="k">if</span> <span class="nx">showUnread</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+    <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;unread&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">unread</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s"> message(s)&quot;</span>
+  <span class="k">else</span>
+    <span class="s">&#39;(nothing shown)&#39;</span>
+<span class="p">]</span>
+</pre></div>
+
+<p>Initially, <code>unread</code> has a subscriber, as expected: the inner <code>bind</code>.  When
+we update <code>showUnread</code>, the outer <code>bind</code> will re-evaluate and create a new
+inner <code>bind</code> (for the nested <code>div</code>), completely forgetting about the old
+one.  Without the nested bind cleanup, <code>unread</code> now has <em>two</em> subscribers,
+old and new inner <code>bind</code>s.  And since the old inner <code>bind</code> is still
+referenced from <code>unread</code>&#39;s list of subscribers, it can&#39;t be
+garbage-collected.  Ergo, memory leak.</p>
+<p>What instead happens: <code>bind</code> tracks any nested <code>bind</code>s.  On re-evaluation,
+these inner <code>bind</code>s are <em>disconnected</em>, unsubscribing themselves from all
+their dependencies.  This disconnection also occurs recursively down to
+<em>their</em> nested <code>bind</code>s, and so on.</p>
+<p>One question is what happens at the top level or when you want to break out
+and do your own thing. We don&#39;t have the luxury of weak refs in JS, and as
+a result it&#39;s less forgiving if you do &quot;silly&quot; things like create binds
+that go nowhere and that you don&#39;t want to keep.</p>
+<p>(But even with weak references, one can&#39;t tell if you added a bind only to
+subscribe a console.log caller to its changes, save to localStorage, or
+some other side effect that you <em>do</em> want to keep.)</p>
+<p>For instance, you don&#39;t want to write the above as the following:</p>
+<div class="highlight"><pre><span class="nv">showing = </span><span class="kc">false</span>
+<span class="nx">$</span><span class="p">(</span><span class="s">&#39;.toggle-button&#39;</span><span class="p">).</span><span class="nx">click</span> <span class="nf">-&gt;</span>
+  <span class="k">if</span> <span class="nx">showing</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.scoreboard&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span>
+      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;unread&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">unread</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s"> message(s)&quot;</span>
+    <span class="p">)</span>
+  <span class="k">else</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.scoreboard&#39;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s">&#39;(nothing shown)&#39;</span><span class="p">)</span>
+  <span class="nv">showing = </span><span class="o">not</span> <span class="nx">showing</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>The key for these situations is that <code>bind</code>s should go all the way to the
+top, or else you&#39;ll want to manually disconnect your (top-level) binds
+using their <code>disconnect</code> method:</p>
+<div class="highlight"><pre><span class="nv">showing = </span><span class="kc">false</span>
+<span class="nv">topBind = </span><span class="kc">null</span>
+<span class="nx">$</span><span class="p">(</span><span class="s">&#39;.toggle-button&#39;</span><span class="p">).</span><span class="nx">click</span> <span class="nf">-&gt;</span>
+  <span class="k">if</span> <span class="nx">showing</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.scoreboard&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span>
+      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;unread&#39;</span><span class="p">},</span> <span class="nv">topBind = </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">unread</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s"> message(s)&quot;</span>
+    <span class="p">)</span>
+  <span class="k">else</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.scoreboard&#39;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s">&#39;(nothing shown)&#39;</span><span class="p">)</span>
+    <span class="nx">topBind</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">()</span>
+  <span class="nv">showing = </span><span class="o">not</span> <span class="nx">showing</span>
+<span class="p">}</span>
+</pre></div>
+
 
         </section>
       </div>

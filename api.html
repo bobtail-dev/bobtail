@@ -82,6 +82,9 @@ changed.  The event data is an array of two elements, <code>[oldVal, newVal]</co
 <p><strong><code>DepCell</code> members</strong></p>
 <ul>
 <li>inherits <code>ObsCell</code></li>
+<li><code>disconnect</code>: unsubscribes this cell from its dependencies and
+recursively disconnects all nested binds; useful for manual disposal of
+<code>bind</code>s</li>
 </ul>
 <p><strong><code>ObsArray</code> members</strong></p>
 <ul>
