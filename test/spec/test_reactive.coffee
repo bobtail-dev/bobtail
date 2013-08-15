@@ -145,21 +145,26 @@ describe 'ObsMap', ->
     x.remove('a')
     expect(all.get()).toEqual({b:2})
 
-#describe 'nested bindings', ->
-#  x = a = elt = null
-#  beforeEach ->
-#    x = rx.cell('')
-#    a =
-#      bind ->
-#        bind -> x.get()
-#        bind ->
-#          bind -> x.get()
-#          x.get()
-#        x.get()
-#  it 'should not leak memory via subscription references', ->
-#    # FIXME
-#    console.log x.onSet.subs
-#    x.set(' ')
-#    console.log x.onSet.subs
-#    x.set(' ')
-#    console.log x.onSet.subs
+describe 'nested bindings', ->
+  x = a = b = elt = null
+  beforeEach ->
+    x = rx.cell('')
+    a =
+      bind ->
+        bind -> x.get()
+        x.get()
+    b =
+      bind ->
+        bind -> x.get()
+        bind ->
+          bind -> x.get()
+          x.get()
+        x.get()
+  it 'should not leak memory via subscription references', ->
+    nsubs0 = _.keys(x.onSet.subs).length
+    x.set(' ')
+    nsubs1 = _.keys(x.onSet.subs).length
+    x.set('  ')
+    nsubs2 = _.keys(x.onSet.subs).length
+    expect(nsubs0).toBe(nsubs1)
+    expect(nsubs0).toBe(nsubs2)

@@ -1,9 +1,8 @@
 (function() {
-  var DepArray, DepCell, DepMgr, Depmap, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, firstWhere, lagBind, maybe, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, prop, propSet, props, recorder, rx, rxt, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, firstWhere, lagBind, maybe, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, prop, propSet, props, recorder, rx, rxt, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     _this = this;
 
   if (typeof exports === 'undefined') {
@@ -63,6 +62,9 @@
     }
 
     Recorder.prototype.start = function(dep) {
+      if (this.stack.length > 0) {
+        _(this.stack).last().addNestedBind(dep);
+      }
       return this.stack.push(dep);
     };
 
@@ -95,7 +97,7 @@
   rx.bind = bind = function(f) {
     var dep;
 
-    dep = rx.depCell(f);
+    dep = new DepCell(f);
     dep.refresh();
     return dep;
   };
@@ -103,7 +105,7 @@
   rx.lagBind = lagBind = function(init, f) {
     var dep;
 
-    dep = rx.lagDepCell(f, init);
+    dep = new DepCell(f, init);
     dep.refresh();
     return dep;
   };
@@ -229,6 +231,7 @@
       this.refreshing = false;
       this.lag = lag != null ? lag : false;
       this.timeout = null;
+      this.nestedBinds = [];
     }
 
     DepCell.prototype.refresh = function() {
@@ -236,16 +239,11 @@
         _this = this;
 
       realRefresh = function() {
-        var old, subUid, _i, _len, _ref1;
+        var old;
 
         if (!_this.refreshing) {
           old = _this.x;
-          _ref1 = _this.subs;
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            subUid = _ref1[_i];
-            depMgr.unsub(subUid);
-          }
-          _this.subs = [];
+          _this.disconnect();
           recorder.start(_this);
           _this.refreshing = true;
           try {
@@ -270,8 +268,29 @@
       }
     };
 
+    DepCell.prototype.disconnect = function() {
+      var nestedBind, subUid, _i, _j, _len, _len1, _ref1, _ref2;
+
+      _ref1 = this.subs;
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        subUid = _ref1[_i];
+        depMgr.unsub(subUid);
+      }
+      _ref2 = this.nestedBinds;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        nestedBind = _ref2[_j];
+        nestedBind.disconnect();
+      }
+      this.subs = [];
+      return this.nestedBinds = [];
+    };
+
     DepCell.prototype.addSub = function(subUid) {
       return this.subs.push(subUid);
+    };
+
+    DepCell.prototype.addNestedBind = function(nestedBind) {
+      return this.nestedBinds.push(nestedBind);
     };
 
     return DepCell;
@@ -477,10 +496,30 @@
       var _this = this;
 
       recorder.sub(function(target) {
+        return _this.onAdd.sub(function(_arg) {
+          var subkey, val;
+
+          subkey = _arg[0], val = _arg[1];
+          if (key === subkey) {
+            return target.refresh();
+          }
+        });
+      });
+      recorder.sub(function(target) {
         return _this.onChange.sub(function(_arg) {
           var old, subkey, val;
 
           subkey = _arg[0], old = _arg[1], val = _arg[2];
+          if (key === subkey) {
+            return target.refresh();
+          }
+        });
+      });
+      recorder.sub(function(target) {
+        return _this.onRemove.sub(function(_arg) {
+          var old, subkey;
+
+          subkey = _arg[0], old = _arg[1];
           if (key === subkey) {
             return target.refresh();
           }
@@ -493,7 +532,17 @@
       var _this = this;
 
       recorder.sub(function(target) {
+        return _this.onAdd.sub(function() {
+          return target.refresh();
+        });
+      });
+      recorder.sub(function(target) {
         return _this.onChange.sub(function() {
+          return target.refresh();
+        });
+      });
+      recorder.sub(function(target) {
+        return _this.onRemove.sub(function() {
           return target.refresh();
         });
       });
@@ -503,7 +552,7 @@
     ObsMap.prototype.realPut = function(key, val) {
       var old;
 
-      if (__indexOf.call(this.x, key) >= 0) {
+      if (key in this.x) {
         old = this.x[key];
         this.x[key] = val;
         this.onChange.pub([key, old, val]);
@@ -549,7 +598,7 @@
 
   })(ObsMap);
 
-  Depmap = rx.DepMap = (function(_super) {
+  DepMap = rx.DepMap = (function(_super) {
     __extends(DepMap, _super);
 
     function DepMap(f) {
@@ -591,18 +640,6 @@
     },
     map: function(x) {
       return new SrcMap(x);
-    },
-    depCell: function(f) {
-      return new DepCell(f);
-    },
-    lagDepCell: function(f, init) {
-      return new DepCell(f, init, true);
-    },
-    depMap: function(f) {
-      return new DepMap(f);
-    },
-    depArray: function(f) {
-      return new DepArray(f);
     }
   });
 

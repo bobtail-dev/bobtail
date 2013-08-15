@@ -37,6 +37,7 @@ Recorder = class rx.Recorder
   # listener, so that calls to .sub (e.g. by ObsCell.get) can establish a
   # dependency
   start: (dep) ->
+    _(@stack).last().addNestedBind(dep) if @stack.length > 0
     @stack.push(dep)
   stop: ->
     @stack.pop()
@@ -125,14 +126,13 @@ DepCell = class rx.DepCell extends ObsCell
     @refreshing = false
     @lag = lag ? false
     @timeout = null
+    @nestedBinds = []
   refresh: ->
     realRefresh = =>
       #console.log('real refresh')
       if not @refreshing
         old = @x
-        for subUid in @subs
-          depMgr.unsub(subUid)
-        @subs = []
+        @disconnect()
         recorder.start(this)
         @refreshing = true
         try
@@ -149,8 +149,21 @@ DepCell = class rx.DepCell extends ObsCell
         @timeout = setTimeout(realRefresh, 500)
       else
         realRefresh()
+  # unsubscribe from all dependencies and recursively have all nested binds
+  # disconnect themselves as well
+  disconnect: ->
+    for subUid in @subs
+      depMgr.unsub(subUid)
+    for nestedBind in @nestedBinds
+      nestedBind.disconnect()
+    @subs = []
+    @nestedBinds = []
+  # called by recorder
   addSub: (subUid) ->
     @subs.push(subUid)
+  # called by recorder
+  addNestedBind: (nestedBind) ->
+    @nestedBinds.push(nestedBind)
 
 ObsArray = class rx.ObsArray
   constructor: (@xs) ->
