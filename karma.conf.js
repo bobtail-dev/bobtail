@@ -12,7 +12,8 @@ files = [
   'src/*.coffee',
   'src/**/*.js',
   'test/mock/**/*.js',
-  'test/spec/**/*.coffee'
+  'test/spec/**/*.coffee',
+  'test/*.js'
 ];
 
 // list of files to exclude
