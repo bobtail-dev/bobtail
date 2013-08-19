@@ -241,3 +241,11 @@ describe 'flatten', ->
     ]
     expect(flattened.at(0).is('body')).toBe(true)
     expect(flattened.at(1).is('div')).toBe(true)
+  it 'should remove undefineds/nulls (for convenient conditionals)', ->
+    flattened = rx.flatten [
+      1
+      rx.cell()
+      undefined
+      2
+    ]
+    expect(flattened.all()).toEqual([1,2])
