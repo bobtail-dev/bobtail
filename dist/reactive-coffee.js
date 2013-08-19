@@ -317,6 +317,17 @@
           return target.refresh();
         });
       });
+      return _.clone(this.xs);
+    };
+
+    ObsArray.prototype.raw = function() {
+      var _this = this;
+
+      recorder.sub(function(target) {
+        return _this.onChange.sub(function() {
+          return target.refresh();
+        });
+      });
       return this.xs;
     };
 
@@ -631,6 +642,120 @@
 
   })(ObsMap);
 
+  rx.reactify = function(obj, fieldspec) {
+    var arr, methName, name, spec;
+
+    if (_.isArray(obj)) {
+      arr = rx.array(_.clone(obj));
+      Object.defineProperties(obj, _.object((function() {
+        var _i, _len, _ref4, _results;
+
+        _ref4 = _.functions(arr);
+        _results = [];
+        for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
+          methName = _ref4[_i];
+          if (methName !== 'length') {
+            _results.push((function(methName) {
+              var meth, newMeth, spec;
+
+              meth = obj[methName];
+              newMeth = function() {
+                var args, res, _ref5;
+
+                args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+                if (meth != null) {
+                  res = meth.call.apply(meth, [obj].concat(__slice.call(args)));
+                }
+                (_ref5 = arr[methName]).call.apply(_ref5, [arr].concat(__slice.call(args)));
+                return res;
+              };
+              spec = {
+                configurable: true,
+                enumerable: false,
+                value: newMeth,
+                writable: true
+              };
+              return [methName, spec];
+            })(methName));
+          }
+        }
+        return _results;
+      })()));
+      return obj;
+    } else {
+      return Object.defineProperties(obj, _.object((function() {
+        var _results;
+
+        _results = [];
+        for (name in fieldspec) {
+          spec = fieldspec[name];
+          _results.push((function(name, spec) {
+            var desc, obs, view, _ref4, _ref5;
+
+            desc = null;
+            switch (spec.type) {
+              case 'cell':
+                obs = rx.cell((_ref4 = spec.val) != null ? _ref4 : null);
+                desc = {
+                  configurable: true,
+                  enumerable: true,
+                  get: function() {
+                    return obs.get();
+                  },
+                  set: function(x) {
+                    return obs.set(x);
+                  }
+                };
+                break;
+              case 'array':
+                view = rx.reactify((_ref5 = spec.val) != null ? _ref5 : []);
+                desc = {
+                  configurable: true,
+                  enumerable: true,
+                  get: function() {
+                    view.raw();
+                    return view;
+                  },
+                  set: function(x) {
+                    view.splice.apply(view, [0, view.length].concat(__slice.call(x)));
+                    return view;
+                  }
+                };
+                break;
+              default:
+                throw "Unknown observable type: " + type;
+            }
+            return [name, desc];
+          })(name, spec));
+        }
+        return _results;
+      })()));
+    }
+  };
+
+  rx.autoReactify = function(obj) {
+    var name, type, val;
+
+    return rx.reactify(obj, _.object((function() {
+      var _i, _len, _ref4, _results;
+
+      _ref4 = Object.getOwnPropertyNames(obj);
+      _results = [];
+      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
+        name = _ref4[_i];
+        val = obj[name];
+        type = _.isFunction(val) ? null : _.isArray(val) ? 'array' : 'cell';
+        _results.push([
+          name, {
+            type: type,
+            val: val
+          }
+        ]);
+      }
+      return _results;
+    })()));
+  };
+
   _.extend(rx, {
     cell: function(x) {
       return new SrcCell(x);
@@ -642,6 +767,31 @@
       return new SrcMap(x);
     }
   });
+
+  rx.flatten = function(xs) {
+    return new DepArray(function() {
+      var x;
+
+      return _((function() {
+        var _i, _len, _results;
+
+        _results = [];
+        for (_i = 0, _len = xs.length; _i < _len; _i++) {
+          x = xs[_i];
+          if (x instanceof ObsArray) {
+            _results.push(x.raw());
+          } else if (x instanceof ObsCell) {
+            _results.push(x.get());
+          } else {
+            _results.push(x);
+          }
+        }
+        return _results;
+      })()).chain().flatten(true).filter(function(x) {
+        return x != null;
+      }).value();
+    });
+  };
 
   $.fn.rx = function(prop) {
     var checked, focused, map, val;

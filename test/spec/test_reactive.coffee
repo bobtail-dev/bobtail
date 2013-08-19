@@ -209,6 +209,11 @@ describe 'reactify', ->
     expect(lastInDeckIsFlipped.get()).toBe(true)
     deck.cards = [new Card(false)]
     expect(lastInDeckIsFlipped.get()).toBe(false)
+  it 'should give back the same fields it was given', ->
+    options = one: 'hello', two: 'world'
+    rx.autoReactify(options)
+    expect(options.one).toBe('hello')
+    expect(options.two).toBe('world')
 
 describe 'flatten', ->
   flattened = mapped = xs = ys = i = null
