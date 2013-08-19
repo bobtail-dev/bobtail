@@ -246,6 +246,9 @@ describe 'flatten', ->
       1
       rx.cell()
       undefined
+      [undefined]
+      bind -> undefined
+      rx.array([null])
       2
     ]
     expect(flattened.all()).toEqual([1,2])

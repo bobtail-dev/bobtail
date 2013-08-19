@@ -350,18 +350,15 @@ _.extend(rx, {
 #
 
 rx.flatten = (xs) ->
-  new DepArray -> _.flatten(
-    _(
-      for x in xs
-        if x instanceof ObsArray
-          x.raw()
-        else if x instanceof ObsCell
-          x.get()
-        else
-          x
-    ).filter (x) -> x?
-    true
-  )
+  new DepArray -> _(
+    for x in xs
+      if x instanceof ObsArray
+        x.raw()
+      else if x instanceof ObsCell
+        x.get()
+      else
+        x
+  ).chain().flatten(true).filter((x) -> x?).value()
 
 #
 # jQuery extension
