@@ -147,11 +147,16 @@ describe 'ObsMap', ->
 
 describe 'nested bindings', ->
   x = a = b = elt = null
+  outerDisposed = innerDisposed = false
   beforeEach ->
+    outerDisposed = innerDisposed = false
     x = rx.cell('')
     a =
       bind ->
-        bind -> x.get()
+        bind ->
+          rx.onDispose -> innerDisposed = true
+          x.get()
+        rx.onDispose -> outerDisposed = true
         x.get()
     b =
       bind ->
@@ -161,8 +166,12 @@ describe 'nested bindings', ->
           x.get()
         x.get()
   it 'should not leak memory via subscription references', ->
+    expect(innerDisposed).toBe(false)
+    expect(outerDisposed).toBe(false)
     nsubs0 = _.keys(x.onSet.subs).length
     x.set(' ')
+    expect(innerDisposed).toBe(true)
+    expect(outerDisposed).toBe(true)
     nsubs1 = _.keys(x.onSet.subs).length
     x.set('  ')
     nsubs2 = _.keys(x.onSet.subs).length

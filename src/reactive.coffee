@@ -52,6 +52,8 @@ Recorder = class rx.Recorder
       topCell = _(@stack).last()
       handle = sub(topCell)
       topCell.addSub(handle)
+  addCleanup: (cleanup) ->
+    _(@stack).last().addCleanup(cleanup)
   warnMutate: ->
     if @stack.length > 0
       console.warn('Mutation to observable detected during a bind context')
@@ -67,6 +69,9 @@ rx.lagBind = lagBind = (init, f) ->
   dep = new DepCell(f, init)
   dep.refresh()
   dep
+
+rx.onDispose = (cleanup) ->
+  recorder.addCleanup(cleanup)
 
 # Just a global mapping from subscription UIDs to source Evs; this essentially
 # enables us to follow subscription UIDs up the dependency graph (from
@@ -127,6 +132,7 @@ DepCell = class rx.DepCell extends ObsCell
     @lag = lag ? false
     @timeout = null
     @nestedBinds = []
+    @cleanups = []
   refresh: ->
     realRefresh = =>
       #console.log('real refresh')
@@ -152,6 +158,9 @@ DepCell = class rx.DepCell extends ObsCell
   # unsubscribe from all dependencies and recursively have all nested binds
   # disconnect themselves as well
   disconnect: ->
+    # TODO ordering of cleanup vs unsubscribes may require revisiting
+    for cleanup in @cleanups
+      cleanup()
     for subUid in @subs
       depMgr.unsub(subUid)
     for nestedBind in @nestedBinds
@@ -164,6 +173,9 @@ DepCell = class rx.DepCell extends ObsCell
   # called by recorder
   addNestedBind: (nestedBind) ->
     @nestedBinds.push(nestedBind)
+  # called by recorder
+  addCleanup: (cleanup) ->
+    @cleanups.push(cleanup)
 
 ObsArray = class rx.ObsArray
   constructor: (@xs) ->

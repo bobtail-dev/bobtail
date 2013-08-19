@@ -82,6 +82,10 @@
       }
     };
 
+    Recorder.prototype.addCleanup = function(cleanup) {
+      return _(this.stack).last().addCleanup(cleanup);
+    };
+
     Recorder.prototype.warnMutate = function() {
       if (this.stack.length > 0) {
         return console.warn('Mutation to observable detected during a bind context');
@@ -108,6 +112,10 @@
     dep = new DepCell(f, init);
     dep.refresh();
     return dep;
+  };
+
+  rx.onDispose = function(cleanup) {
+    return recorder.addCleanup(cleanup);
   };
 
   DepMgr = rx.DepMgr = (function() {
@@ -232,6 +240,7 @@
       this.lag = lag != null ? lag : false;
       this.timeout = null;
       this.nestedBinds = [];
+      this.cleanups = [];
     }
 
     DepCell.prototype.refresh = function() {
@@ -269,16 +278,21 @@
     };
 
     DepCell.prototype.disconnect = function() {
-      var nestedBind, subUid, _i, _j, _len, _len1, _ref1, _ref2;
+      var cleanup, nestedBind, subUid, _i, _j, _k, _len, _len1, _len2, _ref1, _ref2, _ref3;
 
-      _ref1 = this.subs;
+      _ref1 = this.cleanups;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        subUid = _ref1[_i];
+        cleanup = _ref1[_i];
+        cleanup();
+      }
+      _ref2 = this.subs;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        subUid = _ref2[_j];
         depMgr.unsub(subUid);
       }
-      _ref2 = this.nestedBinds;
-      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-        nestedBind = _ref2[_j];
+      _ref3 = this.nestedBinds;
+      for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+        nestedBind = _ref3[_k];
         nestedBind.disconnect();
       }
       this.subs = [];
@@ -291,6 +305,10 @@
 
     DepCell.prototype.addNestedBind = function(nestedBind) {
       return this.nestedBinds.push(nestedBind);
+    };
+
+    DepCell.prototype.addCleanup = function(cleanup) {
+      return this.cleanups.push(cleanup);
     };
 
     return DepCell;
