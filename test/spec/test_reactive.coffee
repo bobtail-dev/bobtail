@@ -209,3 +209,35 @@ describe 'reactify', ->
     expect(lastInDeckIsFlipped.get()).toBe(true)
     deck.cards = [new Card(false)]
     expect(lastInDeckIsFlipped.get()).toBe(false)
+
+describe 'flatten', ->
+  flattened = mapped = xs = ys = i = null
+  beforeEach ->
+    xs = rx.array(['b','c'])
+    ys = rx.array(['E','F'])
+    i = rx.cell('i')
+    flattened = rx.flatten [
+      'A'
+      xs.map (x) -> x.toUpperCase()
+      'D'
+      ys.map (y) -> y
+      ['G','H']
+      bind -> i.get().toUpperCase()
+    ]
+    mapped = flattened.map (x) -> x.toLowerCase()
+  it 'should flatten and react to observables', ->
+    expect(flattened.all()).toEqual(['A','B','C','D','E','F','G','H','I'])
+    expect(mapped.all()).toEqual(['a','b','c','d','e','f','g','h','i'])
+    i.set('j')
+    expect(flattened.all()).toEqual(['A','B','C','D','E','F','G','H','J'])
+    expect(mapped.all()).toEqual(['a','b','c','d','e','f','g','h','j'])
+    ys.push('f')
+    expect(flattened.all()).toEqual(['A','B','C','D','E','F','f','G','H','J'])
+    expect(mapped.all()).toEqual(['a','b','c','d','e','f','f','g','h','j'])
+  it 'should not flatten jQuery objects (which are array-like)', ->
+    flattened = rx.flatten [
+      $('body')
+      bind -> $('<div/>')
+    ]
+    expect(flattened.at(0).is('body')).toBe(true)
+    expect(flattened.at(1).is('div')).toBe(true)

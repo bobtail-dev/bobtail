@@ -346,6 +346,22 @@ _.extend(rx, {
 })
 
 #
+# Reactive utilities
+#
+
+rx.flatten = (xs) ->
+  new DepArray -> _.flatten(
+    for x in xs
+      if x instanceof ObsArray
+        x.raw()
+      else if x instanceof ObsCell
+        x.get()
+      else
+        x
+    true
+  )
+
+#
 # jQuery extension
 #
 
