@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
-            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#garbage-collection">Garbage Collection</a></li><li><a href="#es5-properties">ES5 Properties</a></li></ul></li>
+            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#side-effects-and-resource-cleanup">Side Effects and Resource Cleanup</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#garbage-collection">Garbage Collection</a></li><li><a href="#es5-properties">ES5 Properties</a></li></ul></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
           </ul>
@@ -490,6 +490,30 @@ a sensible default.)</p>
 making everything dynamic, since you can always opt-out of dynamism by stopping
 propagation, whereas you cannot later reintroduce dynamism into places with no
 dynamic bindings.</p>
+<h2><a name="side-effects-and-resource-cleanup">Side Effects and Resource Cleanup</a></h2>
+<p>Sometimes you will have side effects associated with certain <code>bind</code>s or
+components, such as establishing a connection or setting an interval timer:</p>
+<div class="highlight"><pre><span class="nv">blinkingBox = </span><span class="nf">(opts) -&gt;</span>
+  <span class="nv">active = </span> <span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span> <span class="kc">false</span>
+  <span class="nx">setInterval</span> <span class="p">(</span><span class="nf">-&gt;</span> <span class="nx">active</span><span class="p">.</span><span class="nx">set</span> <span class="o">not</span> <span class="nx">active</span><span class="p">.</span><span class="nx">get</span><span class="p">()),</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">ms</span> <span class="o">?</span> <span class="mi">500</span>
+  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="k">if</span> <span class="nx">active</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="s">&#39;red-box&#39;</span> <span class="k">else</span> <span class="s">&#39;black-box&#39;</span><span class="p">}</span>
+
+<span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
+  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;container&#39;</span><span class="p">},</span> <span class="nx">boxes</span><span class="p">.</span><span class="nx">map</span> <span class="nf">-&gt;</span> <span class="nx">blinkingBox</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+
+<p>In these cases, you&#39;ll want to do proper resource management/cleanup
+whenever the <code>bind</code> context is removed or refreshed—in this case, stopping
+the interval timer.  For these situations, you can use
+<code>rx.onDispose(callback)</code>:</p>
+<div class="highlight"><pre><span class="nv">blinkingBox = </span><span class="nf">(opts) -&gt;</span>
+  <span class="nv">active = </span> <span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span> <span class="kc">false</span>
+  <span class="nv">interval = </span><span class="nx">setInterval</span> <span class="p">(</span><span class="nf">-&gt;</span> <span class="nx">active</span><span class="p">.</span><span class="nx">set</span> <span class="o">not</span> <span class="nx">active</span><span class="p">.</span><span class="nx">get</span><span class="p">()),</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">ms</span> <span class="o">?</span> <span class="mi">500</span>
+  <span class="nx">rx</span><span class="p">.</span><span class="nx">onDispose</span> <span class="nf">-&gt;</span> <span class="nx">clearInterval</span><span class="p">(</span><span class="nx">interval</span><span class="p">)</span>
+  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="k">if</span> <span class="nx">active</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="s">&#39;red-box&#39;</span> <span class="k">else</span> <span class="s">&#39;black-box&#39;</span><span class="p">}</span>
+</pre></div>
+
 <h2><a name="binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></h2>
 <p>We can treat certain interactive DOM elements&#39; attributes as cells, thus
 binding to them as well.</p>

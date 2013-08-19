@@ -79,6 +79,10 @@ observable cells, or other elements, flatten them into one dependent
 array, which will be able to react to changes in any of the observables.
 It furthermore strips out undefined/null elements (for convenient
 conditionals in the array).</li>
+<li><code>onDispose(callback)</code>: add a (0-ary) cleanup listener, which gets fired
+whenever the current (enclosing) bind is removed or refreshed.  This is
+useful for proper resource disposal, such as closing a connection or
+removing an interval timer.</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>
