@@ -171,6 +171,9 @@ ObsArray = class rx.ObsArray
     @onChange = new Ev(=> [[0, [], @xs]]) # [index, removed, added]
   all: ->
     recorder.sub((target) => @onChange.sub(-> target.refresh()))
+    _.clone(@xs)
+  raw: ->
+    recorder.sub((target) => @onChange.sub(-> target.refresh()))
     @xs
   at: (i) ->
     recorder.sub((target) => @onChange.sub(([index, removed, added]) ->
@@ -274,6 +277,73 @@ DepMap = class rx.DepMap extends ObsMap
         if @x[k] != v
           @realPut(k,v)
     )
+
+#
+# Implicitly reactive objects
+#
+
+rx.reactify = (obj, fieldspec) ->
+  if _.isArray(obj)
+    arr = rx.array(_.clone(obj))
+    Object.defineProperties obj, _.object(
+      for methName in _.functions(arr) when methName != 'length'
+        do (methName) ->
+          meth = obj[methName]
+          newMeth = (args...) ->
+            res = meth.call(obj, args...)
+            arr[methName].call(arr, args...)
+            res
+          spec =
+            configurable: true
+            enumerable: false
+            value: newMeth
+            writable: true
+          [methName, spec]
+    )
+    Object.defineProperty obj, 'depArray',
+      configurable: true
+      enumerable: false
+      value: arr.map (x) -> x
+      writable: true
+    obj
+  else
+    Object.defineProperties obj, _.object(
+      for name, spec of fieldspec
+        desc = null
+        switch spec.type
+          when 'cell'
+            obs = rx.cell(spec.val ? null)
+            desc =
+              configurable: true
+              enumerable: true
+              get: -> obs.get()
+              set: (x) -> obs.set(x)
+          when 'array'
+            view = rx.reactify(spec.val ? [])
+            obs = view.depArray
+            desc =
+              configurable: true
+              enumerable: true
+              get: ->
+                obs.raw()
+                view
+              set: (x) ->
+                view.splice(0, view.length, x...)
+                view
+          else throw "Unknown observable type: #{type}"
+        [name, desc]
+    )
+
+rx.autoReactify = (obj) ->
+  rx.reactify obj, _.object(
+    for name in Object.getOwnPropertyNames(obj)
+      val = obj[name]
+      type =
+        if _.isFunction(val) then null
+        else if _.isArray(val) then 'array'
+        else 'cell'
+      [name, {type, val}]
+  )
 
 _.extend(rx, {
   cell: (x) -> new SrcCell(x)

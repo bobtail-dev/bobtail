@@ -168,3 +168,44 @@ describe 'nested bindings', ->
     nsubs2 = _.keys(x.onSet.subs).length
     expect(nsubs0).toBe(nsubs1)
     expect(nsubs0).toBe(nsubs2)
+
+describe 'reactify', ->
+  cards = deck = null
+  lastInDeckIsFlipped = lastIsFlipped = null
+  operate = null
+  class Card
+    constructor: (isFlipped) ->
+      @isFlipped = isFlipped ? false
+      rx.autoReactify(@)
+  class Deck
+    constructor: ->
+      @cards = [new Card(), new Card()]
+      rx.autoReactify(@)
+  beforeEach ->
+    cards = rx.reactify([new Card(), new Card()])
+    deck = new Deck()
+    operate = (cards) ->
+      card = cards[cards.length - 1]
+      card.isFlipped = not card.isFlipped
+    lastIsFlipped = bind -> cards[cards.length - 1].isFlipped
+    lastInDeckIsFlipped = bind -> deck.cards[deck.cards.length - 1].isFlipped
+  it 'should make object fields reactive', ->
+    expect(lastIsFlipped.get()).toBe(false)
+    expect(lastInDeckIsFlipped.get()).toBe(false)
+    operate(cards)
+    expect(lastIsFlipped.get()).toBe(true)
+    expect(lastInDeckIsFlipped.get()).toBe(false)
+    operate(deck.cards)
+    expect(lastIsFlipped.get()).toBe(true)
+    expect(lastInDeckIsFlipped.get()).toBe(true)
+  it 'should make array fields reactive', ->
+    deck.cards.push(new Card(true))
+    expect(lastInDeckIsFlipped.get()).toBe(true)
+  it 'should not make non-field arrays reactive', ->
+    cards.push(new Card(true))
+    expect(lastIsFlipped.get()).toBe(false)
+  it 'should make array field sets do a full replacement', ->
+    deck.cards = [new Card(true)]
+    expect(lastInDeckIsFlipped.get()).toBe(true)
+    deck.cards = [new Card(false)]
+    expect(lastInDeckIsFlipped.get()).toBe(false)
