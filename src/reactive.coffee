@@ -300,11 +300,6 @@ rx.reactify = (obj, fieldspec) ->
             writable: true
           [methName, spec]
     )
-    Object.defineProperty obj, 'depArray',
-      configurable: true
-      enumerable: false
-      value: arr.map (x) -> x
-      writable: true
     obj
   else
     Object.defineProperties obj, _.object(
@@ -320,12 +315,11 @@ rx.reactify = (obj, fieldspec) ->
               set: (x) -> obs.set(x)
           when 'array'
             view = rx.reactify(spec.val ? [])
-            obs = view.depArray
             desc =
               configurable: true
               enumerable: true
               get: ->
-                obs.raw()
+                view.raw()
                 view
               set: (x) ->
                 view.splice(0, view.length, x...)
