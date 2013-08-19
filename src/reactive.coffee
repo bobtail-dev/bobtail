@@ -290,7 +290,7 @@ rx.reactify = (obj, fieldspec) ->
         do (methName) ->
           meth = obj[methName]
           newMeth = (args...) ->
-            res = meth.call(obj, args...)
+            res = meth.call(obj, args...) if meth?
             arr[methName].call(arr, args...)
             res
           spec =
