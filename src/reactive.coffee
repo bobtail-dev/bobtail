@@ -304,28 +304,29 @@ rx.reactify = (obj, fieldspec) ->
   else
     Object.defineProperties obj, _.object(
       for name, spec of fieldspec
-        desc = null
-        switch spec.type
-          when 'cell'
-            obs = rx.cell(spec.val ? null)
-            desc =
-              configurable: true
-              enumerable: true
-              get: -> obs.get()
-              set: (x) -> obs.set(x)
-          when 'array'
-            view = rx.reactify(spec.val ? [])
-            desc =
-              configurable: true
-              enumerable: true
-              get: ->
-                view.raw()
-                view
-              set: (x) ->
-                view.splice(0, view.length, x...)
-                view
-          else throw "Unknown observable type: #{type}"
-        [name, desc]
+        do (name, spec) ->
+          desc = null
+          switch spec.type
+            when 'cell'
+              obs = rx.cell(spec.val ? null)
+              desc =
+                configurable: true
+                enumerable: true
+                get: -> obs.get()
+                set: (x) -> obs.set(x)
+            when 'array'
+              view = rx.reactify(spec.val ? [])
+              desc =
+                configurable: true
+                enumerable: true
+                get: ->
+                  view.raw()
+                  view
+                set: (x) ->
+                  view.splice(0, view.length, x...)
+                  view
+            else throw "Unknown observable type: #{type}"
+          [name, desc]
     )
 
 rx.autoReactify = (obj) ->
