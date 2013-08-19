@@ -431,6 +431,20 @@ anything changed, we could do so with:</p>
 
 <p>Nested <code>bind</code>/<code>map</code> calls are insulated from outer calls, re-rendering only
 what&#39;s necessary.</p>
+<p>Sometimes you will want to append an observable array after some element.
+Or you may want to make one element among a set conditionally rendered.
+For these situations, there&#39;s a handy <code>rx.flatten</code> utility function:</p>
+<div class="highlight"><pre><span class="nx">div</span> <span class="p">{},</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">flatten</span> <span class="p">[</span>
+  <span class="nx">h1</span> <span class="p">{},</span> <span class="s">&#39;Header&#39;</span>
+  <span class="nx">headerItems</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(item) -&gt;</span> <span class="p">...</span>
+  <span class="nx">separator</span> <span class="k">if</span> <span class="nx">showSeparator</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+  <span class="nx">h1</span> <span class="p">{},</span> <span class="s">&#39;Footer&#39;</span>
+  <span class="nx">footerItems</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(item) -&gt;</span> <span class="p">...</span>
+<span class="p">]</span>
+</pre></div>
+
+<p>(These behaviors may be folded into core <code>rxt</code> behavior if it proves to be
+a sensible default.)</p>
 <h2><a name="components">Components</a></h2>
 <p>Making reusable components is as simple as defining a function:</p>
 <div class="highlight"><pre><span class="nv">tabs = </span><span class="nf">(opts) -&gt;</span>

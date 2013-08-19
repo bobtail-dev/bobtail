@@ -74,6 +74,11 @@ object.  <code>spec</code> is a mapping from field name to <code>{type, val}</co
 <li><code>autoReactify(obj)</code>: mutates an object to <code>reactify</code> all fields
 (specifying <code>array</code> for arrays and <code>cell</code> for everything else), and
 returns the object</li>
+<li><code>flatten(xs)</code>: given an array of either arrays, observable arrays,
+observable cells, or other elements, flatten them into one dependent
+array, which will be able to react to changes in any of the observables.
+It furthermore strips out undefined/null elements (for convenient
+conditionals in the array).</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>
