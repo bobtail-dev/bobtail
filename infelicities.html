@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="dev-setup.html">Dev Setup</a></li>
-            <li><a href="infelicities.html" class="current">Infelicities</a><ul class="toc"><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#alternative-syntax-support">Alternative Syntax Support</a></li><li><a href="#lazy-change-propagation">Lazy Change Propagation</a></li><li><a href="#structural-attribute-bindings">Structural Attribute Bindings</a></li><li><a href="#more-combinators">More Combinators</a></li><li><a href="#topologically-ordered-visits">Topologically Ordered Visits</a></li><li><a href="#lazy-event-notification">Lazy Event Notification</a></li><li><a href="#transitions">Transitions</a></li><li><a href="#dag-debugger">DAG Debugger</a></li><li><a href="#tests">Tests</a></li></ul></li>
+            <li><a href="infelicities.html" class="current">Infelicities</a><ul class="toc"><li><a href="#alternative-syntax-support">Alternative Syntax Support</a></li><li><a href="#lazy-change-propagation">Lazy Change Propagation</a></li><li><a href="#structural-attribute-bindings">Structural Attribute Bindings</a></li><li><a href="#more-combinators">More Combinators</a></li><li><a href="#topologically-ordered-visits">Topologically Ordered Visits</a></li><li><a href="#lazy-event-notification">Lazy Event Notification</a></li><li><a href="#transitions">Transitions</a></li><li><a href="#dag-debugger">DAG Debugger</a></li><li><a href="#tests">Tests</a></li></ul></li>
             <li><a href="ideas.html">Ideas</a></li>
             <li><a href="https://github.com/yang/reactive-coffee">GitHub</a></li>
           </ul>
@@ -30,23 +30,6 @@
         <section id="main-content"><h1>Infelicities</h1>
 <p>There are a number of areas for immediate improvement, including but not
 limited to the following:</p>
-<h2><a name="es5-properties">ES5 Properties</a></h2>
-<p>Currently cells and other observable data structures are plain classes,
-with explicit getter/setter method calls.  To make working with observables
-more natural/less verbose as well as more similar to working with regular
-non-observable data structures, we can use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">ES5 object property
-getter/setters</a>, so that what used to be:</p>
-<div class="highlight"><pre><span class="nv">card = </span><span class="nx">cards</span><span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="nx">cards</span><span class="p">.</span><span class="nx">length</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-<span class="nx">card</span><span class="p">.</span><span class="nx">isFlipped</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="o">not</span> <span class="nx">card</span><span class="p">.</span><span class="nx">isFlipped</span><span class="p">.</span><span class="nx">get</span><span class="p">())</span>
-</pre></div>
-
-<p>becomes:</p>
-<div class="highlight"><pre><span class="nv">card = </span><span class="nx">cards</span><span class="p">[</span><span class="nx">cards</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
-<span class="nv">card.isFlipped = </span><span class="o">not</span> <span class="nx">card</span><span class="p">.</span><span class="nx">isFlipped</span>
-</pre></div>
-
-<p>Thanks to <a href="https://github.com/yang/reactive-coffee/issues/6">@m1sta</a> for
-bringing this idea to the table.</p>
 <h2><a name="alternative-syntax-support">Alternative Syntax Support</a></h2>
 <p>Although there should be a single encouraged syntax so as to facilitate
 communication among developers, we realize that the syntax has yet to learn

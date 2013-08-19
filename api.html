@@ -67,6 +67,13 @@ subsequently trigger future re-evaluations.</li>
 <li><code>lagBind(init, fn)</code>: same as <code>bind</code> but waits a 500ms delay after getting an
 update before the <code>DepCell</code> updates itself (yes, this needs to be a
 configurable parameter)</li>
+<li><code>reactify(obj, spec)</code>: mutates an object to replace the specified fields
+with getters/setters powered by an observable cell/array, and returns the
+object.  <code>spec</code> is a mapping from field name to <code>{type, val}</code>, where
+<code>type</code> is <code>&#39;array&#39;</code> or <code>&#39;cell&#39;</code> and <code>val</code> is an optional initial value.</li>
+<li><code>autoReactify(obj)</code>: mutates an object to <code>reactify</code> all fields
+(specifying <code>array</code> for arrays and <code>cell</code> for everything else), and
+returns the object</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>
@@ -89,7 +96,10 @@ recursively disconnects all nested binds; useful for manual disposal of
 <p><strong><code>ObsArray</code> members</strong></p>
 <ul>
 <li><code>at(i)</code>: return element at <code>i</code></li>
-<li><code>all()</code>: return raw array copy of all elements</li>
+<li><code>all()</code>: return array copy of all elements</li>
+<li><code>raw()</code>: return raw array of all elements; this is unsafe since mutations
+will violate the encapsulated invariants, but serves as a performance
+escape hatch around <code>all()</code></li>
 <li><code>length()</code>: return size of the array</li>
 <li><code>map(fn)</code>: return <code>DepArray</code> of given function mapped over this array</li>
 <li><code>onChange</code>: the event that is fired after any part of the array is
