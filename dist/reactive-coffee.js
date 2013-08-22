@@ -114,6 +114,17 @@
       return popKey(this.subs, uid);
     };
 
+    Ev.prototype.scoped = function(listener, context) {
+      var uid;
+
+      uid = this.sub(listener);
+      try {
+        return context();
+      } finally {
+        this.unsub(uid);
+      }
+    };
+
     return Ev;
 
   })();

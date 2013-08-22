@@ -64,6 +64,11 @@ Ev = class rx.Ev
       listener(data)
   unsub: (uid) ->
     popKey(@subs, uid)
+  # listener is subscribed only for the duration of the context
+  scoped: (listener, context) ->
+    uid = @sub(listener)
+    try context()
+    finally @unsub(uid)
 
 #
 # Reactivity

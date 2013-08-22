@@ -266,3 +266,18 @@ describe 'flatten', ->
       2
     ]
     expect(flattened.all()).toEqual([1,2])
+
+describe 'Ev', ->
+  it 'should support scoped subscription', ->
+    ev = new Ev()
+    n = 0
+    hits = 0
+    listener = (x) ->
+      hits += 1
+      expect(x).toBe(n)
+    ev.pub(n += 1)
+    ev.scoped listener, ->
+      ev.pub(n += 1)
+      ev.pub(n += 1)
+    ev.pub(n += 1)
+    expect(hits).toBe(2)
