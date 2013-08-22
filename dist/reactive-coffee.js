@@ -134,15 +134,16 @@
       this.stack = [];
     }
 
-    Recorder.prototype.start = function(dep) {
-      if (this.stack.length > 0) {
+    Recorder.prototype.record = function(dep, f) {
+      if (this.stack.length > 0 && !this.isMutating) {
         _(this.stack).last().addNestedBind(dep);
       }
-      return this.stack.push(dep);
-    };
-
-    Recorder.prototype.stop = function() {
-      return this.stack.pop();
+      this.stack.push(dep);
+      try {
+        return f();
+      } finally {
+        this.stack.pop();
+      }
     };
 
     Recorder.prototype.sub = function(sub) {
@@ -264,13 +265,11 @@
         if (!_this.refreshing) {
           old = _this.x;
           _this.disconnect();
-          recorder.start(_this);
           _this.refreshing = true;
           try {
-            _this.x = _this.body();
+            _this.x = recorder.record(_this, _this.body);
           } finally {
             _this.refreshing = false;
-            recorder.stop();
           }
           return _this.onSet.pub([old, _this.x]);
         }

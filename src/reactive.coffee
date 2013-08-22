@@ -80,11 +80,13 @@ Recorder = class rx.Recorder
   # takes a dep cell and push it onto the stack as the current invalidation
   # listener, so that calls to .sub (e.g. by ObsCell.get) can establish a
   # dependency
-  start: (dep) ->
-    _(@stack).last().addNestedBind(dep) if @stack.length > 0
+  record: (dep, f) ->
+    _(@stack).last().addNestedBind(dep) if @stack.length > 0 and not @isMutating
     @stack.push(dep)
-  stop: ->
-    @stack.pop()
+    try
+      f()
+    finally
+      @stack.pop()
   # Takes a subscriber function that adds the current cell as an invalidation
   # listener; the subscriber function is responsible for actually subscribing
   # the current listener to the appropriate events; note that we are
@@ -148,13 +150,9 @@ DepCell = class rx.DepCell extends ObsCell
       if not @refreshing
         old = @x
         @disconnect()
-        recorder.start(this)
         @refreshing = true
-        try
-          @x = @body()
-        finally
-          @refreshing = false
-          recorder.stop()
+        try @x = recorder.record this, @body
+        finally @refreshing = false
         @onSet.pub([old, @x])
     if not @refreshing
       if @lag
