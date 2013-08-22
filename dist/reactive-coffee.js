@@ -132,16 +132,22 @@
   Recorder = rx.Recorder = (function() {
     function Recorder() {
       this.stack = [];
+      this.isMutating = false;
     }
 
     Recorder.prototype.record = function(dep, f) {
+      var wasMutating;
+
       if (this.stack.length > 0 && !this.isMutating) {
         _(this.stack).last().addNestedBind(dep);
       }
       this.stack.push(dep);
+      wasMutating = this.isMutating;
+      this.isMutating = false;
       try {
         return f();
       } finally {
+        this.isMutating = wasMutating;
         this.stack.pop();
       }
     };
@@ -160,9 +166,18 @@
       return _(this.stack).last().addCleanup(cleanup);
     };
 
-    Recorder.prototype.warnMutate = function() {
+    Recorder.prototype.mutating = function(f) {
       if (this.stack.length > 0) {
-        return console.warn('Mutation to observable detected during a bind context');
+        console.warn('Mutation to observable detected during a bind context');
+      }
+      if (this.isMutating) {
+        throw 'Directly nested mutations';
+      }
+      this.isMutating = true;
+      try {
+        return f();
+      } finally {
+        this.isMutating = false;
       }
     };
 
@@ -228,13 +243,16 @@
     }
 
     SrcCell.prototype.set = function(x) {
-      var old;
+      var _this = this;
 
-      recorder.warnMutate();
-      old = this.x;
-      this.x = x;
-      this.onSet.pub([old, x]);
-      return old;
+      return recorder.mutating(function() {
+        var old;
+
+        old = _this.x;
+        _this.x = x;
+        _this.onSet.pub([old, x]);
+        return old;
+      });
     };
 
     return SrcCell;
@@ -424,8 +442,11 @@
     }
 
     SrcArray.prototype.spliceArray = function(index, count, additions) {
-      recorder.warnMutate();
-      return this.realSplice(index, count, additions);
+      var _this = this;
+
+      return recorder.mutating(function() {
+        return _this.realSplice(index, count, additions);
+      });
     };
 
     SrcArray.prototype.splice = function() {
@@ -624,13 +645,19 @@
     }
 
     SrcMap.prototype.put = function(key, val) {
-      recorder.warnMutate();
-      return this.realPut(key, val);
+      var _this = this;
+
+      return recorder.mutating(function() {
+        return _this.realPut(key, val);
+      });
     };
 
     SrcMap.prototype.remove = function(key) {
-      recorder.warnMutate();
-      return this.realRemove(key);
+      var _this = this;
+
+      return recorder.mutating(function() {
+        return _this.realRemove(key);
+      });
     };
 
     return SrcMap;

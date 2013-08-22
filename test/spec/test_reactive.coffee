@@ -7,6 +7,13 @@ describe 'source cell', ->
   it 'has get value that is same as last set value', ->
     src.set(1)
     expect(src.get()).toBe(1)
+  it 'should not nest (and thus disconnect) binds refreshed from inside a mutation', ->
+    x = rx.cell()
+    xx = bind -> x.get()
+    y = bind -> x.set(src.get())
+    for i in [1..3]
+      src.set(i)
+      expect(xx.get()).toBe(i)
 
 describe 'dependent cell', ->
   dep = src = null

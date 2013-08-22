@@ -77,15 +77,20 @@ Ev = class rx.Ev
 Recorder = class rx.Recorder
   constructor: ->
     @stack = []
+    @isMutating = false
   # takes a dep cell and push it onto the stack as the current invalidation
   # listener, so that calls to .sub (e.g. by ObsCell.get) can establish a
   # dependency
   record: (dep, f) ->
     _(@stack).last().addNestedBind(dep) if @stack.length > 0 and not @isMutating
     @stack.push(dep)
+    # reset isMutating
+    wasMutating = @isMutating
+    @isMutating = false
     try
       f()
     finally
+      @isMutating = wasMutating
       @stack.pop()
   # Takes a subscriber function that adds the current cell as an invalidation
   # listener; the subscriber function is responsible for actually subscribing
@@ -100,9 +105,18 @@ Recorder = class rx.Recorder
       topCell.addSub(handle)
   addCleanup: (cleanup) ->
     _(@stack).last().addCleanup(cleanup)
-  warnMutate: ->
+  # Delimit the function as one where a mutation takes place, such that if
+  # within this function we refresh a bind, we don't treat that bind as a
+  # nested bind (which causes all sorts of problems e.g. the cascading
+  # disconnects)
+  mutating: (f) ->
     if @stack.length > 0
       console.warn('Mutation to observable detected during a bind context')
+    if @isMutating
+      throw 'Directly nested mutations'
+    @isMutating = true
+    try f()
+    finally @isMutating = false
 
 recorder = new Recorder()
 
@@ -128,8 +142,7 @@ ObsCell = class rx.ObsCell
     @x
 
 SrcCell = class rx.SrcCell extends ObsCell
-  set: (x) ->
-    recorder.warnMutate()
+  set: (x) -> recorder.mutating =>
     old = @x
     @x = x
     @onSet.pub([old, x])
@@ -213,8 +226,7 @@ ObsArray = class rx.ObsArray
     @onChange.pub([index, removed, additions])
 
 SrcArray = class rx.SrcArray extends ObsArray
-  spliceArray: (index, count, additions) ->
-    recorder.warnMutate()
+  spliceArray: (index, count, additions) -> recorder.mutating =>
     @realSplice(index, count, additions)
   splice: (index, count, additions...) -> @spliceArray(index, count, additions)
   insert: (x, index) -> @splice(index, 0, x)
@@ -279,11 +291,9 @@ ObsMap = class rx.ObsMap
 
 SrcMap = class rx.SrcMap extends ObsMap
   put: (key, val) ->
-    recorder.warnMutate()
-    @realPut(key, val)
+    recorder.mutating => @realPut(key, val)
   remove: (key) ->
-    recorder.warnMutate()
-    @realRemove(key)
+    recorder.mutating => @realRemove(key)
 
 DepMap = class rx.DepMap extends ObsMap
   constructor: (@f) ->
