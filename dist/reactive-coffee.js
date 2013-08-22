@@ -133,10 +133,12 @@
     function Recorder() {
       this.stack = [];
       this.isMutating = false;
+      this.isAllowingMutations = false;
+      this.onMutationWarning = new Ev();
     }
 
     Recorder.prototype.record = function(dep, f) {
-      var wasMutating;
+      var wasAllowingMutations, wasMutating;
 
       if (this.stack.length > 0 && !this.isMutating) {
         _(this.stack).last().addNestedBind(dep);
@@ -144,9 +146,12 @@
       this.stack.push(dep);
       wasMutating = this.isMutating;
       this.isMutating = false;
+      wasAllowingMutations = this.isAllowingMutations;
+      this.isAllowingMutations = false;
       try {
         return f();
       } finally {
+        this.isAllowingMutations = wasAllowingMutations;
         this.isMutating = wasMutating;
         this.stack.pop();
       }
@@ -167,8 +172,9 @@
     };
 
     Recorder.prototype.mutating = function(f) {
-      if (this.stack.length > 0) {
+      if (this.stack.length > 0 && !this.isAllowingMutations) {
         console.warn('Mutation to observable detected during a bind context');
+        this.onMutationWarning.pub(null);
       }
       if (this.isMutating) {
         throw 'Directly nested mutations';
@@ -181,11 +187,27 @@
       }
     };
 
+    Recorder.prototype.allowMutations = function(f) {
+      var wasAllowingMutations;
+
+      wasAllowingMutations = this.isAllowingMutations;
+      this.isAllowingMutations = true;
+      try {
+        return f();
+      } finally {
+        this.isAllowingMutations = wasAllowingMutations;
+      }
+    };
+
     return Recorder;
 
   })();
 
-  recorder = new Recorder();
+  rx._recorder = recorder = new Recorder();
+
+  rx.allowMutations = function(f) {
+    return recorder.allowMutations(f);
+  };
 
   rx.bind = bind = function(f) {
     var dep;

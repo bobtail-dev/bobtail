@@ -288,3 +288,48 @@ describe 'Ev', ->
       ev.pub(n += 1)
     ev.pub(n += 1)
     expect(hits).toBe(2)
+
+describe 'allowMutations', ->
+  thrower = -> throw 'should not see me uncaught'
+  wrapper = (f) -> rx._recorder.onMutationWarning.scoped thrower, f
+  it 'should be necessary to silence warnings', -> wrapper ->
+    x = rx.cell(0)
+    y = rx.cell()
+    expect(-> bind -> y.set(x.get())).toThrow()
+  it 'should be sufficient to silence warnings', -> wrapper ->
+    x = rx.cell(0)
+    y = rx.cell()
+    z = bind ->
+      rx.allowMutations ->
+        y.set(x.get())
+    expect(y.get()).toBe(0)
+    x.set(1)
+    expect(y.get()).toBe(1)
+  it 'should support recursive, multi-layer silencing', -> wrapper ->
+    a = rx.cell()
+    b = rx.cell()
+    c = rx.cell()
+    bb = bind -> b.get()
+    cc = bind ->
+      rx.allowMutations ->
+        c.set(bb.get())
+    aa = bind ->
+      rx.allowMutations ->
+        b.set(a.get())
+        b.set(a.get())
+    expect(cc.get()).toBe(null)
+    a.set(0)
+    expect(cc.get()).toBe(0)
+    a.set(1)
+    expect(cc.get()).toBe(1)
+  it 'should not silence warnings beyond current bind context', -> wrapper ->
+    x = rx.cell()
+    y = rx.cell()
+    z = rx.cell()
+    yy = bind ->
+      z.set(y.get()) if y.get()?
+    xx = bind ->
+      rx.allowMutations ->
+        y.set(x.get())
+    expect(-> x.set()).not.toThrow()
+    expect(-> x.set(0)).toThrow()

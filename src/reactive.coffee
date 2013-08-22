@@ -78,6 +78,8 @@ Recorder = class rx.Recorder
   constructor: ->
     @stack = []
     @isMutating = false
+    @isAllowingMutations = false
+    @onMutationWarning = new Ev() # just fires null for now
   # takes a dep cell and push it onto the stack as the current invalidation
   # listener, so that calls to .sub (e.g. by ObsCell.get) can establish a
   # dependency
@@ -87,9 +89,13 @@ Recorder = class rx.Recorder
     # reset isMutating
     wasMutating = @isMutating
     @isMutating = false
+    # reset isAllowingMutations
+    wasAllowingMutations = @isAllowingMutations
+    @isAllowingMutations = false
     try
       f()
     finally
+      @isAllowingMutations = wasAllowingMutations
       @isMutating = wasMutating
       @stack.pop()
   # Takes a subscriber function that adds the current cell as an invalidation
@@ -108,17 +114,27 @@ Recorder = class rx.Recorder
   # Delimit the function as one where a mutation takes place, such that if
   # within this function we refresh a bind, we don't treat that bind as a
   # nested bind (which causes all sorts of problems e.g. the cascading
-  # disconnects)
+  # disconnects), and also we can issue warnings on mutations
   mutating: (f) ->
-    if @stack.length > 0
+    if @stack.length > 0 and not @isAllowingMutations
       console.warn('Mutation to observable detected during a bind context')
+      @onMutationWarning.pub(null)
     if @isMutating
       throw 'Directly nested mutations'
     @isMutating = true
     try f()
     finally @isMutating = false
+  # silence mutation warnings while evaluating the given function (but limited to
+  # the current bind context; subsequent binds will still be warned on mutations)
+  allowMutations: (f) ->
+    wasAllowingMutations = @isAllowingMutations
+    @isAllowingMutations = true
+    try f()
+    finally @isAllowingMutations = wasAllowingMutations
 
-recorder = new Recorder()
+rx._recorder = recorder = new Recorder()
+
+rx.allowMutations = (f) -> recorder.allowMutations(f)
 
 rx.bind = bind = (f) ->
   dep = new DepCell(f)
