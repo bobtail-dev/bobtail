@@ -27,6 +27,45 @@ firstWhere = (xs, f) -> nthWhere(xs, 0, f)
 mkMap = -> Object.create(null)
 
 #
+# Events and pub-sub dependency management
+#
+
+# Just a global mapping from subscription UIDs to source Evs; this essentially
+# enables us to follow subscription UIDs up the dependency graph (from
+# dependents)
+DepMgr = class rx.DepMgr
+  constructor: ->
+    @uid2src = {}
+  # called by source Ev to register a new subscription
+  sub: (uid, src) ->
+    @uid2src[uid] = src
+  # called by destination (who's responsible for remembering what he's
+  # subscribed to, or else...memory leak!)
+  unsub: (uid) ->
+    @uid2src[uid].unsub(uid)
+    popKey(@uid2src, uid)
+
+depMgr = new DepMgr()
+
+Ev = class rx.Ev
+  constructor: (@inits) ->
+    @subs = []
+  sub: (listener) ->
+    uid = mkuid()
+    if @inits?
+      for init in @inits()
+        listener(init)
+    @subs[uid] = listener
+    depMgr.sub(uid, this)
+    uid
+  # callable only by the src
+  pub: (data) ->
+    for uid, listener of @subs
+      listener(data)
+  unsub: (uid) ->
+    popKey(@subs, uid)
+
+#
 # Reactivity
 #
 
@@ -72,41 +111,6 @@ rx.lagBind = lagBind = (init, f) ->
 
 rx.onDispose = (cleanup) ->
   recorder.addCleanup(cleanup)
-
-# Just a global mapping from subscription UIDs to source Evs; this essentially
-# enables us to follow subscription UIDs up the dependency graph (from
-# dependents)
-DepMgr = class rx.DepMgr
-  constructor: ->
-    @uid2src = {}
-  # called by source Ev to register a new subscription
-  sub: (uid, src) ->
-    @uid2src[uid] = src
-  # called by destination (who's responsible for remembering what he's
-  # subscribed to, or else...memory leak!)
-  unsub: (uid) ->
-    @uid2src[uid].unsub(uid)
-    popKey(@uid2src, uid)
-
-depMgr = new DepMgr()
-
-Ev = class rx.Ev
-  constructor: (@inits) ->
-    @subs = []
-  sub: (listener) ->
-    uid = mkuid()
-    if @inits?
-      for init in @inits()
-        listener(init)
-    @subs[uid] = listener
-    depMgr.sub(uid, this)
-    uid
-  # callable only by the src
-  pub: (data) ->
-    for uid, listener of @subs
-      listener(data)
-  unsub: (uid) ->
-    popKey(@subs, uid)
 
 ObsCell = class rx.ObsCell
   constructor: (@x) ->

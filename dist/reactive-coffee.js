@@ -56,68 +56,6 @@
     return Object.create(null);
   };
 
-  Recorder = rx.Recorder = (function() {
-    function Recorder() {
-      this.stack = [];
-    }
-
-    Recorder.prototype.start = function(dep) {
-      if (this.stack.length > 0) {
-        _(this.stack).last().addNestedBind(dep);
-      }
-      return this.stack.push(dep);
-    };
-
-    Recorder.prototype.stop = function() {
-      return this.stack.pop();
-    };
-
-    Recorder.prototype.sub = function(sub) {
-      var handle, topCell;
-
-      if (this.stack.length > 0) {
-        topCell = _(this.stack).last();
-        handle = sub(topCell);
-        return topCell.addSub(handle);
-      }
-    };
-
-    Recorder.prototype.addCleanup = function(cleanup) {
-      return _(this.stack).last().addCleanup(cleanup);
-    };
-
-    Recorder.prototype.warnMutate = function() {
-      if (this.stack.length > 0) {
-        return console.warn('Mutation to observable detected during a bind context');
-      }
-    };
-
-    return Recorder;
-
-  })();
-
-  recorder = new Recorder();
-
-  rx.bind = bind = function(f) {
-    var dep;
-
-    dep = new DepCell(f);
-    dep.refresh();
-    return dep;
-  };
-
-  rx.lagBind = lagBind = function(init, f) {
-    var dep;
-
-    dep = new DepCell(f, init);
-    dep.refresh();
-    return dep;
-  };
-
-  rx.onDispose = function(cleanup) {
-    return recorder.addCleanup(cleanup);
-  };
-
   DepMgr = rx.DepMgr = (function() {
     function DepMgr() {
       this.uid2src = {};
@@ -179,6 +117,68 @@
     return Ev;
 
   })();
+
+  Recorder = rx.Recorder = (function() {
+    function Recorder() {
+      this.stack = [];
+    }
+
+    Recorder.prototype.start = function(dep) {
+      if (this.stack.length > 0) {
+        _(this.stack).last().addNestedBind(dep);
+      }
+      return this.stack.push(dep);
+    };
+
+    Recorder.prototype.stop = function() {
+      return this.stack.pop();
+    };
+
+    Recorder.prototype.sub = function(sub) {
+      var handle, topCell;
+
+      if (this.stack.length > 0) {
+        topCell = _(this.stack).last();
+        handle = sub(topCell);
+        return topCell.addSub(handle);
+      }
+    };
+
+    Recorder.prototype.addCleanup = function(cleanup) {
+      return _(this.stack).last().addCleanup(cleanup);
+    };
+
+    Recorder.prototype.warnMutate = function() {
+      if (this.stack.length > 0) {
+        return console.warn('Mutation to observable detected during a bind context');
+      }
+    };
+
+    return Recorder;
+
+  })();
+
+  recorder = new Recorder();
+
+  rx.bind = bind = function(f) {
+    var dep;
+
+    dep = new DepCell(f);
+    dep.refresh();
+    return dep;
+  };
+
+  rx.lagBind = lagBind = function(init, f) {
+    var dep;
+
+    dep = new DepCell(f, init);
+    dep.refresh();
+    return dep;
+  };
+
+  rx.onDispose = function(cleanup) {
+    return recorder.addCleanup(cleanup);
+  };
 
   ObsCell = rx.ObsCell = (function() {
     function ObsCell(x) {
