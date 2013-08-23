@@ -19,9 +19,6 @@ nthWhere = (xs, n, f) ->
       return [x, i]
   [null, -1]
 
-maybe = (f,x) ->
-  if x? then f(x) else x
-
 firstWhere = (xs, f) -> nthWhere(xs, 0, f)
 
 mkMap = -> Object.create(null)
