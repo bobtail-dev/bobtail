@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+ts() { stat -c %Y "$@"; }
+if (( $(ts dist/reactive-coffee.js) <= $(ts src/reactive.coffee) )); then
+  cat 1>&2 << "EOF"
+Generated artifacts under dist/ are older than source.
+Ensure commits always have dist/ reflecting source.
+Run `grunt` to re-generate before committing.
+EOF
+  exit 1
+fi
