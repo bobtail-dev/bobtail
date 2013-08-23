@@ -333,3 +333,30 @@ describe 'allowMutations', ->
         y.set(x.get())
     expect(-> x.set()).not.toThrow()
     expect(-> x.set(0)).toThrow()
+
+describe 'snap', ->
+  it 'should only run once and should ignore hooks', ->
+    runs = []
+    x = rx.cell()
+    y = rx.snap ->
+      runs.push(null)
+      x.get()
+    expect(runs.length).toBe(1)
+    expect(y.get()).toBeNull()
+    x.set(0)
+    expect(runs.length).toBe(1)
+    expect(y.get()).toBeNull()
+
+describe 'noSubs', ->
+  it 'should shield enclosing bind', ->
+    runs = []
+    x = rx.cell()
+    y = bind ->
+      y = rx.noSubs(-> x.get())
+      runs.push(null)
+      y
+    expect(runs.length).toBe(1)
+    expect(y.get()).toBeNull()
+    x.set(0)
+    expect(runs.length).toBe(1)
+    expect(y.get()).toBeNull()

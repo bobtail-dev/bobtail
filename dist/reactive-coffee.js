@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, firstWhere, lagBind, maybe, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, prop, propSet, props, recorder, rx, rxt, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, firstWhere, lagBind, maybe, mkMap, mktag, mkuid, nextUid, noSubs, nthWhere, popKey, prop, propSet, props, recorder, rx, rxt, setProp, snap, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -134,11 +134,12 @@
       this.stack = [];
       this.isMutating = false;
       this.isAllowingMutations = false;
+      this.isIgnoring = false;
       this.onMutationWarning = new Ev();
     }
 
     Recorder.prototype.record = function(dep, f) {
-      var wasAllowingMutations, wasMutating;
+      var wasAllowingMutations, wasIgnoring, wasMutating;
 
       if (this.stack.length > 0 && !this.isMutating) {
         _(this.stack).last().addNestedBind(dep);
@@ -148,9 +149,12 @@
       this.isMutating = false;
       wasAllowingMutations = this.isAllowingMutations;
       this.isAllowingMutations = false;
+      wasIgnoring = this.isIgnoring;
+      this.isIgnoring = false;
       try {
         return f();
       } finally {
+        this.isIgnoring = wasIgnoring;
         this.isAllowingMutations = wasAllowingMutations;
         this.isMutating = wasMutating;
         this.stack.pop();
@@ -160,7 +164,7 @@
     Recorder.prototype.sub = function(sub) {
       var handle, topCell;
 
-      if (this.stack.length > 0) {
+      if (this.stack.length > 0 && !this.isIgnoring) {
         topCell = _(this.stack).last();
         handle = sub(topCell);
         return topCell.addSub(handle);
@@ -199,6 +203,18 @@
       }
     };
 
+    Recorder.prototype.ignoring = function(f) {
+      var wasIgnoring;
+
+      wasIgnoring = this.isIgnoring;
+      this.isIgnoring = true;
+      try {
+        return f();
+      } finally {
+        this.isIgnoring = wasIgnoring;
+      }
+    };
+
     return Recorder;
 
   })();
@@ -221,6 +237,21 @@
     var dep;
 
     dep = new DepCell(f, init);
+    dep.refresh();
+    return dep;
+  };
+
+  rx.noSubs = noSubs = function(f) {
+    return recorder.ignoring(f);
+  };
+
+  rx.snap = snap = function(f) {
+    var dep, snapshot;
+
+    snapshot = rx.noSubs(f);
+    dep = new DepCell(function() {
+      return snapshot;
+    });
     dep.refresh();
     return dep;
   };
