@@ -289,6 +289,20 @@ describe 'Ev', ->
     ev.pub(n += 1)
     expect(hits).toBe(2)
 
+describe 'nested mutations', ->
+  it 'should not complain about directly nested mutations in dependent binds of dependent binds', ->
+    a = rx.cell()
+    b = rx.cell()
+    aa = bind -> b.set(a.get())
+    aaa = bind -> b.set(aa.get())
+    a.set(0)
+    expect(aaa.get()).toBe(0)
+  it 'should not complain about directly nested mutations in listeners', ->
+    a = rx.cell()
+    b = rx.cell()
+    a.onSet.sub ([old,val]) -> b.set(val)
+    expect(-> a.set(0)).not.toThrow()
+
 describe 'allowMutations', ->
   thrower = -> throw 'should not see me uncaught'
   wrapper = (f) -> rx._recorder.onMutationWarning.scoped thrower, f

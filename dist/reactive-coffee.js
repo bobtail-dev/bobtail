@@ -176,18 +176,18 @@
     };
 
     Recorder.prototype.mutating = function(f) {
+      var wasMutating;
+
       if (this.stack.length > 0 && !this.isAllowingMutations) {
         console.warn('Mutation to observable detected during a bind context');
         this.onMutationWarning.pub(null);
       }
-      if (this.isMutating) {
-        throw 'Directly nested mutations';
-      }
+      wasMutating = this.isMutating;
       this.isMutating = true;
       try {
         return f();
       } finally {
-        this.isMutating = false;
+        this.isMutating = wasMutating;
       }
     };
 

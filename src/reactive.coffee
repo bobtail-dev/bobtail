@@ -119,16 +119,15 @@ Recorder = class rx.Recorder
   # Delimit the function as one where a mutation takes place, such that if
   # within this function we refresh a bind, we don't treat that bind as a
   # nested bind (which causes all sorts of problems e.g. the cascading
-  # disconnects), and also we can issue warnings on mutations
+  # disconnects)
   mutating: (f) ->
     if @stack.length > 0 and not @isAllowingMutations
       console.warn('Mutation to observable detected during a bind context')
       @onMutationWarning.pub(null)
-    if @isMutating
-      throw 'Directly nested mutations'
+    wasMutating = @isMutating
     @isMutating = true
     try f()
-    finally @isMutating = false
+    finally @isMutating = wasMutating
   # silence mutation warnings while evaluating the given function (but limited to
   # the current bind context; subsequent binds will still be warned on mutations)
   allowMutations: (f) ->
