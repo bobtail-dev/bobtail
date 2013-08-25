@@ -23,6 +23,7 @@
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
             <li><a href="tutorial.html">Tutorial</a></li>
+            <li><a href="advanced.html">Advanced Concepts</a></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html" class="current">Change Log</a></li>
           </ul>
@@ -31,12 +32,15 @@
 <p><strong>v0.0.5 – under development</strong></p>
 <ul>
 <li>Add support for <a href="tutorial.html#es5-properties">ES5 property getter/setters</a>.</li>
-<li>Add utility function <code>flatten</code>.</li>
-<li>Add <code>rx.onDispose</code> for <a href="tutorial.html#side-effects-and-resource-cleanup">resource cleanup</a>.</li>
+<li>Add <code>rx.snap</code> for non-binding snapshots.</li>
+<li>Add <code>rx.onDispose</code> for <a href="advanced.html#side-effects-and-resource-cleanup">resource cleanup</a>.</li>
+<li>Add <code>rx.allowMutations</code> to <a href="advanced.html#mutations-inside-binds">tie a source cell to a dependent
+cell</a>.</li>
+<li>Add <code>rx.flatten</code> utility function.</li>
 </ul>
 <p><strong>v0.0.4 – 2013-08-14</strong></p>
 <ul>
-<li>Fix long-standing <a href="tutorial.html#garbage-collection">memory leak with nested binds</a>.</li>
+<li>Fix long-standing <a href="advanced.html#garbage-collection">memory leak with nested binds</a>.</li>
 <li>Trim undocumented functions from public <code>rx</code> API.</li>
 <li>Fix several bugs in <code>ObsMap</code> hierarchy.</li>
 </ul>

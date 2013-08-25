@@ -23,6 +23,7 @@
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
             <li><a href="tutorial.html">Tutorial</a></li>
+            <li><a href="advanced.html">Advanced Concepts</a></li>
             <li><a href="api.html" class="current">API Reference</a><ul class="toc"><li><a href="#rx-namespace"><code>rx</code> Namespace</a></li><li><a href="#rxt-namespace"><code>rxt</code> Namespace</a></li></ul></li>
             <li><a href="changes.html">Change Log</a></li>
           </ul>
@@ -59,11 +60,15 @@ type</li>
 defaults to <code>undefined</code>)</li>
 <li><code>array(value)</code>: return a <code>SrcArray</code> initialized to the given array (optional;
 defaults to <code>[]</code>)</li>
-<li><code>bind(fn)</code>: given a 0-ary function, return a <code>DepCell</code> whose value is the
+<li><code>bind(fn)</code>: given a 0-ary function, return a <code>DepCell</code> whose value is
 bound to the result of evaluating that function.  The function is immediately
 evaluated once, and each time it&#39;s evaluated, for any accesses of
 observables, the <code>DepCell</code> subscribes to the corresponding events, which may
 subsequently trigger future re-evaluations.</li>
+<li><code>snap(fn)</code>: given a 0-ary function, return a <code>DepCell</code> whose value is the
+result of immediately evaluating that function <em>just once</em>.  The function
+does not subscribe to any observables contained therein.  This also
+shields the current context from subscribing to the function as well.</li>
 <li><code>lagBind(init, fn)</code>: same as <code>bind</code> but waits a 500ms delay after getting an
 update before the <code>DepCell</code> updates itself (yes, this needs to be a
 configurable parameter)</li>
@@ -83,6 +88,11 @@ conditionals in the array).</li>
 whenever the current (enclosing) bind is removed or refreshed.  This is
 useful for proper resource disposal, such as closing a connection or
 removing an interval timer.</li>
+<li><code>allowMutations(fn)</code>: do not warn on mutations within current bind
+context.  This is an escape hatch which can be useful for tying together
+nodes that have no dependency relationship, but use this with caution,
+since you can easily end up with cycles (usually manifesting themselves
+as stack overflows).</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>

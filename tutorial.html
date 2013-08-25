@@ -22,7 +22,8 @@
         <nav class="side-nav">
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
-            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#side-effects-and-resource-cleanup">Side Effects and Resource Cleanup</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#garbage-collection">Garbage Collection</a></li><li><a href="#es5-properties">ES5 Properties</a></li></ul></li>
+            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
+            <li><a href="advanced.html">Advanced Concepts</a></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
           </ul>
@@ -430,7 +431,18 @@ anything changed, we could do so with:</p>
 </pre></div>
 
 <p>Nested <code>bind</code>/<code>map</code> calls are insulated from outer calls, re-rendering only
-what&#39;s necessary.</p>
+what&#39;s necessary.  As an escape hatch, to insulate something from the
+current bind context and <em>not</em> subscribe to any dependencies therein, you
+can use <code>rx.snap</code>, which also returns a <code>DepCell</code>; this is evaluated only
+once:</p>
+<div class="highlight"><pre><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;editor&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span>
+  <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">value: </span><span class="nx">snap</span> <span class="nf">-&gt;</span> <span class="nx">x</span><span class="p">.</span><span class="nx">get</span><span class="p">()}</span>
+<span class="p">]</span>
+</pre></div>
+
+<p>Without the <code>snap</code>, anytime <code>x</code> changes, the entire <code>div</code> would be
+re-rendered, but with a <code>bind</code>, the text box&#39;s contents would be
+re-rendered.  <code>snap</code> is the &quot;anti-<code>bind</code>&quot;.</p>
 <p>Sometimes you will want to append an observable array after some element.
 Or you may want to make one element among a set conditionally rendered.
 For these situations, there&#39;s a handy <code>rx.flatten</code> utility function:</p>
@@ -490,30 +502,6 @@ a sensible default.)</p>
 making everything dynamic, since you can always opt-out of dynamism by stopping
 propagation, whereas you cannot later reintroduce dynamism into places with no
 dynamic bindings.</p>
-<h2><a name="side-effects-and-resource-cleanup">Side Effects and Resource Cleanup</a></h2>
-<p>Sometimes you will have side effects associated with certain <code>bind</code>s or
-components, such as establishing a connection or setting an interval timer:</p>
-<div class="highlight"><pre><span class="nv">blinkingBox = </span><span class="nf">(opts) -&gt;</span>
-  <span class="nv">active = </span> <span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span> <span class="kc">false</span>
-  <span class="nx">setInterval</span> <span class="p">(</span><span class="nf">-&gt;</span> <span class="nx">active</span><span class="p">.</span><span class="nx">set</span> <span class="o">not</span> <span class="nx">active</span><span class="p">.</span><span class="nx">get</span><span class="p">()),</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">ms</span> <span class="o">?</span> <span class="mi">500</span>
-  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="k">if</span> <span class="nx">active</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="s">&#39;red-box&#39;</span> <span class="k">else</span> <span class="s">&#39;black-box&#39;</span><span class="p">}</span>
-
-<span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span>
-  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;container&#39;</span><span class="p">},</span> <span class="nx">boxes</span><span class="p">.</span><span class="nx">map</span> <span class="nf">-&gt;</span> <span class="nx">blinkingBox</span><span class="p">()</span>
-<span class="p">)</span>
-</pre></div>
-
-<p>In these cases, you&#39;ll want to do proper resource management/cleanup
-whenever the <code>bind</code> context is removed or refreshed—in this case, stopping
-the interval timer.  For these situations, you can use
-<code>rx.onDispose(callback)</code>:</p>
-<div class="highlight"><pre><span class="nv">blinkingBox = </span><span class="nf">(opts) -&gt;</span>
-  <span class="nv">active = </span> <span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span> <span class="kc">false</span>
-  <span class="nv">interval = </span><span class="nx">setInterval</span> <span class="p">(</span><span class="nf">-&gt;</span> <span class="nx">active</span><span class="p">.</span><span class="nx">set</span> <span class="o">not</span> <span class="nx">active</span><span class="p">.</span><span class="nx">get</span><span class="p">()),</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">ms</span> <span class="o">?</span> <span class="mi">500</span>
-  <span class="nx">rx</span><span class="p">.</span><span class="nx">onDispose</span> <span class="nf">-&gt;</span> <span class="nx">clearInterval</span><span class="p">(</span><span class="nx">interval</span><span class="p">)</span>
-  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="k">if</span> <span class="nx">active</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="s">&#39;red-box&#39;</span> <span class="k">else</span> <span class="s">&#39;black-box&#39;</span><span class="p">}</span>
-</pre></div>
-
 <h2><a name="binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></h2>
 <p>We can treat certain interactive DOM elements&#39; attributes as cells, thus
 binding to them as well.</p>
@@ -553,71 +541,6 @@ focused on the input text field:</p>
 <p>We are using three different types of reactive element attributes.
 <code>rx(property)</code> returns the value of the given property (<code>focused</code>,
 <code>checked</code>, <code>val</code>) as a cell.</p>
-<h2><a name="garbage-collection">Garbage Collection</a></h2>
-<p>Dependencies hold references to their dependents in order to know who to
-propagate updates to.  We do currently unsubscribe a dependent observable
-from its dependencies whenever that dependent is refreshed, but if the
-dependent observable itself creates nested binds, those nested binds must
-also be disconnected, and so on, recursively.</p>
-<p>For instance, say we have:</p>
-<div class="highlight"><pre><span class="nv">showUnread = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
-<span class="nv">unread = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;scoreboard&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span>
-  <span class="k">if</span> <span class="nx">showUnread</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
-    <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;unread&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">unread</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s"> message(s)&quot;</span>
-  <span class="k">else</span>
-    <span class="s">&#39;(nothing shown)&#39;</span>
-<span class="p">]</span>
-</pre></div>
-
-<p>Initially, <code>unread</code> has a subscriber, as expected: the inner <code>bind</code>.  When
-we update <code>showUnread</code>, the outer <code>bind</code> will re-evaluate and create a new
-inner <code>bind</code> (for the nested <code>div</code>), completely forgetting about the old
-one.  Without the nested bind cleanup, <code>unread</code> now has <em>two</em> subscribers,
-old and new inner <code>bind</code>s.  And since the old inner <code>bind</code> is still
-referenced from <code>unread</code>&#39;s list of subscribers, it can&#39;t be
-garbage-collected.  Ergo, memory leak.</p>
-<p>What instead happens: <code>bind</code> tracks any nested <code>bind</code>s.  On re-evaluation,
-these inner <code>bind</code>s are <em>disconnected</em>, unsubscribing themselves from all
-their dependencies.  This disconnection also occurs recursively down to
-<em>their</em> nested <code>bind</code>s, and so on.</p>
-<p>One question is what happens at the top level or when you want to break out
-and do your own thing. We don&#39;t have the luxury of weak refs in JS, and as
-a result it&#39;s less forgiving if you do &quot;silly&quot; things like create binds
-that go nowhere and that you don&#39;t want to keep.</p>
-<p>(But even with weak references, one can&#39;t tell if you added a bind only to
-subscribe a console.log caller to its changes, save to localStorage, or
-some other side effect that you <em>do</em> want to keep.)</p>
-<p>For instance, you don&#39;t want to write the above as the following:</p>
-<div class="highlight"><pre><span class="nv">showing = </span><span class="kc">false</span>
-<span class="nx">$</span><span class="p">(</span><span class="s">&#39;.toggle-button&#39;</span><span class="p">).</span><span class="nx">click</span> <span class="nf">-&gt;</span>
-  <span class="k">if</span> <span class="nx">showing</span>
-    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.scoreboard&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span>
-      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;unread&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">unread</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s"> message(s)&quot;</span>
-    <span class="p">)</span>
-  <span class="k">else</span>
-    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.scoreboard&#39;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s">&#39;(nothing shown)&#39;</span><span class="p">)</span>
-  <span class="nv">showing = </span><span class="o">not</span> <span class="nx">showing</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>The key for these situations is that <code>bind</code>s should go all the way to the
-top, or else you&#39;ll want to manually disconnect your (top-level) binds
-using their <code>disconnect</code> method:</p>
-<div class="highlight"><pre><span class="nv">showing = </span><span class="kc">false</span>
-<span class="nv">topBind = </span><span class="kc">null</span>
-<span class="nx">$</span><span class="p">(</span><span class="s">&#39;.toggle-button&#39;</span><span class="p">).</span><span class="nx">click</span> <span class="nf">-&gt;</span>
-  <span class="k">if</span> <span class="nx">showing</span>
-    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.scoreboard&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span>
-      <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;unread&#39;</span><span class="p">},</span> <span class="nv">topBind = </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">unread</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s"> message(s)&quot;</span>
-    <span class="p">)</span>
-  <span class="k">else</span>
-    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.scoreboard&#39;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="s">&#39;(nothing shown)&#39;</span><span class="p">)</span>
-    <span class="nx">topBind</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">()</span>
-  <span class="nv">showing = </span><span class="o">not</span> <span class="nx">showing</span>
-<span class="p">}</span>
-</pre></div>
-
 <h2><a name="es5-properties">ES5 Properties</a></h2>
 <p>So far, everything is built on observable data structures, which are just
 plain classes with explicit getter/setter calls.  To make working with
@@ -681,6 +604,13 @@ they&#39;re really big):</p>
 
 <p>Thanks to <a href="https://github.com/yang/reactive-coffee/issues/6">@m1sta</a> for
 bringing this idea to the table.</p>
+<h2><a name="next-steps">Next Steps</a></h2>
+<p>Congrats on making it all the way through the basic tutorial!  You can
+continue to learn more about <a href="advanced.html">&quot;advanced&quot; concepts</a> (really just
+more details), or read more on the <a href="design.html">motivation/design rationale</a>
+behind the library.</p>
+<p>Otherwise, go forth and build some web apps using Reactive!  <a href="https://groups.google.com/forum/?fromgroups#!forum/reactive-coffee">Drop us a
+line</a> if you do and would like to share your work on the website.</p>
 
         </section>
       </div>
