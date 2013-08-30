@@ -293,10 +293,12 @@
       return recorder.mutating(function() {
         var old;
 
-        old = _this.x;
-        _this.x = x;
-        _this.onSet.pub([old, x]);
-        return old;
+        if (_this.x !== x) {
+          old = _this.x;
+          _this.x = x;
+          _this.onSet.pub([old, x]);
+          return old;
+        }
       });
     };
 
@@ -334,7 +336,9 @@
           } finally {
             _this.refreshing = false;
           }
-          return _this.onSet.pub([old, _this.x]);
+          if (old !== _this.x) {
+            return _this.onSet.pub([old, _this.x]);
+          }
         }
       };
       if (!this.refreshing) {

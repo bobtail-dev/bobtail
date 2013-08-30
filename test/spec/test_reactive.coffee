@@ -291,10 +291,10 @@ describe 'Ev', ->
 
 describe 'nested mutations', ->
   it 'should not complain about directly nested mutations in dependent binds of dependent binds', ->
-    a = rx.cell()
+    a = rx.cell(0)
     b = rx.cell()
     aa = bind -> b.set(a.get())
-    aaa = bind -> b.set(aa.get())
+    aaa = bind -> b.set(aa.get()+1)
     a.set(0)
     expect(aaa.get()).toBe(0)
   it 'should not complain about directly nested mutations in listeners', ->
@@ -331,11 +331,11 @@ describe 'allowMutations', ->
       rx.allowMutations ->
         b.set(a.get())
         b.set(a.get())
-    expect(cc.get()).toBe(null)
+    expect(cc.get()).toBe(undefined) # set is not executed because old=new=null
     a.set(0)
-    expect(cc.get()).toBe(0)
+    expect(cc.get()).toBe(null) # old value was null
     a.set(1)
-    expect(cc.get()).toBe(1)
+    expect(cc.get()).toBe(0) # old value was 0
   it 'should not silence warnings beyond current bind context', -> wrapper ->
     x = rx.cell()
     y = rx.cell()

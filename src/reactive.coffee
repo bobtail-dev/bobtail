@@ -176,10 +176,11 @@ ObsCell = class rx.ObsCell
 
 SrcCell = class rx.SrcCell extends ObsCell
   set: (x) -> recorder.mutating =>
-    old = @x
-    @x = x
-    @onSet.pub([old, x])
-    old
+    if @x != x
+      old = @x
+      @x = x
+      @onSet.pub([old, x])
+      old
 
 DepCell = class rx.DepCell extends ObsCell
   constructor: (@body, init, lag) ->
@@ -199,7 +200,8 @@ DepCell = class rx.DepCell extends ObsCell
         @refreshing = true
         try @x = recorder.record this, @body
         finally @refreshing = false
-        @onSet.pub([old, @x])
+        if old != @x
+          @onSet.pub([old, @x])
     if not @refreshing
       if @lag
         if @timeout?
