@@ -188,6 +188,14 @@ describe 'nested bindings', ->
 describe 'onDispose', ->
   it 'should not die even outside any bind context', ->
     rx.onDispose -> expect(false).toBe(true)
+  it 'should not fire after context is disposed', ->
+    x = rx.cell()
+    y = bind ->
+      counter = 0
+      rx.onDispose -> expect(counter += 1).toBe(1)
+      x.get()
+    x.set(0)
+    x.set(1)
 
 describe 'reactify', ->
   cards = deck = null

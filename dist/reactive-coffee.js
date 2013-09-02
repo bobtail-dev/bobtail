@@ -375,7 +375,8 @@
         nestedBind.disconnect();
       }
       this.subs = [];
-      return this.nestedBinds = [];
+      this.nestedBinds = [];
+      return this.cleanups = [];
     };
 
     DepCell.prototype.addSub = function(subUid) {

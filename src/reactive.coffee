@@ -222,6 +222,7 @@ DepCell = class rx.DepCell extends ObsCell
       nestedBind.disconnect()
     @subs = []
     @nestedBinds = []
+    @cleanups = []
   # called by recorder
   addSub: (subUid) ->
     @subs.push(subUid)
