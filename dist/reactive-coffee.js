@@ -66,7 +66,7 @@
 
   })();
 
-  depMgr = new DepMgr();
+  rx._depMgr = depMgr = new DepMgr();
 
   Ev = rx.Ev = (function() {
     function Ev(inits) {

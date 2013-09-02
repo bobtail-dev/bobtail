@@ -42,7 +42,7 @@ DepMgr = class rx.DepMgr
     @uid2src[uid].unsub(uid)
     popKey(@uid2src, uid)
 
-depMgr = new DepMgr()
+rx._depMgr = depMgr = new DepMgr()
 
 Ev = class rx.Ev
   constructor: (@inits) ->
