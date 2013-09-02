@@ -112,7 +112,7 @@ Recorder = class rx.Recorder
       handle = sub(topCell)
       topCell.addSub(handle)
   addCleanup: (cleanup) ->
-    _(@stack).last().addCleanup(cleanup)
+    _(@stack).last().addCleanup(cleanup) if @stack.length > 0
   # Delimit the function as one where a mutation takes place, such that if
   # within this function we refresh a bind, we don't treat that bind as a
   # nested bind (which causes all sorts of problems e.g. the cascading

@@ -185,6 +185,10 @@ describe 'nested bindings', ->
     expect(nsubs0).toBe(nsubs1)
     expect(nsubs0).toBe(nsubs2)
 
+describe 'onDispose', ->
+  it 'should not die even outside any bind context', ->
+    rx.onDispose -> expect(false).toBe(true)
+
 describe 'reactify', ->
   cards = deck = null
   lastInDeckIsFlipped = lastIsFlipped = null

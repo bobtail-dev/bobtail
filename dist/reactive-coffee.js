@@ -164,7 +164,9 @@
     };
 
     Recorder.prototype.addCleanup = function(cleanup) {
-      return _(this.stack).last().addCleanup(cleanup);
+      if (this.stack.length > 0) {
+        return _(this.stack).last().addCleanup(cleanup);
+      }
     };
 
     Recorder.prototype.mutating = function(f) {
