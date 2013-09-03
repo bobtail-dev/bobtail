@@ -513,7 +513,7 @@
     };
 
     SrcArray.prototype.remove = function(x) {
-      return this.removeAt(_(this.all()).indexOf(x));
+      return this.removeAt(_(this.raw()).indexOf(x));
     };
 
     SrcArray.prototype.removeAt = function(index) {
