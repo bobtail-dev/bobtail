@@ -121,6 +121,19 @@
 
   })();
 
+  rx.skipFirst = function(f) {
+    var first;
+
+    first = true;
+    return function(x) {
+      if (first) {
+        return first = false;
+      } else {
+        return f(x);
+      }
+    };
+  };
+
   Recorder = rx.Recorder = (function() {
     function Recorder() {
       this.stack = [];

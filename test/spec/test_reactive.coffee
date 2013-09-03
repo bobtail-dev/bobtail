@@ -386,3 +386,16 @@ describe 'noSubs', ->
     x.set(0)
     expect(runs.length).toBe(1)
     expect(y.get()).toBeNull()
+
+describe 'skipFirst', ->
+  it 'should skip first', ->
+    x = rx.cell()
+    xs = []
+    x.onSet.sub rx.skipFirst ([o,n]) -> xs.push(n)
+    expect(xs.length).toBe(0)
+    x.set(true)
+    expect(xs.length).toBe(1)
+    expect(xs[0]).toBe(true)
+    x.set(false)
+    expect(xs.length).toBe(2)
+    expect(xs[1]).toBe(false)

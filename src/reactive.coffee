@@ -67,6 +67,14 @@ Ev = class rx.Ev
     try context()
     finally @unsub(uid)
 
+rx.skipFirst = (f) ->
+  first = true
+  (x) ->
+    if first
+      first = false
+    else
+      f(x)
+
 #
 # Reactivity
 #
