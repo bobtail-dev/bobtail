@@ -1048,9 +1048,52 @@
           return _results;
         };
         updateContents = function(contents) {
+          var covers, hasWidth, left, node, nodes, top;
+
           elt.html('');
           if (_.isArray(contents)) {
-            return elt.append(toNodes(contents));
+            nodes = toNodes(contents);
+            elt.append(nodes);
+            if (false) {
+              hasWidth = function(node) {
+                var e;
+
+                try {
+                  return ($(node).width() != null) !== 0;
+                } catch (_error) {
+                  e = _error;
+                  return false;
+                }
+              };
+              covers = (function() {
+                var _j, _len1, _ref6, _ref7, _results;
+
+                _ref6 = nodes != null ? nodes : [];
+                _results = [];
+                for (_j = 0, _len1 = _ref6.length; _j < _len1; _j++) {
+                  node = _ref6[_j];
+                  if (!(hasWidth(node))) {
+                    continue;
+                  }
+                  _ref7 = $(node).offset(), left = _ref7.left, top = _ref7.top;
+                  _results.push($('<div/>').appendTo($('body').first()).addClass('updated-element').offset({
+                    top: top,
+                    left: left
+                  }).width($(node).width()).height($(node).height()));
+                }
+                return _results;
+              })();
+              return setTimeout((function() {
+                var cover, _j, _len1, _results;
+
+                _results = [];
+                for (_j = 0, _len1 = covers.length; _j < _len1; _j++) {
+                  cover = covers[_j];
+                  _results.push($(cover).remove());
+                }
+                return _results;
+              }), 2000);
+            }
           } else if (_.isString(contents) || contents instanceof RawHtml) {
             return updateContents([contents]);
           } else {

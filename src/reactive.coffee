@@ -536,7 +536,18 @@ rxt.mktag = mktag = (tag) ->
       updateContents = (contents) ->
         elt.html('')
         if _.isArray(contents)
-          elt.append(toNodes(contents))
+          nodes = toNodes(contents)
+          elt.append(nodes)
+          if false # this is super slow
+            hasWidth = (node) ->
+              try $(node).width()? != 0
+              catch e then false
+            covers = for node in nodes ? [] when hasWidth(node)
+              {left, top} = $(node).offset()
+              $('<div/>').appendTo($('body').first())
+                .addClass('updated-element').offset({top,left})
+                .width($(node).width()).height($(node).height())
+            setTimeout (-> $(cover).remove() for cover in covers), 2000
         else if _.isString(contents) or contents instanceof RawHtml
           updateContents([contents])
         else
