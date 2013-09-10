@@ -83,7 +83,6 @@ Recorder = class rx.Recorder
   constructor: ->
     @stack = []
     @isMutating = false
-    @isAllowingMutations = false
     @isIgnoring = false
     @onMutationWarning = new Ev() # just fires null for now
   # takes a dep cell and push it onto the stack as the current invalidation
@@ -95,9 +94,6 @@ Recorder = class rx.Recorder
     # reset isMutating
     wasMutating = @isMutating
     @isMutating = false
-    # reset isAllowingMutations
-    wasAllowingMutations = @isAllowingMutations
-    @isAllowingMutations = false
     # reset isIgnoring
     wasIgnoring = @isIgnoring
     @isIgnoring = false
@@ -105,7 +101,6 @@ Recorder = class rx.Recorder
       f()
     finally
       @isIgnoring = wasIgnoring
-      @isAllowingMutations = wasAllowingMutations
       @isMutating = wasMutating
       @stack.pop()
   # Takes a subscriber function that adds the current cell as an invalidation
@@ -126,20 +121,13 @@ Recorder = class rx.Recorder
   # nested bind (which causes all sorts of problems e.g. the cascading
   # disconnects)
   mutating: (f) ->
-    if @stack.length > 0 and not @isAllowingMutations
+    if @stack.length > 0
       console.warn('Mutation to observable detected during a bind context')
       @onMutationWarning.pub(null)
     wasMutating = @isMutating
     @isMutating = true
     try f()
     finally @isMutating = wasMutating
-  # silence mutation warnings while evaluating the given function (but limited to
-  # the current bind context; subsequent binds will still be warned on mutations)
-  allowMutations: (f) ->
-    wasAllowingMutations = @isAllowingMutations
-    @isAllowingMutations = true
-    try f()
-    finally @isAllowingMutations = wasAllowingMutations
   # Ignore event hooks while evaluating f (but limited to the current bind
   # context; subsequent binds will still subscribe those binds to event hooks)
   ignoring: (f) ->
@@ -149,8 +137,6 @@ Recorder = class rx.Recorder
     finally @isIgnoring = wasIgnoring
 
 rx._recorder = recorder = new Recorder()
-
-rx.allowMutations = (f) -> recorder.allowMutations(f)
 
 rx.bind = bind = (f) ->
   dep = new DepCell(f)
