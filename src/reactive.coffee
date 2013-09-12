@@ -609,3 +609,13 @@ tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script',
 rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
 rxt.rawHtml = (html) -> new RawHtml(html)
 rxt.importTags = (x) => _(x ? this).extend(rxt.tags)
+
+#
+# rxt utilities
+#
+
+rxt.cssify = (map) ->
+  (
+    for k,v of map when v?
+      "#{_.str.dasherize(k)}: #{if _.isNumber(v) then v+'px' else v};"
+  ).join(' ')

@@ -436,3 +436,12 @@ describe 'postLagBind', ->
             x.set(snooze)
           ), snooze
     waitsFor (-> y.get() == 20), 41
+
+describe 'cssify', ->
+  it 'should work', ->
+    cssified = rxt.cssify {
+      display: 'none' if false
+      borderLeft: 5
+      margin: '0'
+    }
+    expect(cssified).toBe('border-left: 5px; margin: 0;')

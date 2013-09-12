@@ -1168,4 +1168,21 @@
     return _(x != null ? x : _this).extend(rxt.tags);
   };
 
+  rxt.cssify = function(map) {
+    var k, v;
+
+    return ((function() {
+      var _results;
+
+      _results = [];
+      for (k in map) {
+        v = map[k];
+        if (v != null) {
+          _results.push("" + (_.str.dasherize(k)) + ": " + (_.isNumber(v) ? v + 'px' : v) + ";");
+        }
+      }
+      return _results;
+    })()).join(' ');
+  };
+
 }).call(this);
