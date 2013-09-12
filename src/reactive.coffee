@@ -614,6 +614,29 @@ rxt.importTags = (x) => _(x ? this).extend(rxt.tags)
 # rxt utilities
 #
 
+rxt.cast = (opts, types) ->
+  _.object(
+    for key, value of opts
+      newval = switch types[key]
+        when 'array'
+          if value instanceof rx.ObsArray
+            value
+          else if _.isArray(value)
+            new rx.DepArray(-> value)
+          else if value instanceof rx.ObsCell
+            new rx.DepArray(-> value.get())
+          else
+            throw 'Cannot cast to array: ' + value.constructor.name
+        when 'cell'
+          if value instanceof rx.ObsCell
+            value
+          else
+            bind -> value
+        else
+          value
+      [key, newval]
+  )
+
 rxt.cssify = (map) ->
   (
     for k,v of map when v?

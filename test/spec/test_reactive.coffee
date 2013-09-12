@@ -445,3 +445,22 @@ describe 'cssify', ->
       margin: '0'
     }
     expect(cssified).toBe('border-left: 5px; margin: 0;')
+
+describe 'cast', ->
+  it 'should work', ->
+    opts =
+      change: ->
+      selected: bind -> 0
+      label: 'hello'
+      options: [1..3]
+      values: bind -> [1..3]
+    casted = rxt.cast opts,
+      selected: 'cell'
+      label: 'cell'
+      options: 'array'
+      values: 'array'
+    expect(casted.change).toBe(opts.change)
+    expect(casted.selected).toBe(opts.selected)
+    expect(casted.label.get()).toBe(opts.label)
+    expect(casted.options.all()).toEqual(opts.options)
+    expect(casted.values.all()).toEqual(opts.values.get())

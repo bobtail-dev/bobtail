@@ -1168,6 +1168,51 @@
     return _(x != null ? x : _this).extend(rxt.tags);
   };
 
+  rxt.cast = function(opts, types) {
+    var key, newval, value;
+
+    return _.object((function() {
+      var _results;
+
+      _results = [];
+      for (key in opts) {
+        value = opts[key];
+        newval = (function() {
+          switch (types[key]) {
+            case 'array':
+              if (value instanceof rx.ObsArray) {
+                return value;
+              } else if (_.isArray(value)) {
+                return new rx.DepArray(function() {
+                  return value;
+                });
+              } else if (value instanceof rx.ObsCell) {
+                return new rx.DepArray(function() {
+                  return value.get();
+                });
+              } else {
+                throw 'Cannot cast to array: ' + value.constructor.name;
+              }
+              break;
+            case 'cell':
+              if (value instanceof rx.ObsCell) {
+                return value;
+              } else {
+                return bind(function() {
+                  return value;
+                });
+              }
+              break;
+            default:
+              return value;
+          }
+        })();
+        _results.push([key, newval]);
+      }
+      return _results;
+    })());
+  };
+
   rxt.cssify = function(map) {
     var k, v;
 
