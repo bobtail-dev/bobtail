@@ -1,7 +1,10 @@
 {
   "name": "reactive-coffee",
   "version": "0.0.4",
-  "main": ["dist/reactive-coffee.js", "dist/reactive-coffee.min.js"],
+  "main": [
+    "dist/reactive-coffee.js",
+    "dist/reactive-coffee.min.js"
+  ],
   "ignore": [
     "**/.*",
     "node_modules",
@@ -9,6 +12,7 @@
   ],
   "dependencies": {
     "underscore": ">=1.4.4",
-    "jquery": ">=1.7.0"
+    "jquery": ">=1.7.0",
+    "underscore.string": "~2.3.3"
   }
 }
