@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, asyncBind, bind, depMgr, ev, events, firstWhere, lagBind, mkMap, mktag, mkuid, nextUid, noSubs, nthWhere, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setProp, snap, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, asyncBind, bind, depMgr, ev, events, firstWhere, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setProp, snap, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -260,17 +260,8 @@
     });
   };
 
-  rx.noSubs = noSubs = function(f) {
-    return recorder.ignoring(f);
-  };
-
   rx.snap = snap = function(f) {
-    var snapshot;
-
-    snapshot = rx.noSubs(f);
-    return bind(function() {
-      return snapshot;
-    });
+    return recorder.ignoring(f);
   };
 
   rx.onDispose = function(cleanup) {

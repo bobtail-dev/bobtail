@@ -162,12 +162,7 @@ rx.postLagBind = postLagBind = (init, f) ->
     clearTimeout(timeout) if timeout?
     timeout = setTimeout((=> @done(val)), ms)
 
-rx.noSubs = noSubs = (f) ->
-  recorder.ignoring(f)
-
-rx.snap = snap = (f) ->
-  snapshot = rx.noSubs(f)
-  bind -> snapshot
+rx.snap = snap = (f) -> recorder.ignoring(f)
 
 rx.onDispose = (cleanup) ->
   recorder.addCleanup(cleanup)

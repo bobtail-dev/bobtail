@@ -317,24 +317,11 @@ describe 'nested mutations', ->
     expect(-> a.set(0)).not.toThrow()
 
 describe 'snap', ->
-  it 'should only run once and should ignore hooks', ->
-    runs = []
-    x = rx.cell()
-    y = rx.snap ->
-      runs.push(null)
-      x.get()
-    expect(runs.length).toBe(1)
-    expect(y.get()).toBeNull()
-    x.set(0)
-    expect(runs.length).toBe(1)
-    expect(y.get()).toBeNull()
-
-describe 'noSubs', ->
-  it 'should shield enclosing bind', ->
+  it 'should shield from enclosing bind', ->
     runs = []
     x = rx.cell()
     y = bind ->
-      y = rx.noSubs(-> x.get())
+      y = rx.snap(-> x.get())
       runs.push(null)
       y
     expect(runs.length).toBe(1)
