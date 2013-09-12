@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, bind, depMgr, ev, events, firstWhere, lagBind, mkMap, mktag, mkuid, nextUid, noSubs, nthWhere, popKey, prop, propSet, props, recorder, rx, rxt, setProp, snap, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, asyncBind, bind, depMgr, ev, events, firstWhere, lagBind, mkMap, mktag, mkuid, nextUid, noSubs, nthWhere, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setProp, snap, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -212,15 +212,7 @@
 
   rx._recorder = recorder = new Recorder();
 
-  rx.bind = bind = function(f) {
-    var dep;
-
-    dep = new DepCell(f);
-    dep.refresh();
-    return dep;
-  };
-
-  rx.lagBind = lagBind = function(init, f) {
+  rx.asyncBind = asyncBind = function(init, f) {
     var dep;
 
     dep = new DepCell(f, init);
@@ -228,19 +220,57 @@
     return dep;
   };
 
+  rx.bind = bind = function(f) {
+    return asyncBind(null, function() {
+      return this.done(this.record(f));
+    });
+  };
+
+  rx.lagBind = lagBind = function(lag, init, f) {
+    var timeout;
+
+    timeout = null;
+    return asyncBind(init, function() {
+      var _this = this;
+
+      if (timeout != null) {
+        clearTimeout(timeout);
+      }
+      return timeout = setTimeout(function() {
+        return _this.done(_this.record(f));
+      }, lag);
+    });
+  };
+
+  rx.postLagBind = postLagBind = function(init, f) {
+    var timeout;
+
+    timeout = null;
+    return asyncBind(init, function() {
+      var ms, val, _ref,
+        _this = this;
+
+      _ref = this.record(f), val = _ref.val, ms = _ref.ms;
+      if (timeout != null) {
+        clearTimeout(timeout);
+      }
+      return timeout = setTimeout((function() {
+        return _this.done(val);
+      }), ms);
+    });
+  };
+
   rx.noSubs = noSubs = function(f) {
     return recorder.ignoring(f);
   };
 
   rx.snap = snap = function(f) {
-    var dep, snapshot;
+    var snapshot;
 
     snapshot = rx.noSubs(f);
-    dep = new DepCell(function() {
+    return bind(function() {
       return snapshot;
     });
-    dep.refresh();
-    return dep;
   };
 
   rx.onDispose = function(cleanup) {
@@ -304,48 +334,48 @@
   DepCell = rx.DepCell = (function(_super) {
     __extends(DepCell, _super);
 
-    function DepCell(body, init, lag) {
+    function DepCell(body, init) {
       this.body = body;
       DepCell.__super__.constructor.call(this, init != null ? init : null);
       this.subs = [];
       this.refreshing = false;
-      this.lag = lag != null ? lag : false;
-      this.timeout = null;
       this.nestedBinds = [];
       this.cleanups = [];
     }
 
     DepCell.prototype.refresh = function() {
-      var realRefresh,
+      var env, old,
         _this = this;
 
-      realRefresh = function() {
-        var old;
-
-        if (!_this.refreshing) {
-          old = _this.x;
-          _this.disconnect();
-          _this.refreshing = true;
-          try {
-            _this.x = recorder.record(_this, _this.body);
-          } finally {
-            _this.refreshing = false;
-          }
-          if (old !== _this.x) {
-            return _this.onSet.pub([old, _this.x]);
-          }
-        }
-      };
       if (!this.refreshing) {
-        if (this.lag) {
-          if (this.timeout != null) {
-            clearTimeout(this.timeout);
+        old = this.x;
+        env = {
+          _recorded: false,
+          record: function(f) {
+            if (!_this.refreshing) {
+              _this.disconnect();
+              _this.refreshing = true;
+              if (env._recorded) {
+                throw 'this refresh has already recorded its dependencies';
+              }
+              env._recorded = true;
+              try {
+                return recorder.record(_this, function() {
+                  return f.call(env);
+                });
+              } finally {
+                _this.refreshing = false;
+              }
+            }
+          },
+          done: function(x) {
+            _this.x = x;
+            if (old !== _this.x) {
+              return _this.onSet.pub([old, _this.x]);
+            }
           }
-          console.log('setting timeout');
-          return this.timeout = setTimeout(realRefresh, 500);
-        } else {
-          return realRefresh();
-        }
+        };
+        return this.body.call(env);
       }
     };
 

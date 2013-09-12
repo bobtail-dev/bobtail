@@ -138,24 +138,36 @@ Recorder = class rx.Recorder
 
 rx._recorder = recorder = new Recorder()
 
-rx.bind = bind = (f) ->
-  dep = new DepCell(f)
-  dep.refresh()
-  dep
-
-rx.lagBind = lagBind = (init, f) ->
+rx.asyncBind = asyncBind = (init, f) ->
   dep = new DepCell(f, init)
   dep.refresh()
   dep
+
+rx.bind = bind = (f) ->
+  asyncBind null, -> @done(@record(f))
+
+rx.lagBind = lagBind = (lag, init, f) ->
+  timeout = null
+  asyncBind init, ->
+    clearTimeout(timeout) if timeout?
+    timeout = setTimeout(
+      => @done(@record(f))
+      lag
+    )
+
+rx.postLagBind = postLagBind = (init, f) ->
+  timeout = null
+  asyncBind init, ->
+    {val, ms} = @record(f)
+    clearTimeout(timeout) if timeout?
+    timeout = setTimeout((=> @done(val)), ms)
 
 rx.noSubs = noSubs = (f) ->
   recorder.ignoring(f)
 
 rx.snap = snap = (f) ->
   snapshot = rx.noSubs(f)
-  dep = new DepCell(-> snapshot)
-  dep.refresh()
-  dep
+  bind -> snapshot
 
 rx.onDispose = (cleanup) ->
   recorder.addCleanup(cleanup)
@@ -177,33 +189,43 @@ SrcCell = class rx.SrcCell extends ObsCell
       old
 
 DepCell = class rx.DepCell extends ObsCell
-  constructor: (@body, init, lag) ->
+  constructor: (@body, init) ->
     super(init ? null)
     @subs = []
     @refreshing = false
-    @lag = lag ? false
-    @timeout = null
     @nestedBinds = []
     @cleanups = []
   refresh: ->
-    realRefresh = =>
-      #console.log('real refresh')
-      if not @refreshing
-        old = @x
-        @disconnect()
-        @refreshing = true
-        try @x = recorder.record this, @body
-        finally @refreshing = false
-        if old != @x
-          @onSet.pub([old, @x])
     if not @refreshing
-      if @lag
-        if @timeout?
-          clearTimeout(@timeout)
-        console.log('setting timeout')
-        @timeout = setTimeout(realRefresh, 500)
-      else
-        realRefresh()
+      old = @x
+      # TODO we are immediately disconnecting; something that disconnects upon
+      # completion may have better semantics for asynchronous operations:
+      #
+      # - enabling lagBind to defer evaluation so long as its current
+      #   dependencies keep changing
+      # - allowing nested binds to continue reacting during asynchronous
+      #   operation
+      #
+      # But the implementation is more complex as it requires being able to
+      # create and discard tentative recordings.  It's also unclear whether
+      # such a lagBind is more desirable (in the face of changing dependencies)
+      # and whether on-completion is what's most generalizable.
+      env =
+        _recorded: false
+        record: (f) =>
+          # TODO document why @refreshing exists
+          # guards against recursively evaluating this recorded
+          # function (@body or an async body) when calling `.get()`
+          if not @refreshing
+            @disconnect()
+            @refreshing = true
+            throw 'this refresh has already recorded its dependencies' if env._recorded
+            env._recorded = true
+            try recorder.record @, -> f.call(env)
+            finally @refreshing = false
+        done: (@x) =>
+          @onSet.pub([old, @x]) if old != @x
+      @body.call(env)
   # unsubscribe from all dependencies and recursively have all nested binds
   # disconnect themselves as well
   disconnect: ->

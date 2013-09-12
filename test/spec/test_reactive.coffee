@@ -355,3 +355,97 @@ describe 'skipFirst', ->
     x.set(false)
     expect(xs.length).toBe(2)
     expect(xs[1]).toBe(false)
+
+describe 'asyncBind', ->
+  it 'should work synchronously as well', ->
+    x = rx.cell(0)
+    y = rx.asyncBind 'none', -> @done(@record -> x.get())
+    expect(y.get()).toBe(0)
+    x.set(1)
+    expect(y.get()).toBe(1)
+  it 'should work asynchronously', ->
+    x = rx.cell(0)
+    y = rx.asyncBind 'none', ->
+      _.defer => @done(x.get())
+    runs ->
+      expect(y.get()).toBe('none')
+      x.set(1)
+      expect(y.get()).toBe('none')
+    waitsFor (-> y.get() == 1), 'The async should have fired', 1
+  it 'should not be a SrcCell', ->
+    x = rx.cell(0)
+    y = rx.asyncBind 'none', -> @done(x.get())
+    expect(-> y.set(0)).toThrow()
+
+describe 'lagBind', ->
+  x = y = evaled = null
+  beforeEach ->
+    x = rx.cell(0)
+    evaled = false
+    y = rx.lagBind 20, 'none', ->
+      evaled = true
+      x.get()
+  it 'should remain at init value until the given lag', ->
+    runs ->
+      expect(y.get()).toBe('none')
+      setTimeout (->
+        expect(evaled).toBe(false)
+        expect(y.get()).toBe('none')
+      ), 10
+    waitsFor (-> evaled), 21
+    runs ->
+      expect(y.get()).toBe(0)
+  it 'should (after init) update on upstream set by (and not before) the given lag', ->
+    waitsFor (-> evaled), 21
+    runs ->
+      evaled = false
+      x.set(1)
+      setTimeout (->
+        expect(evaled).toBe(false)
+        expect(y.get()).toBe(0)
+      ), 10
+    waitsFor (-> evaled), 21
+    runs ->
+      expect(y.get()).toBe(1)
+  it 'should not evaluate as long as new refresh keeps getting scheduled', ->
+    start = new Date().getTime()
+    y = rx.lagBind 20, 'none', ->
+      evaled = true
+      x.get()
+    waitsFor (-> evaled), 21 # nothing we can do before first evaluation
+    runs ->
+      evaled = false
+      for snooze in [10, 20, 30, 40]
+        do (snooze) ->
+          setTimeout (->
+            expect(evaled).toBe(false)
+            x.set(snooze)
+          ), snooze
+    waitsFor (-> evaled), 61
+
+describe 'postLagBind', ->
+  x = y = evaled = null
+  beforeEach ->
+    x = rx.cell(20)
+    evaled = false
+    y = rx.postLagBind 'none', ->
+      evaled = true
+      val: x.get(), ms: x.get()
+  it 'should evaluate immediately but not update value', ->
+    expect(evaled).toBe(true)
+    expect(y.get()).toBe('none')
+  it 'should evaluate by (and not before) the given lag', ->
+    runs ->
+      expect(y.get()).toBe('none')
+      x.set(15)
+      setTimeout (-> expect(y.get()).toBe('none')), 5
+    waitsFor (-> y.get() == 15), 16
+  it 'should not update as long as new refresh keeps getting scheduled', ->
+    runs ->
+      for snooze in [5, 10, 15, 20]
+        do (snooze) ->
+          setTimeout (->
+            expect(y.get()).toBe('none')
+            x.set(snooze)
+          ), snooze
+    waitsFor (-> y.get() == 20), 41
