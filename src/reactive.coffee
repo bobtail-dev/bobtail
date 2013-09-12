@@ -292,7 +292,7 @@ MappedDepArray = class rx.MappedDepArray extends ObsArray
 DepArray = class rx.DepArray extends ObsArray
   constructor: (@f) ->
     super()
-    (bind => @f()).onSet.sub(([old, val]) =>
+    rx.autoSub (bind => @f()).onSet, ([old, val]) =>
       if old?
         # TODO use diff algo so shifts aren't catastrophic
         [index, index] = firstWhere(
@@ -305,7 +305,6 @@ DepArray = class rx.DepArray extends ObsArray
         count = if old? then old.length - index else 0
         additions = val[index..]
         @realSplice(index, count, additions)
-    )
 
 ObsMap = class rx.ObsMap
   constructor: (@x = {}) ->
@@ -349,14 +348,13 @@ SrcMap = class rx.SrcMap extends ObsMap
 DepMap = class rx.DepMap extends ObsMap
   constructor: (@f) ->
     super()
-    new DepCell(@f).onSet.sub(([old, val]) ->
+    rx.autoSub new DepCell(@f).onSet, ([old, val]) ->
       for k,v of old
         if not k of val
           @realRemove(k)
       for k,v of val
         if @x[k] != v
           @realPut(k,v)
-    )
 
 #
 # Implicitly reactive objects
@@ -531,8 +529,7 @@ rxt.mktag = mktag = (tag) ->
     for name, value of _.omit(attrs, _.keys(specialAttrs))
       if value instanceof ObsCell
         do (name) ->
-          value.onSet.sub ([old, val]) ->
-            setProp(elt, name, val)
+          rx.autoSub value.onSet, ([old, val]) -> setProp(elt, name, val)
       else
         setProp(elt, name, value)
     if contents?
@@ -580,8 +577,7 @@ rxt.mktag = mktag = (tag) ->
         # TODO: make this more efficient by checking each element to see if it
         # changed (i.e. layer a MappedDepArray over this, and make DepArrays
         # propagate the minimal change set)
-        contents.onSet.sub(([old, val]) ->
-          updateContents(val))
+        rx.autoSub contents.onSet, ([old, val]) -> updateContents(val)
       else
         updateContents(contents)
     for key of attrs when key of specialAttrs

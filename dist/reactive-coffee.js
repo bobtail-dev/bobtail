@@ -580,9 +580,9 @@
 
       this.f = f;
       DepArray.__super__.constructor.call(this);
-      (bind(function() {
+      rx.autoSub((bind(function() {
         return _this.f();
-      })).onSet.sub(function(_arg) {
+      })).onSet, function(_arg) {
         var additions, count, index, old, val, _i, _ref3, _ref4, _results;
 
         old = _arg[0], val = _arg[1];
@@ -746,7 +746,7 @@
     function DepMap(f) {
       this.f = f;
       DepMap.__super__.constructor.call(this);
-      new DepCell(this.f).onSet.sub(function(_arg) {
+      rx.autoSub(new DepCell(this.f).onSet, function(_arg) {
         var k, old, v, val, _results;
 
         old = _arg[0], val = _arg[1];
@@ -1037,7 +1037,7 @@
         value = _ref5[name];
         if (value instanceof ObsCell) {
           (function(name) {
-            return value.onSet.sub(function(_arg) {
+            return rx.autoSub(value.onSet, function(_arg) {
               var old, val;
 
               old = _arg[0], val = _arg[1];
@@ -1138,7 +1138,7 @@
             }
           });
         } else if (contents instanceof ObsCell) {
-          contents.onSet.sub(function(_arg) {
+          rx.autoSub(contents.onSet, function(_arg) {
             var old, val;
 
             old = _arg[0], val = _arg[1];
