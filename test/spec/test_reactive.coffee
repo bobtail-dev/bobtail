@@ -464,3 +464,18 @@ describe 'cast', ->
     expect(casted.label.get()).toBe(opts.label)
     expect(casted.options.all()).toEqual(opts.options)
     expect(casted.values.all()).toEqual(opts.values.get())
+
+describe 'autoSub', ->
+  it 'should automatically unsubscribe on bind exit', ->
+    count = 0
+    x = rx.cell()
+    y = rx.cell()
+    z = bind ->
+      rx.autoSub x.onSet, -> count += 1
+      y.get()
+    x.set(0)
+    x.set(1)
+    y.set(0)
+    x.set(2)
+    x.set(3)
+    expect(count).toBe(6)

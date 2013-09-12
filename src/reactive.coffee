@@ -162,10 +162,14 @@ rx.postLagBind = postLagBind = (init, f) ->
     clearTimeout(timeout) if timeout?
     timeout = setTimeout((=> @done(val)), ms)
 
-rx.snap = snap = (f) -> recorder.ignoring(f)
+rx.snap = (f) -> recorder.ignoring(f)
 
-rx.onDispose = (cleanup) ->
-  recorder.addCleanup(cleanup)
+rx.onDispose = (cleanup) -> recorder.addCleanup(cleanup)
+
+rx.autoSub = (ev, listener) ->
+  subid = ev.sub(listener)
+  rx.onDispose -> ev.unsub(subid)
+  subid
 
 ObsCell = class rx.ObsCell
   constructor: (@x) ->
