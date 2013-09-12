@@ -65,13 +65,24 @@ bound to the result of evaluating that function.  The function is immediately
 evaluated once, and each time it&#39;s evaluated, for any accesses of
 observables, the <code>DepCell</code> subscribes to the corresponding events, which may
 subsequently trigger future re-evaluations.</li>
-<li><code>snap(fn)</code>: given a 0-ary function, return a <code>DepCell</code> whose value is the
-result of immediately evaluating that function <em>just once</em>.  The function
-does not subscribe to any observables contained therein.  This also
-shields the current context from subscribing to the function as well.</li>
-<li><code>lagBind(init, fn)</code>: same as <code>bind</code> but waits a 500ms delay after getting an
-update before the <code>DepCell</code> updates itself (yes, this needs to be a
-configurable parameter)</li>
+<li><code>snap(fn)</code>: evaluate the given 0-ary function while insulating it from
+the enclosing bind.  This will be evaluated <em>just once</em> and prevents
+subscriptions to any observables contained therein.</li>
+<li><code>asyncBind(init, fn)</code>: create an asynchronous bind.  The given <code>fn</code> is
+expected to call <code>this.record(f)</code> up to at most one time at some point
+during its potentially asynchronous duration before calling
+<code>this.done(result)</code>.  The call to <code>this.record(f)</code> evaluates <code>f</code> while
+recording the implicit subscriptions triggered by accesses to
+observables.  The cell&#39;s initial value is <code>init</code>.</li>
+<li><code>lagBind(lag, init, fn)</code>: same as <code>bind</code> but waits a 500ms delay after
+a dependency changes (or after initialization) before the <code>DepCell</code>
+refreshes.  For the first 500ms, the cell&#39;s value is <code>init</code>; you can set
+this to e.g. <code>noSub(fn)</code> if you want to immediately populate it with the
+result of evaluating your given <code>fn</code>.</li>
+<li><code>postLagBind(init, fn)</code>: immediately evaluates <code>fn</code>, which is expected to
+return a <code>{val, ms}</code>, where <code>ms</code> indicates how long to wait before
+publishing <code>val</code> as the new value of this <code>DepCell</code>.  Until the first
+published value, the cell is initialized to <code>init</code>.</li>
 <li><code>reactify(obj, spec)</code>: mutates an object to replace the specified fields
 with getters/setters powered by an observable cell/array, and returns the
 object.  <code>spec</code> is a mapping from field name to <code>{type, val}</code>, where
@@ -88,11 +99,6 @@ conditionals in the array).</li>
 whenever the current (enclosing) bind is removed or refreshed.  This is
 useful for proper resource disposal, such as closing a connection or
 removing an interval timer.</li>
-<li><code>allowMutations(fn)</code>: do not warn on mutations within current bind
-context.  This is an escape hatch which can be useful for tying together
-nodes that have no dependency relationship, but use this with caution,
-since you can easily end up with cycles (usually manifesting themselves
-as stack overflows).</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>
@@ -192,6 +198,17 @@ don&#39;t need have <code>rxt</code> all over your templates.  Useful for quickl
 something together.</li>
 <li><code>rawHtml(html)</code>: returns a <code>RawHtml</code> wrapper for strings that tags won&#39;t
 escape when rendering; example: <code>div {}, [rawHtml(&#39;&lt;span&gt;hello&lt;/span&gt;&#39;)]</code></li>
+<li><code>rxt.cast(opts, types)</code>: convenience utility for use in preparing
+arguments for a component.  <code>opts</code> is the arguments object mapping, and
+<code>types</code> is an object mapping fields of <code>opts</code> to either <code>cell</code> or
+<code>array</code>.  <code>cast</code> returns a copy of <code>opts</code> but with the fields casted
+based on the specified desired <code>types</code> (yielding observable cells and
+arrays).</li>
+<li><code>rxt.cssify(props)</code>: convenience utility for programmatically constructing
+strings suitable for use as a <code>style</code> attribute.  Takes an object mapping
+camelCase versions of style property names and values that are either
+strings (which are put in verbatim), numbers (which are written as pixels),
+or null/undefined (which omits that property altogether).</li>
 <li>Tags: <code>p</code>, <code>br</code>, <code>ul</code>, <code>li</code>, <code>span</code>, <code>anchor</code>, <code>div</code>, <code>input</code>, <code>select</code>,
 <code>option</code>, <code>label</code>, <code>button</code>, <code>fieldset</code>, <code>legend</code>, <code>section</code>, <code>header</code>,
 <code>footer</code>, <code>strong</code>, <code>h1</code>, <code>h2</code>, <code>h3</code>, <code>h4</code>, <code>h5</code>, <code>h6</code>, <code>h7</code></li>

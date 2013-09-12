@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
-            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
+            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#tips">Tips</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
             <li><a href="advanced.html">Advanced Concepts</a></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
@@ -92,7 +92,7 @@ a listener:</p>
 <div class="highlight"><pre><span class="nx">x</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">unsub</span><span class="p">(</span><span class="nx">subscriptionId</span><span class="p">)</span>
 </pre></div>
 
-<p>You can now start reacting to these events.  For instance:</p>
+<p>Once subscribed, you can start reacting to its events.  For instance:</p>
 <div class="highlight"><pre><span class="nv">firstName = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="s">&#39;John&#39;</span><span class="p">)</span>
 <span class="c1"># This ensures .name will always reflect the firstName</span>
 <span class="nx">firstName</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([oldVal, newVal]) -&gt;</span>
@@ -155,6 +155,12 @@ frameworks—which is an effective paradigm for frontend UI development—but
 instead of being exclusively applied to view components, typically confined to
 a template language, this is generalized to be a generic way of expressing
 arbitrary time-varying data structures.</p>
+<p>When you set a cell to the same value (value doesn&#39;t change), the event is
+not propagated.  This is a useful efficiency boost that assumes/encourages
+you to think of binds/cells not as reacting to discrete events, but more
+abstractly as continuous time-varying signals.  In general, your cells are
+encouraged to be deterministic in their effects, if not <a href="https://en.wikipedia.org/wiki/Pure_function">pure functions</a>
+altogether.</p>
 <h2><a name="arrays-and-maps">Arrays and Maps</a></h2>
 <p>Cells are the most general type of observable container.  However, there are
 also observable containers with special support for arrays and objects.  This
@@ -431,10 +437,9 @@ anything changed, we could do so with:</p>
 </pre></div>
 
 <p>Nested <code>bind</code>/<code>map</code> calls are insulated from outer calls, re-rendering only
-what&#39;s necessary.  As an escape hatch, to insulate something from the
+what&#39;s necessary.  As an escape hatch, to insulate some code <code>fn</code> from the
 current bind context and <em>not</em> subscribe to any dependencies therein, you
-can use <code>rx.snap</code>, which also returns a <code>DepCell</code>; this is evaluated only
-once:</p>
+can use <code>rx.snap(fn)</code>.  This is evaluated only once:</p>
 <div class="highlight"><pre><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;editor&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span>
   <span class="nx">input</span> <span class="p">{</span><span class="nv">type: </span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="nv">value: </span><span class="nx">snap</span> <span class="nf">-&gt;</span> <span class="nx">x</span><span class="p">.</span><span class="nx">get</span><span class="p">()}</span>
 <span class="p">]</span>
@@ -604,6 +609,11 @@ they&#39;re really big):</p>
 
 <p>Thanks to <a href="https://github.com/yang/reactive-coffee/issues/6">@m1sta</a> for
 bringing this idea to the table.</p>
+<h2><a name="tips">Tips</a></h2>
+<ul>
+<li>Use the <code>do</code> to including some code (such as defining some variables)
+inline in your views, without cluttering up syntax too much</li>
+</ul>
 <h2><a name="next-steps">Next Steps</a></h2>
 <p>Congrats on making it all the way through the basic tutorial!  You can
 continue to learn more about <a href="advanced.html">&quot;advanced&quot; concepts</a> (really just

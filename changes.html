@@ -29,14 +29,17 @@
           </ul>
         </nav>
         <section id="main-content"><h1>Change Log</h1>
+<p>Changes for each version are roughly listed in order of descending
+noteworthiness.</p>
 <p><strong>v0.0.5 – under development</strong></p>
 <ul>
 <li>Add support for <a href="tutorial.html#es5-properties">ES5 property getter/setters</a>.</li>
-<li>Add <code>rx.snap</code> for non-binding snapshots.</li>
+<li>Add <a href="advanced.html#asynchronous-binds">asynchronous bind</a> support and <code>asyncBind</code>.</li>
+<li>Resurrent <code>rx.lagBind</code>.</li>
+<li>Add <code>rx.postLagBind</code> for dynamic delayed async binds.</li>
 <li>Add <code>rx.onDispose</code> for <a href="advanced.html#side-effects-and-resource-cleanup">resource cleanup</a>.</li>
-<li>Add <code>rx.allowMutations</code> to <a href="advanced.html#mutations-inside-binds">tie a source cell to a dependent
-cell</a>.</li>
-<li>Add <code>rx.flatten</code> utility function.</li>
+<li>Add <code>rx.snap</code> for non-binding snapshots.</li>
+<li>Add utility functions: <code>rx.flatten</code>, <code>rxt.cast</code>, <code>rxt.cssify</code>.</li>
 </ul>
 <p><strong>v0.0.4 – 2013-08-14</strong></p>
 <ul>

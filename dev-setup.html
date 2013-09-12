@@ -43,6 +43,10 @@ npm install -g bower@1.0.0 # for conveniently running grunt</code></pre>
 <pre><code>ERROR [launcher]: Cannot start PhantomJS</code></pre>
 <p>You can ignore this; it was a Karma bug, fixed recently in
 <a href="https://github.com/karma-runner/karma/issues/444">https://github.com/karma-runner/karma/issues/444</a>.</p>
+<p>Before making commits, please set up the commit-hook:</p>
+<pre><code>ln -s $PWD/tools/pre-commit .git/hooks/</code></pre>
+<p>This ensures that <code>dist/</code> has the latest compiled sources (and consequently
+that everything passes tests).</p>
 
         </section>
       </div>
