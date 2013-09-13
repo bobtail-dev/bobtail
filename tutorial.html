@@ -633,6 +633,10 @@ they&#39;re really big):</p>
 <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span><span class="p">.</span><span class="nx">length</span>
 </pre></div>
 
+<p>All things considered, we still recommend using normal observable arrays
+over these magical ES5 array proxies, given the limitations.  When you call
+<code>autoReactify</code> on an object, it will essentially ignore and leave intact
+any existing observables.</p>
 <p>Thanks to <a href="https://github.com/yang/reactive-coffee/issues/6">@m1sta</a> for
 bringing this idea to the table.</p>
 <h2><a name="next-steps">Next Steps</a></h2>
