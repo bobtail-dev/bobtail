@@ -243,6 +243,15 @@ describe 'reactify', ->
     rx.autoReactify(options)
     expect(options.one).toBe('hello')
     expect(options.two).toBe('world')
+  it 'should leave observables unchanged', ->
+    x = one: 'hello', two: 'world', three: (bind -> 0), four: rx.array([1,2])
+    origThree = x.three
+    origFour = x.four
+    rx.autoReactify(x)
+    expect(x.one).toBe('hello')
+    expect(x.two).toBe('world')
+    expect(x.three).toBe(origThree)
+    expect(x.four).toBe(origFour)
 
 describe 'flatten', ->
   flattened = mapped = xs = ys = i = null

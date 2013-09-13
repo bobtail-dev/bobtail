@@ -863,6 +863,9 @@
       for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
         name = _ref4[_i];
         val = obj[name];
+        if (val instanceof ObsMap || val instanceof ObsCell || val instanceof ObsArray) {
+          continue;
+        }
         type = _.isFunction(val) ? null : _.isArray(val) ? 'array' : 'cell';
         _results.push([
           name, {

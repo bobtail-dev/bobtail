@@ -401,6 +401,7 @@ rx.autoReactify = (obj) ->
   rx.reactify obj, _.object(
     for name in Object.getOwnPropertyNames(obj)
       val = obj[name]
+      continue if val instanceof ObsMap or val instanceof ObsCell or val instanceof ObsArray
       type =
         if _.isFunction(val) then null
         else if _.isArray(val) then 'array'
