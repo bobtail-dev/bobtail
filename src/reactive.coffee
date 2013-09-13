@@ -552,7 +552,7 @@ rxt.mktag = mktag = (tag) ->
             document.createTextNode(child)
           else if child instanceof RawHtml
             parsed = $(child.html)
-            throw 'Cannot insert RawHtml of multiple elements' if parsed.length
+            throw 'Cannot insert RawHtml of multiple elements' if parsed.length != 1
             parsed[0]
           else if child instanceof $
             child[0]

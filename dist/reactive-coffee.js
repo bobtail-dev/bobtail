@@ -1129,7 +1129,7 @@
               _results.push(document.createTextNode(child));
             } else if (child instanceof RawHtml) {
               parsed = $(child.html);
-              if (parsed.length) {
+              if (parsed.length !== 1) {
                 throw 'Cannot insert RawHtml of multiple elements';
               }
               _results.push(parsed[0]);

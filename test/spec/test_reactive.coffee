@@ -1,4 +1,5 @@
 bind = rx.bind
+div = rxt.tags.div
 
 describe 'source cell', ->
   src = null
@@ -502,4 +503,18 @@ describe 'autoSub', ->
     x.set(3)
     expect(count).toBe(6)
 
-describe 'ObsMap', ->
+describe 'RawHtml', ->
+  frag = null
+  beforeEach ->
+    frag = rxt.rawHtml('<em>hi</em>')
+  it 'should support insertion of arbitrary HTML elements', ->
+    $x = div {class: 'stuff'}, bind -> [frag]
+    expect($x.html()).toBe('<em>hi</em>')
+  it 'should only be supported if containing single element', ->
+    frag = rxt.rawHtml('<em>hi</em><em>ho</em>')
+    expect(->
+      div {class: 'stuff'}, bind -> frag
+    ).toThrow()
+    expect(->
+      div {class: 'stuff'}, bind -> rxt.rawHtml('')
+    ).toThrow()
