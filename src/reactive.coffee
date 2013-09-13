@@ -174,7 +174,7 @@ ObsCell = class rx.ObsCell
     @x = @x ? null
     @onSet = new Ev(=> [[null, @x]]) # [old, new]
   get: ->
-    recorder.sub((target) => rx.autoSub @onSet, -> target.refresh())
+    recorder.sub (target) => rx.autoSub @onSet, -> target.refresh()
     @x
 
 SrcCell = class rx.SrcCell extends ObsCell
@@ -244,18 +244,18 @@ ObsArray = class rx.ObsArray
     @xs = @xs ? []
     @onChange = new Ev(=> [[0, [], @xs]]) # [index, removed, added]
   all: ->
-    recorder.sub((target) => rx.autoSub @onChange, -> target.refresh())
+    recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
     _.clone(@xs)
   raw: ->
-    recorder.sub((target) => rx.autoSub @onChange, -> target.refresh())
+    recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
     @xs
   at: (i) ->
-    recorder.sub((target) => rx.autoSub @onChange, ([index, removed, added]) ->
-      target.refresh() if index == i)
+    recorder.sub (target) => rx.autoSub @onChange, ([index, removed, added]) ->
+      target.refresh() if index == i
     @xs[i]
   length: ->
-    recorder.sub((target) => rx.autoSub @onChange, ([index, removed, added]) ->
-      target.refresh() if removed.length != added.length)
+    recorder.sub (target) => rx.autoSub @onChange, ([index, removed, added]) ->
+      target.refresh() if removed.length != added.length
     @xs.length
   map: (f) ->
     ys = new MappedDepArray()
@@ -302,17 +302,17 @@ ObsMap = class rx.ObsMap
     @onRemove = new Ev() # [key, old]
     @onChange = new Ev() # [key, old, new]
   get: (key) ->
-    recorder.sub((target) => rx.autoSub @onAdd, ([subkey, val]) ->
-      target.refresh() if key == subkey)
-    recorder.sub((target) => rx.autoSub @onChange, ([subkey, old, val]) ->
-      target.refresh() if key == subkey)
-    recorder.sub((target) => rx.autoSub @onRemove, ([subkey, old]) ->
-      target.refresh() if key == subkey)
+    recorder.sub (target) => rx.autoSub @onAdd, ([subkey, val]) ->
+      target.refresh() if key == subkey
+    recorder.sub (target) => rx.autoSub @onChange, ([subkey, old, val]) ->
+      target.refresh() if key == subkey
+    recorder.sub (target) => rx.autoSub @onRemove, ([subkey, old]) ->
+      target.refresh() if key == subkey
     @x[key]
   all: ->
-    recorder.sub((target) => rx.autoSub @onAdd, -> target.refresh())
-    recorder.sub((target) => rx.autoSub @onChange, -> target.refresh())
-    recorder.sub((target) => rx.autoSub @onRemove, -> target.refresh())
+    recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
+    recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
+    recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
     _.clone(@x)
   realPut: (key, val) ->
     if key of @x
