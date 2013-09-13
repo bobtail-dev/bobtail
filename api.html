@@ -99,6 +99,13 @@ conditionals in the array).</li>
 whenever the current (enclosing) bind is removed or refreshed.  This is
 useful for proper resource disposal, such as closing a connection or
 removing an interval timer.</li>
+<li><code>skipFirst(f)</code>: wrap a 1-ary function such that the first invocation is
+simply dropped.  This is useful for subscribing an event listener but
+suppressing the initial invocation at subscription time.</li>
+<li><code>autoSub(ev, listener)</code>: Subscribes a listener to an event but such that
+if this is called from within a <code>bind</code> context, the listener will be
+properly cleaned up (unsubscribed) on context disposal.  Returns the
+subscription ID.</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>

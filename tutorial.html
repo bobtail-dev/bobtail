@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
-            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#tips">Tips</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
+            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
             <li><a href="advanced.html">Advanced Concepts</a></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
@@ -33,10 +33,11 @@
 <p>Reactive depends on jQuery and Underscore:</p>
 <div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/underscore.string/2.3.0/underscore.string.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </pre></div>
 
 <p>Reactive is hosted on <a href="http://cdnjs.com/">cdnjs</a> as well, so you can source directly from there:</p>
-<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/reactive-coffee/0.0.4/reactive-coffee.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/reactive-coffee/0.0.5/reactive-coffee.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </pre></div>
 
 <p>If you&#39;re using <a href="http://bower.io/">Bower</a>, you can also add Reactive as a dependency for your
@@ -98,6 +99,12 @@ a listener:</p>
 <span class="nx">firstName</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([oldVal, newVal]) -&gt;</span>
   <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.name&#39;</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="nx">newVal</span><span class="p">)</span>
 <span class="nx">firstName</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s">&#39;Jane&#39;</span><span class="p">)</span>
+</pre></div>
+
+<p>Events immediately invoke a newly added listener to bring them up to speed
+on the current value, but you can suppress this first invocation with the
+simple <code>rx.skipFirst</code> utility function:</p>
+<div class="highlight"><pre><span class="nx">x</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">sub</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">skipFirst</span> <span class="nf">([oldVal, newVal]) -&gt;</span> <span class="p">...</span>
 </pre></div>
 
 <h2><a name="dependent-cells">Dependent Cells</a></h2>
@@ -463,12 +470,26 @@ For these situations, there&#39;s a handy <code>rx.flatten</code> utility functi
 <p>(These behaviors may be folded into core <code>rxt</code> behavior if it proves to be
 a sensible default.)</p>
 <h2><a name="components">Components</a></h2>
-<p>Making reusable components is as simple as defining a function:</p>
-<div class="highlight"><pre><span class="nv">tabs = </span><span class="nf">(opts) -&gt;</span>
+<p>Making reusable components is as simple as defining a function, where the
+convention is to pass in a single named argument object, as opposed to
+regular arguments, since components have a tendency to demand a fairly
+unwieldy set of parameters:</p>
+<div class="highlight"><pre><span class="c1">#</span>
+<span class="c1"># tabs: array of tab contents, where each tab content is itself an array of</span>
+<span class="c1">#   elements or text</span>
+<span class="c1"># initialTabIndex: index of initial tab; defaults to 0</span>
+<span class="c1"># activeClass: class to set an active tab; defaults to &#39;active-tab&#39;</span>
+<span class="c1"># change: a callback that is called whenever the active tab is changed,</span>
+<span class="c1">#   and is passed the new active tab index</span>
+<span class="c1">#</span>
+
+<span class="nv">tabs = </span><span class="nf">(opts) -&gt;</span>
   <span class="nv">opts = </span><span class="nx">_</span><span class="p">(</span><span class="nx">opts</span><span class="p">).</span><span class="nx">defaults</span>
-    <span class="nv">tabs: </span><span class="p">[]</span>
     <span class="nv">initialTabIndex: </span><span class="mi">0</span>
     <span class="nv">activeClass: </span><span class="s">&#39;active-tab&#39;</span>
+    <span class="nv">change: </span><span class="nf">-&gt;</span>
+  <span class="nv">opts = </span><span class="nx">rxt</span><span class="p">.</span><span class="nx">cast</span> <span class="nx">opts</span><span class="p">,</span>
+    <span class="nv">tabs: </span><span class="s">&#39;array&#39;</span>
 
   <span class="nv">activeTabIndex = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">opts</span><span class="p">.</span><span class="nx">initialTabIndex</span><span class="p">)</span>
 
@@ -480,7 +501,9 @@ a sensible default.)</p>
             <span class="s">&quot;nav-tab&quot;</span>
             <span class="s">&quot;</span><span class="si">#{</span><span class="k">if</span> <span class="nx">activeTabIndex</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">==</span> <span class="nx">i</span> <span class="k">then</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">activeClass</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="si">}</span><span class="s">&quot;</span>
           <span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
-        <span class="nv">click: </span><span class="nf">-&gt;</span> <span class="nx">activeTabIndex</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+        <span class="nv">click: </span><span class="nf">-&gt;</span>
+          <span class="nx">activeTabIndex</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+          <span class="nx">opts</span><span class="p">.</span><span class="nx">change</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
       <span class="p">},</span> <span class="p">[</span><span class="nx">tabName</span><span class="p">]</span>
     <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;tab-content&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
       <span class="p">[</span><span class="nx">tabName</span><span class="p">,</span> <span class="nx">tabContents</span><span class="p">]</span> <span class="o">=</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">tabs</span><span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="nx">activeTabIndex</span><span class="p">.</span><span class="nx">get</span><span class="p">())</span>
@@ -488,6 +511,8 @@ a sensible default.)</p>
   <span class="p">]</span>
 </pre></div>
 
+<p>Above, we used a convenience function <code>rxt.cast</code> which lets us cast inputs
+to the desired observable data type (cell or array).</p>
 <p>Now we can use this with:</p>
 <div class="highlight"><pre><span class="nv">modifyTab = </span><span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&#39;MODIFY&#39;</span><span class="p">]</span>
 <span class="nv">createTab = </span><span class="nf">-&gt;</span> <span class="p">[</span><span class="s">&#39;CREATE&#39;</span><span class="p">]</span>
@@ -505,8 +530,9 @@ a sensible default.)</p>
 
 <p>When defining abstractions, it&#39;s almost always better to err on the side of
 making everything dynamic, since you can always opt-out of dynamism by stopping
-propagation, whereas you cannot later reintroduce dynamism into places with no
-dynamic bindings.</p>
+propagation (e.g. with <code>snap</code> or with hoisting things out of a <code>bind</code>),
+whereas you cannot later reintroduce dynamism into places with no dynamic
+bindings.</p>
 <h2><a name="binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></h2>
 <p>We can treat certain interactive DOM elements&#39; attributes as cells, thus
 binding to them as well.</p>
@@ -609,11 +635,6 @@ they&#39;re really big):</p>
 
 <p>Thanks to <a href="https://github.com/yang/reactive-coffee/issues/6">@m1sta</a> for
 bringing this idea to the table.</p>
-<h2><a name="tips">Tips</a></h2>
-<ul>
-<li>Use the <code>do</code> to including some code (such as defining some variables)
-inline in your views, without cluttering up syntax too much</li>
-</ul>
 <h2><a name="next-steps">Next Steps</a></h2>
 <p>Congrats on making it all the way through the basic tutorial!  You can
 continue to learn more about <a href="advanced.html">&quot;advanced&quot; concepts</a> (really just

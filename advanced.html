@@ -146,20 +146,23 @@ rather than be its own <code>SrcCell</code>:</p>
 <p>However, in case you need an escape hatch in a bind (har har), you can
 always set up a manual listener:</p>
 <div class="highlight"><pre><span class="nv">plusOne = </span><span class="nx">bind</span> <span class="nf">-&gt;</span>
-  <span class="nx">src</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([old, val]) -&gt;</span> <span class="nx">val</span> <span class="o">+</span> <span class="mi">1</span>
+  <span class="nx">src</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">sub</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">skipFirst</span> <span class="nf">([old, val]) -&gt;</span> <span class="nx">val</span> <span class="o">+</span> <span class="mi">1</span>
   <span class="p">...</span>
 </pre></div>
 
+<p>We need <code>skipFirst</code> since by default the listener is immediately invoked
+with the current value of <code>src</code>.</p>
 <p>Note that <code>dst</code> will not be considered a dependency of <code>src</code> or <code>plusOne</code>.
 This connection is unmanaged (or rather, managed by you).</p>
 <p>So if this is happening within some bind context, you must also unsubscribe
 on context disposal:</p>
-<div class="highlight"><pre><span class="nv">uid = </span><span class="nx">src</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([old, val]) -&gt;</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">val</span><span class="p">)</span>
+<div class="highlight"><pre><span class="nv">uid = </span><span class="nx">src</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">sub</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">skipFirst</span> <span class="nf">([old, val]) -&gt;</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">val</span><span class="p">)</span>
 <span class="nx">rx</span><span class="p">.</span><span class="nx">onDispose</span> <span class="nf">-&gt;</span> <span class="nx">src</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">unsub</span><span class="p">(</span><span class="nx">uid</span><span class="p">)</span>
 </pre></div>
 
-<p>There is a convenience function, <code>autoSub</code>, which will take care of this for you:</p>
-<div class="highlight"><pre><span class="nx">rx</span><span class="p">.</span><span class="nx">autoSub</span> <span class="nx">src</span><span class="p">.</span><span class="nx">onSet</span><span class="p">,</span> <span class="nf">([old, val]) -&gt;</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">val</span><span class="p">)</span>
+<p>There is a convenience function, <code>autoSub</code>, which will take care of this
+for you:</p>
+<div class="highlight"><pre><span class="nx">rx</span><span class="p">.</span><span class="nx">autoSub</span> <span class="nx">src</span><span class="p">.</span><span class="nx">onSet</span><span class="p">,</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">skipFirst</span> <span class="nf">([old, val]) -&gt;</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">val</span><span class="p">)</span>
 </pre></div>
 
 <h2><a name="asynchronous-binds">Asynchronous Binds</a></h2>
