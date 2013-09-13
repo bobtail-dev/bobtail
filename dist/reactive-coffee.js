@@ -58,7 +58,6 @@
     };
 
     DepMgr.prototype.unsub = function(uid) {
-      this.uid2src[uid].unsub(uid);
       return popKey(this.uid2src, uid);
     };
 
@@ -103,7 +102,8 @@
     };
 
     Ev.prototype.unsub = function(uid) {
-      return popKey(this.subs, uid);
+      popKey(this.subs, uid);
+      return depMgr.unsub(uid, this);
     };
 
     Ev.prototype.scoped = function(listener, context) {
@@ -167,8 +167,7 @@
 
       if (this.stack.length > 0 && !this.isIgnoring) {
         topCell = _(this.stack).last();
-        handle = sub(topCell);
-        return topCell.addSub(handle);
+        return handle = sub(topCell);
       }
     };
 
@@ -294,7 +293,7 @@
       var _this = this;
 
       recorder.sub(function(target) {
-        return _this.onSet.sub(function() {
+        return rx.autoSub(_this.onSet, function() {
           return target.refresh();
         });
       });
@@ -338,7 +337,6 @@
     function DepCell(body, init) {
       this.body = body;
       DepCell.__super__.constructor.call(this, init != null ? init : null);
-      this.subs = [];
       this.refreshing = false;
       this.nestedBinds = [];
       this.cleanups = [];
@@ -381,30 +379,20 @@
     };
 
     DepCell.prototype.disconnect = function() {
-      var cleanup, nestedBind, subUid, _i, _j, _k, _len, _len1, _len2, _ref1, _ref2, _ref3;
+      var cleanup, nestedBind, _i, _j, _len, _len1, _ref1, _ref2;
 
       _ref1 = this.cleanups;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         cleanup = _ref1[_i];
         cleanup();
       }
-      _ref2 = this.subs;
+      _ref2 = this.nestedBinds;
       for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-        subUid = _ref2[_j];
-        depMgr.unsub(subUid);
-      }
-      _ref3 = this.nestedBinds;
-      for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
-        nestedBind = _ref3[_k];
+        nestedBind = _ref2[_j];
         nestedBind.disconnect();
       }
-      this.subs = [];
       this.nestedBinds = [];
       return this.cleanups = [];
-    };
-
-    DepCell.prototype.addSub = function(subUid) {
-      return this.subs.push(subUid);
     };
 
     DepCell.prototype.addNestedBind = function(nestedBind) {
@@ -435,7 +423,7 @@
       var _this = this;
 
       recorder.sub(function(target) {
-        return _this.onChange.sub(function() {
+        return rx.autoSub(_this.onChange, function() {
           return target.refresh();
         });
       });
@@ -446,7 +434,7 @@
       var _this = this;
 
       recorder.sub(function(target) {
-        return _this.onChange.sub(function() {
+        return rx.autoSub(_this.onChange, function() {
           return target.refresh();
         });
       });
@@ -457,7 +445,7 @@
       var _this = this;
 
       recorder.sub(function(target) {
-        return _this.onChange.sub(function(_arg) {
+        return rx.autoSub(_this.onChange, function(_arg) {
           var added, index, removed;
 
           index = _arg[0], removed = _arg[1], added = _arg[2];
@@ -473,7 +461,7 @@
       var _this = this;
 
       recorder.sub(function(target) {
-        return _this.onChange.sub(function(_arg) {
+        return rx.autoSub(_this.onChange, function(_arg) {
           var added, index, removed;
 
           index = _arg[0], removed = _arg[1], added = _arg[2];
@@ -489,7 +477,7 @@
       var ys;
 
       ys = new MappedDepArray();
-      this.onChange.sub(function(_arg) {
+      rx.autoSub(this.onChange, function(_arg) {
         var added, index, removed;
 
         index = _arg[0], removed = _arg[1], added = _arg[2];
@@ -632,7 +620,7 @@
       var _this = this;
 
       recorder.sub(function(target) {
-        return _this.onAdd.sub(function(_arg) {
+        return rx.autoSub(_this.onAdd, function(_arg) {
           var subkey, val;
 
           subkey = _arg[0], val = _arg[1];
@@ -642,7 +630,7 @@
         });
       });
       recorder.sub(function(target) {
-        return _this.onChange.sub(function(_arg) {
+        return rx.autoSub(_this.onChange, function(_arg) {
           var old, subkey, val;
 
           subkey = _arg[0], old = _arg[1], val = _arg[2];
@@ -652,7 +640,7 @@
         });
       });
       recorder.sub(function(target) {
-        return _this.onRemove.sub(function(_arg) {
+        return rx.autoSub(_this.onRemove, function(_arg) {
           var old, subkey;
 
           subkey = _arg[0], old = _arg[1];
@@ -668,17 +656,17 @@
       var _this = this;
 
       recorder.sub(function(target) {
-        return _this.onAdd.sub(function() {
+        return rx.autoSub(_this.onAdd, function() {
           return target.refresh();
         });
       });
       recorder.sub(function(target) {
-        return _this.onChange.sub(function() {
+        return rx.autoSub(_this.onChange, function() {
           return target.refresh();
         });
       });
       recorder.sub(function(target) {
-        return _this.onRemove.sub(function() {
+        return rx.autoSub(_this.onRemove, function() {
           return target.refresh();
         });
       });
@@ -1125,7 +1113,7 @@
           }
         };
         if (contents instanceof ObsArray) {
-          contents.onChange.sub(function(_arg) {
+          rx.autoSub(contents.onChange, function(_arg) {
             var added, index, removed, toAdd;
 
             index = _arg[0], removed = _arg[1], added = _arg[2];

@@ -33,13 +33,11 @@ mkMap = -> Object.create(null)
 DepMgr = class rx.DepMgr
   constructor: ->
     @uid2src = {}
-  # called by source Ev to register a new subscription
+  # called by Ev.sub to register a new subscription
   sub: (uid, src) ->
     @uid2src[uid] = src
-  # called by destination (who's responsible for remembering what he's
-  # subscribed to, or else...memory leak!)
+  # called by Ev.unsub to unregister a subscription
   unsub: (uid) ->
-    @uid2src[uid].unsub(uid)
     popKey(@uid2src, uid)
 
 rx._depMgr = depMgr = new DepMgr()
@@ -61,6 +59,7 @@ Ev = class rx.Ev
       listener(data)
   unsub: (uid) ->
     popKey(@subs, uid)
+    depMgr.unsub(uid, this)
   # listener is subscribed only for the duration of the context
   scoped: (listener, context) ->
     uid = @sub(listener)
@@ -113,7 +112,6 @@ Recorder = class rx.Recorder
     if @stack.length > 0 and not @isIgnoring
       topCell = _(@stack).last()
       handle = sub(topCell)
-      topCell.addSub(handle)
   addCleanup: (cleanup) ->
     _(@stack).last().addCleanup(cleanup) if @stack.length > 0
   # Delimit the function as one where a mutation takes place, such that if
@@ -176,7 +174,7 @@ ObsCell = class rx.ObsCell
     @x = @x ? null
     @onSet = new Ev(=> [[null, @x]]) # [old, new]
   get: ->
-    recorder.sub((target) => @onSet.sub(-> target.refresh()))
+    recorder.sub((target) => rx.autoSub @onSet, -> target.refresh())
     @x
 
 SrcCell = class rx.SrcCell extends ObsCell
@@ -190,7 +188,6 @@ SrcCell = class rx.SrcCell extends ObsCell
 DepCell = class rx.DepCell extends ObsCell
   constructor: (@body, init) ->
     super(init ? null)
-    @subs = []
     @refreshing = false
     @nestedBinds = []
     @cleanups = []
@@ -231,16 +228,10 @@ DepCell = class rx.DepCell extends ObsCell
     # TODO ordering of cleanup vs unsubscribes may require revisiting
     for cleanup in @cleanups
       cleanup()
-    for subUid in @subs
-      depMgr.unsub(subUid)
     for nestedBind in @nestedBinds
       nestedBind.disconnect()
-    @subs = []
     @nestedBinds = []
     @cleanups = []
-  # called by recorder
-  addSub: (subUid) ->
-    @subs.push(subUid)
   # called by recorder
   addNestedBind: (nestedBind) ->
     @nestedBinds.push(nestedBind)
@@ -253,24 +244,23 @@ ObsArray = class rx.ObsArray
     @xs = @xs ? []
     @onChange = new Ev(=> [[0, [], @xs]]) # [index, removed, added]
   all: ->
-    recorder.sub((target) => @onChange.sub(-> target.refresh()))
+    recorder.sub((target) => rx.autoSub @onChange, -> target.refresh())
     _.clone(@xs)
   raw: ->
-    recorder.sub((target) => @onChange.sub(-> target.refresh()))
+    recorder.sub((target) => rx.autoSub @onChange, -> target.refresh())
     @xs
   at: (i) ->
-    recorder.sub((target) => @onChange.sub(([index, removed, added]) ->
-      target.refresh() if index == i))
+    recorder.sub((target) => rx.autoSub @onChange, ([index, removed, added]) ->
+      target.refresh() if index == i)
     @xs[i]
   length: ->
-    recorder.sub((target) => @onChange.sub(([index, removed, added]) ->
-      target.refresh() if removed.length != added.length))
+    recorder.sub((target) => rx.autoSub @onChange, ([index, removed, added]) ->
+      target.refresh() if removed.length != added.length)
     @xs.length
   map: (f) ->
     ys = new MappedDepArray()
-    @onChange.sub(([index, removed, added]) ->
+    rx.autoSub @onChange, ([index, removed, added]) ->
       ys.realSplice(index, removed.length, added.map(f))
-    )
     ys
   realSplice: (index, count, additions) ->
     removed = @xs.splice.apply(@xs, [index, count].concat(additions))
@@ -312,17 +302,17 @@ ObsMap = class rx.ObsMap
     @onRemove = new Ev() # [key, old]
     @onChange = new Ev() # [key, old, new]
   get: (key) ->
-    recorder.sub((target) => @onAdd.sub(([subkey, val]) ->
-      target.refresh() if key == subkey))
-    recorder.sub((target) => @onChange.sub(([subkey, old, val]) ->
-      target.refresh() if key == subkey))
-    recorder.sub((target) => @onRemove.sub(([subkey, old]) ->
-      target.refresh() if key == subkey))
+    recorder.sub((target) => rx.autoSub @onAdd, ([subkey, val]) ->
+      target.refresh() if key == subkey)
+    recorder.sub((target) => rx.autoSub @onChange, ([subkey, old, val]) ->
+      target.refresh() if key == subkey)
+    recorder.sub((target) => rx.autoSub @onRemove, ([subkey, old]) ->
+      target.refresh() if key == subkey)
     @x[key]
   all: ->
-    recorder.sub((target) => @onAdd.sub(-> target.refresh()))
-    recorder.sub((target) => @onChange.sub(-> target.refresh()))
-    recorder.sub((target) => @onRemove.sub(-> target.refresh()))
+    recorder.sub((target) => rx.autoSub @onAdd, -> target.refresh())
+    recorder.sub((target) => rx.autoSub @onChange, -> target.refresh())
+    recorder.sub((target) => rx.autoSub @onRemove, -> target.refresh())
     _.clone(@x)
   realPut: (key, val) ->
     if key of @x
@@ -565,14 +555,13 @@ rxt.mktag = mktag = (tag) ->
         else
           throw 'Unknown type for contents: ' + contents.constructor.name
       if contents instanceof ObsArray
-        contents.onChange.sub(([index, removed, added]) ->
+        rx.autoSub contents.onChange, ([index, removed, added]) ->
           elt.contents().slice(index, index + removed.length).remove()
           toAdd = toNodes(added)
           if index == elt.contents().length
             elt.append(toAdd)
           else
             elt.contents().eq(index).before(toAdd)
-        )
       else if contents instanceof ObsCell
         # TODO: make this more efficient by checking each element to see if it
         # changed (i.e. layer a MappedDepArray over this, and make DepArrays
