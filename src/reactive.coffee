@@ -296,6 +296,24 @@ DepArray = class rx.DepArray extends ObsArray
         additions = val[index..]
         @realSplice(index, count, additions)
 
+FakeSrcCell = class rx.FakeSrcCell extends SrcCell
+  constructor: (@_getter, @_setter) ->
+  get: -> @_getter()
+  set: (x) -> @_setter(x)
+
+FakeObsCell = class rx.FakeObsCell extends ObsCell
+  constructor: (@_getter) ->
+  get: -> @_getter()
+
+SrcMapEntryCell = class rx.MapEntryCell extends FakeSrcCell
+  constructor: (@_map, @_key) ->
+  get: -> @_map.get(@_key)
+  set: (x) -> @_map.put(@_key, x)
+
+ObsMapEntryCell = class rx.ObsMapEntryCell extends FakeObsCell
+  constructor: (@_map, @_key) ->
+  get: -> @_map.get(@_key)
+
 ObsMap = class rx.ObsMap
   constructor: (@x = {}) ->
     @onAdd = new Ev(=> ([k,v] for k,v of x)) # [key, new]
@@ -328,12 +346,16 @@ ObsMap = class rx.ObsMap
     val = popKey(@x, key)
     @onRemove.pub([key, val])
     val
+  cell: (key) ->
+    new ObsMapEntryCell(@, key)
 
 SrcMap = class rx.SrcMap extends ObsMap
   put: (key, val) ->
     recorder.mutating => @realPut(key, val)
   remove: (key) ->
     recorder.mutating => @realRemove(key)
+  cell: (key) ->
+    new SrcMapEntryCell(@, key)
 
 DepMap = class rx.DepMap extends ObsMap
   constructor: (@f) ->

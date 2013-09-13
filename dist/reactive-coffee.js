@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, MappedDepArray, ObsArray, ObsCell, ObsMap, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, asyncBind, bind, depMgr, ev, events, firstWhere, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -597,6 +597,77 @@
 
   })(ObsArray);
 
+  FakeSrcCell = rx.FakeSrcCell = (function(_super) {
+    __extends(FakeSrcCell, _super);
+
+    function FakeSrcCell(_getter, _setter) {
+      this._getter = _getter;
+      this._setter = _setter;
+    }
+
+    FakeSrcCell.prototype.get = function() {
+      return this._getter();
+    };
+
+    FakeSrcCell.prototype.set = function(x) {
+      return this._setter(x);
+    };
+
+    return FakeSrcCell;
+
+  })(SrcCell);
+
+  FakeObsCell = rx.FakeObsCell = (function(_super) {
+    __extends(FakeObsCell, _super);
+
+    function FakeObsCell(_getter) {
+      this._getter = _getter;
+    }
+
+    FakeObsCell.prototype.get = function() {
+      return this._getter();
+    };
+
+    return FakeObsCell;
+
+  })(ObsCell);
+
+  SrcMapEntryCell = rx.MapEntryCell = (function(_super) {
+    __extends(MapEntryCell, _super);
+
+    function MapEntryCell(_map, _key) {
+      this._map = _map;
+      this._key = _key;
+    }
+
+    MapEntryCell.prototype.get = function() {
+      return this._map.get(this._key);
+    };
+
+    MapEntryCell.prototype.set = function(x) {
+      return this._map.put(this._key, x);
+    };
+
+    return MapEntryCell;
+
+  })(FakeSrcCell);
+
+  ObsMapEntryCell = rx.ObsMapEntryCell = (function(_super) {
+    __extends(ObsMapEntryCell, _super);
+
+    function ObsMapEntryCell(_map, _key) {
+      this._map = _map;
+      this._key = _key;
+    }
+
+    ObsMapEntryCell.prototype.get = function() {
+      return this._map.get(this._key);
+    };
+
+    return ObsMapEntryCell;
+
+  })(FakeObsCell);
+
   ObsMap = rx.ObsMap = (function() {
     function ObsMap(x) {
       var _this = this;
@@ -696,6 +767,10 @@
       return val;
     };
 
+    ObsMap.prototype.cell = function(key) {
+      return new ObsMapEntryCell(this, key);
+    };
+
     return ObsMap;
 
   })();
@@ -722,6 +797,10 @@
       return recorder.mutating(function() {
         return _this.realRemove(key);
       });
+    };
+
+    SrcMap.prototype.cell = function(key) {
+      return new SrcMapEntryCell(this, key);
     };
 
     return SrcMap;

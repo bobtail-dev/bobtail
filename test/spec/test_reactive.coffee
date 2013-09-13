@@ -152,6 +152,19 @@ describe 'ObsMap', ->
     expect(all.get()).toEqual({a:1,b:2})
     x.remove('a')
     expect(all.get()).toEqual({b:2})
+  it 'should yield working cells', ->
+    a = x.cell('a')
+    b = x.cell('b')
+    aa = bind -> a.get()
+    bb = bind -> b.get()
+    expect(aa.get()).toBe(0)
+    expect(bb.get()).toBeUndefined()
+    a.set(1)
+    expect(aa.get()).toBe(1)
+    expect(bb.get()).toBeUndefined()
+    b.set(2)
+    expect(aa.get()).toBe(1)
+    expect(bb.get()).toBe(2)
 
 describe 'nested bindings', ->
   x = a = b = elt = null
@@ -488,3 +501,5 @@ describe 'autoSub', ->
     x.set(2)
     x.set(3)
     expect(count).toBe(6)
+
+describe 'ObsMap', ->
