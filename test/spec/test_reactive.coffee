@@ -582,3 +582,19 @@ describe 'cellToArray', ->
     rx.autoSub ys.onChange, rx.skipFirst ([index, removed, added]) ->
       expect(false).toBe(true)
     x.set([1,'1'])
+
+describe 'DepArray', ->
+  it 'should concat arrays efficiently', ->
+    xs = rx.array([-1])
+    ys = rx.array()
+    zs = rx.concat(xs, ys)
+    rx.autoSub zs.onChange, ([index, removed, added]) ->
+      expect(zs.raw()).toEqual(xs.raw().concat(ys.raw()))
+    xs.push(2)
+    ys.insert(5, 0)
+    xs.push(4)
+    ys.insert(4, 0)
+    xs.put(2, 3)
+    ys.push(6)
+    xs.splice(0, 1, 0, 1)
+    ys.replace([4,5,6,7])

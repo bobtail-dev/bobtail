@@ -29,6 +29,11 @@ mkMap = (xs = []) ->
     map[k] = v for k,v of xs
   map
 
+sum = (xs) ->
+  n = 0
+  n += x for x in xs
+  n
+
 #
 # Events and pub-sub dependency management
 #
@@ -279,6 +284,7 @@ ObsArray = class rx.ObsArray
     rx.autoSub @onChange, ([index, removed, added]) ->
       ys.realSplice(index, removed.length, added.map(f))
     ys
+  concat: (that) -> rx.concat(this, that)
   realSplice: (index, count, additions) ->
     removed = @xs.splice.apply(@xs, [index, count].concat(additions))
     @onChange.pub([index, removed, additions])
@@ -312,6 +318,16 @@ DepArray = class rx.DepArray extends ObsArray
       for splice in splices
         [index, count, additions] = splice
         @realSplice(index, count, additions)
+
+rx.concat = (xss...) ->
+  ys = new MappedDepArray()
+  repLens = (0 for xs in xss)
+  xss.map (xs, i) ->
+    rx.autoSub xs.onChange, ([index, removed, added]) ->
+      xsOffset = sum(repLens[...i])
+      repLens[i] += added.length - removed.length
+      ys.realSplice(xsOffset + index, removed.length, added)
+  ys
 
 FakeSrcCell = class rx.FakeSrcCell extends SrcCell
   constructor: (@_getter, @_setter) ->

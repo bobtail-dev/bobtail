@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -63,6 +63,17 @@
       }
     }
     return map;
+  };
+
+  sum = function(xs) {
+    var n, x, _i, _len;
+
+    n = 0;
+    for (_i = 0, _len = xs.length; _i < _len; _i++) {
+      x = xs[_i];
+      n += x;
+    }
+    return n;
   };
 
   DepMgr = rx.DepMgr = (function() {
@@ -521,6 +532,10 @@
       return ys;
     };
 
+    ObsArray.prototype.concat = function(that) {
+      return rx.concat(this, that);
+    };
+
     ObsArray.prototype.realSplice = function(index, count, additions) {
       var removed;
 
@@ -633,6 +648,34 @@
     return DepArray;
 
   })(ObsArray);
+
+  rx.concat = function() {
+    var repLens, xs, xss, ys;
+
+    xss = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    ys = new MappedDepArray();
+    repLens = (function() {
+      var _i, _len, _results;
+
+      _results = [];
+      for (_i = 0, _len = xss.length; _i < _len; _i++) {
+        xs = xss[_i];
+        _results.push(0);
+      }
+      return _results;
+    })();
+    xss.map(function(xs, i) {
+      return rx.autoSub(xs.onChange, function(_arg) {
+        var added, index, removed, xsOffset;
+
+        index = _arg[0], removed = _arg[1], added = _arg[2];
+        xsOffset = sum(repLens.slice(0, i));
+        repLens[i] += added.length - removed.length;
+        return ys.realSplice(xsOffset + index, removed.length, added);
+      });
+    });
+    return ys;
+  };
 
   FakeSrcCell = rx.FakeSrcCell = (function(_super) {
     __extends(FakeSrcCell, _super);
