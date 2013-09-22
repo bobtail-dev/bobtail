@@ -79,11 +79,11 @@ Ev = class rx.Ev
 
 rx.skipFirst = (f) ->
   first = true
-  (x) ->
+  (args...) ->
     if first
       first = false
     else
-      f(x)
+      f(args...)
 
 #
 # Reactivity

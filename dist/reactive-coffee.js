@@ -1,8 +1,8 @@
 (function() {
   var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+    __slice = [].slice,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __slice = [].slice,
     _this = this;
 
   if (typeof exports === 'undefined') {
@@ -153,11 +153,14 @@
     var first;
 
     first = true;
-    return function(x) {
+    return function() {
+      var args;
+
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       if (first) {
         return first = false;
       } else {
-        return f(x);
+        return f.apply(null, args);
       }
     };
   };
