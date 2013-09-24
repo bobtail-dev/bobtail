@@ -1138,6 +1138,8 @@
                 throw 'jQuery object must wrap a single element';
               }
               _results.push(child[0]);
+            } else if (child instanceof Element) {
+              _results.push(child);
             } else {
               throw "Unknown element type in array: " + child.constructor.name + " (must be string, RawHtml, or jQuery objects)";
             }

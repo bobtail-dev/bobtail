@@ -557,6 +557,8 @@ rxt.mktag = mktag = (tag) ->
           else if child instanceof $
             throw 'jQuery object must wrap a single element' if child.length != 1
             child[0]
+          else if child instanceof Element
+            child
           else
             throw "Unknown element type in array: #{child.constructor.name} (must be string, RawHtml, or jQuery objects)"
       updateContents = (contents) ->

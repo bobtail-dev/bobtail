@@ -1,5 +1,6 @@
 bind = rx.bind
 div = rxt.tags.div
+outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
 describe 'source cell', ->
   src = null
@@ -518,3 +519,12 @@ describe 'RawHtml', ->
     expect(->
       div {class: 'stuff'}, bind -> rxt.rawHtml('')
     ).toThrow()
+
+describe 'rxt', ->
+  it 'should take as contents (arrays of) elements, $, RawHtml, and strings', ->
+    for useArray in [true]
+      maybeArray = (x) -> if useArray then [x] else x
+      expect(outerHtml(div(maybeArray('hi')))).toBe('<div>hi</div>')
+      expect(outerHtml(div(maybeArray($('<em>hi</em>'))))).toBe('<div><em>hi</em></div>')
+      expect(outerHtml(div(maybeArray(rxt.rawHtml('<em>hi</em>'))))).toBe('<div><em>hi</em></div>')
+      expect(outerHtml(div(maybeArray($('<em>hi</em>')[0])))).toBe('<div><em>hi</em></div>')
