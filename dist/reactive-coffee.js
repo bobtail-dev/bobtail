@@ -1130,13 +1130,16 @@
             } else if (child instanceof RawHtml) {
               parsed = $(child.html);
               if (parsed.length !== 1) {
-                throw 'Cannot insert RawHtml of multiple elements';
+                throw 'RawHtml must wrap a single element';
               }
               _results.push(parsed[0]);
             } else if (child instanceof $) {
+              if (child.length !== 1) {
+                throw 'jQuery object must wrap a single element';
+              }
               _results.push(child[0]);
             } else {
-              throw 'Unknown element type in array: ' + child.constructor.name;
+              throw "Unknown element type in array: " + child.constructor.name + " (must be string, RawHtml, or jQuery objects)";
             }
           }
           return _results;
@@ -1191,7 +1194,7 @@
           } else if (_.isString(contents) || contents instanceof RawHtml) {
             return updateContents([contents]);
           } else {
-            throw 'Unknown type for contents: ' + contents.constructor.name;
+            throw "Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, RawHtml, jQuery object of single element, or array of the aforementioned)";
           }
         };
         if (contents instanceof ObsArray) {

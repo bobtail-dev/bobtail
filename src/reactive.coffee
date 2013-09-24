@@ -552,12 +552,13 @@ rxt.mktag = mktag = (tag) ->
             document.createTextNode(child)
           else if child instanceof RawHtml
             parsed = $(child.html)
-            throw 'Cannot insert RawHtml of multiple elements' if parsed.length != 1
+            throw 'RawHtml must wrap a single element' if parsed.length != 1
             parsed[0]
           else if child instanceof $
+            throw 'jQuery object must wrap a single element' if child.length != 1
             child[0]
           else
-            throw 'Unknown element type in array: ' + child.constructor.name
+            throw "Unknown element type in array: #{child.constructor.name} (must be string, RawHtml, or jQuery objects)"
       updateContents = (contents) ->
         elt.html('')
         if _.isArray(contents)
@@ -576,7 +577,7 @@ rxt.mktag = mktag = (tag) ->
         else if _.isString(contents) or contents instanceof RawHtml
           updateContents([contents])
         else
-          throw 'Unknown type for contents: ' + contents.constructor.name
+          throw "Unknown type for element contents: #{contents.constructor.name} (accepted types: string, RawHtml, jQuery object of single element, or array of the aforementioned)"
       if contents instanceof ObsArray
         rx.autoSub contents.onChange, ([index, removed, added]) ->
           elt.contents().slice(index, index + removed.length).remove()
