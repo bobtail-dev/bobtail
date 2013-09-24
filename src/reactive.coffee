@@ -525,15 +525,17 @@ setProp = (elt, prop, val) ->
 
 rxt.mktag = mktag = (tag) ->
   (arg1, arg2) ->
-    # arguments are either (), (attrs: Object), (contents: non-Object), or
-    # (attrs: Object, contents: non-Object)
+    # arguments are either (), (attrs: Object), (contents: Contents), or
+    # (attrs: Object, contents: Contents), where Contents is:
+    # string | Element | RawHtml | $ | Array | ObsCell | ObsArray
     [attrs, contents] =
       if not arg1? and not arg2?
         [{}, null]
       else if arg2?
         [arg1, arg2]
-      else if _.isString(arg1) or arg1 instanceof RawHtml or _.isArray(arg1) or
-              arg1 instanceof ObsCell or arg1 instanceof ObsArray
+      else if _.isString(arg1) or arg1 instanceof Element or
+          arg1 instanceof RawHtml or arg1 instanceof $ or _.isArray(arg1) or
+          arg1 instanceof ObsCell or arg1 instanceof ObsArray
         [{}, arg1]
       else
         [arg1, null]
@@ -550,6 +552,8 @@ rxt.mktag = mktag = (tag) ->
         for child in contents
           if _.isString(child)
             document.createTextNode(child)
+          else if child instanceof Element
+            child
           else if child instanceof RawHtml
             parsed = $(child.html)
             throw 'RawHtml must wrap a single element' if parsed.length != 1
@@ -557,10 +561,8 @@ rxt.mktag = mktag = (tag) ->
           else if child instanceof $
             throw 'jQuery object must wrap a single element' if child.length != 1
             child[0]
-          else if child instanceof Element
-            child
           else
-            throw "Unknown element type in array: #{child.constructor.name} (must be string, RawHtml, or jQuery objects)"
+            throw "Unknown element type in array: #{child.constructor.name} (must be string, Element, RawHtml, or jQuery objects)"
       updateContents = (contents) ->
         elt.html('')
         if _.isArray(contents)
@@ -576,10 +578,11 @@ rxt.mktag = mktag = (tag) ->
                 .addClass('updated-element').offset({top,left})
                 .width($(node).width()).height($(node).height())
             setTimeout (-> $(cover).remove() for cover in covers), 2000
-        else if _.isString(contents) or contents instanceof RawHtml
+        else if _.isString(contents) or contents instanceof Element or
+            contents instanceof RawHtml or contents instanceof $
           updateContents([contents])
         else
-          throw "Unknown type for element contents: #{contents.constructor.name} (accepted types: string, RawHtml, jQuery object of single element, or array of the aforementioned)"
+          throw "Unknown type for element contents: #{contents.constructor.name} (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)"
       if contents instanceof ObsArray
         rx.autoSub contents.onChange, ([index, removed, added]) ->
           elt.contents().slice(index, index + removed.length).remove()

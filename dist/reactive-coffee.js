@@ -1100,7 +1100,7 @@
     return function(arg1, arg2) {
       var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref4, _ref5;
 
-      _ref4 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof RawHtml || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref4[0], contents = _ref4[1];
+      _ref4 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref4[0], contents = _ref4[1];
       elt = $("<" + tag + "/>");
       _ref5 = _.omit(attrs, _.keys(specialAttrs));
       for (name in _ref5) {
@@ -1127,6 +1127,8 @@
             child = contents[_j];
             if (_.isString(child)) {
               _results.push(document.createTextNode(child));
+            } else if (child instanceof Element) {
+              _results.push(child);
             } else if (child instanceof RawHtml) {
               parsed = $(child.html);
               if (parsed.length !== 1) {
@@ -1138,10 +1140,8 @@
                 throw 'jQuery object must wrap a single element';
               }
               _results.push(child[0]);
-            } else if (child instanceof Element) {
-              _results.push(child);
             } else {
-              throw "Unknown element type in array: " + child.constructor.name + " (must be string, RawHtml, or jQuery objects)";
+              throw "Unknown element type in array: " + child.constructor.name + " (must be string, Element, RawHtml, or jQuery objects)";
             }
           }
           return _results;
@@ -1193,10 +1193,10 @@
                 return _results;
               }), 2000);
             }
-          } else if (_.isString(contents) || contents instanceof RawHtml) {
+          } else if (_.isString(contents) || contents instanceof Element || contents instanceof RawHtml || contents instanceof $) {
             return updateContents([contents]);
           } else {
-            throw "Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, RawHtml, jQuery object of single element, or array of the aforementioned)";
+            throw "Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)";
           }
         };
         if (contents instanceof ObsArray) {
