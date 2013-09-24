@@ -4,7 +4,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
+    <!-- build:css({.tmp,app}) styles/main.css-->
+    <link rel="stylesheet" type="text/css" href="styles/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="styles/pygment_trac.css" media="screen">
+    <!-- endbuild-->
     <title>Infelicities - reactive.coffee</title>
   </head>
   <body>
@@ -61,7 +64,7 @@ A -&gt; C
 B -&gt; D
 C -&gt; D
 D -&gt; E</code></pre>
-<p><img src="images/9df74959.cell-dag.png" alt="DAG"></p>
+<p><img src="images/cell-dag.png" alt="DAG"></p>
 <p>If <code>A</code> is updated, then we&#39;d currently perform a recursive descent starting at
 <code>A</code> and visit the nodes in this order:</p>
 <pre><code>A, B, D, E, C, D, E</code></pre>
