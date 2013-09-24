@@ -109,6 +109,8 @@ suppressing the initial invocation at subscription time.</li>
 if this is called from within a <code>bind</code> context, the listener will be
 properly cleaned up (unsubscribed) on context disposal.  Returns the
 subscription ID.</li>
+<li><code>concat(arrays...)</code>: returns a dependent array that is the result of
+concatenating multiple <code>ObsArray</code>s (efficiently maintained).</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>
@@ -197,15 +199,18 @@ function</em>, which is what constructs a DOM element.</p>
 <p><strong>Free functions</strong></p>
 <ul>
 <li><code>mktag(tag)</code>: returns a tag function of the given tag name.  The various
-tags like <code>div</code> and <code>h2</code> are simply aliases; e.g., <code>div =
-mktag(&#39;div&#39;)</code>.  Tag functions themselves take <code>(attrs, children)</code>, where
+tags like <code>div</code> and <code>h2</code> are simply aliases; e.g., <code>div = mktag(&#39;div&#39;)</code>.
+Tag functions themselves take <code>(attrs, contents)</code>, both optional, where
 <code>attrs</code> is a JavaScript object of HTML attributes and/or <em>special
-attributes</em> and <code>children</code> is an optional list of child elements
-(jQuery-wrapped) and/or strings (for text nodes).  They return an
-instance of the specified element wrapped in a jQuery object.  See also <code>specialAttrs</code> below for more on special attributes.</li>
-<li><code>importTags()</code>: populate the global namespace with the tag symbols, so you
-don&#39;t need have <code>rxt</code> all over your templates.  Useful for quickly throwing
-something together.</li>
+attributes</em> and <code>contents</code> is an array (<code>ObsArray</code> or regular <code>Array</code>) of
+child nodes (either raw elements, <code>RawHtml</code>, or jQuery objects) and/or
+strings (for text nodes).  You can also pass in a singular such node
+without the array.  The function returns an instance of the specified
+element wrapped in a jQuery object.  See also <code>specialAttrs</code> below for
+more on special attributes.</li>
+<li><code>importTags([dest])</code>: populate the global namespace (or the <code>dest</code> object
+if given) with the tag symbols, so you don&#39;t need have <code>rxt</code> all over
+your templates.  Useful for quickly throwing something together.</li>
 <li><code>rawHtml(html)</code>: returns a <code>RawHtml</code> wrapper for strings that tags won&#39;t
 escape when rendering; example: <code>div {}, [rawHtml(&#39;&lt;span&gt;hello&lt;/span&gt;&#39;)]</code></li>
 <li><code>rxt.cast(opts, types)</code>: convenience utility for use in preparing
