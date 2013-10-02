@@ -387,6 +387,19 @@ describe 'asyncBind', ->
     x = rx.cell(0)
     y = rx.asyncBind 'none', -> @done(x.get())
     expect(-> y.set(0)).toThrow()
+  it 'should support @done called from within @record', ->
+    x = rx.cell()
+    y = rx.cell(1)
+    z = rx.asyncBind 'none', -> @record =>
+      return @done(0) if not x.get()?
+      sum = x.get() + y.get()
+      _.defer => @done(sum)
+    w = bind -> z.get()
+    expect(w.get()).toBe(0)
+    runs -> x.set(2)
+    waitsFor (-> w.get() == 3), 'The async should have fired', 1
+    runs -> x.set(5)
+    waitsFor (-> w.get() == 6), 'The async should have fired', 1
 
 describe 'lagBind', ->
   x = y = evaled = null

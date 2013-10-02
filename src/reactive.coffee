@@ -206,21 +206,32 @@ DepCell = class rx.DepCell extends ObsCell
       # create and discard tentative recordings.  It's also unclear whether
       # such a lagBind is more desirable (in the face of changing dependencies)
       # and whether on-completion is what's most generalizable.
+      realDone = (@x) => @onSet.pub([old, @x])
+      recorded: false
+      syncResult = null
+      isSynchronous = false
       env =
-        _recorded: false
+        # next two are for tolerating env.done calls from within env.record
         record: (f) =>
           # TODO document why @refreshing exists
           # guards against recursively evaluating this recorded
           # function (@body or an async body) when calling `.get()`
           if not @refreshing
             @disconnect()
+            throw 'this refresh has already recorded its dependencies' if recorded
             @refreshing = true
-            throw 'this refresh has already recorded its dependencies' if env._recorded
-            env._recorded = true
-            try recorder.record @, -> f.call(env)
+            recorded = true
+            try res = recorder.record @, -> f.call(env)
             finally @refreshing = false
-        done: (@x) =>
-          @onSet.pub([old, @x]) if old != @x
+            realDone(syncResult) if isSynchronous
+            res
+        done: (x) =>
+          if old != x
+            if @refreshing
+              isSynchronous = true
+              syncResult = x
+            else
+              realDone(x)
       @body.call(env)
   # unsubscribe from all dependencies and recursively have all nested binds
   # disconnect themselves as well

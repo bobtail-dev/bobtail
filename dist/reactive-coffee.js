@@ -343,34 +343,52 @@
     }
 
     DepCell.prototype.refresh = function() {
-      var env, old,
+      var env, isSynchronous, old, realDone, syncResult,
         _this = this;
 
       if (!this.refreshing) {
         old = this.x;
+        realDone = function(x) {
+          _this.x = x;
+          return _this.onSet.pub([old, _this.x]);
+        };
+        ({
+          recorded: false
+        });
+        syncResult = null;
+        isSynchronous = false;
         env = {
-          _recorded: false,
           record: function(f) {
+            var recorded, res;
+
             if (!_this.refreshing) {
               _this.disconnect();
-              _this.refreshing = true;
-              if (env._recorded) {
+              if (recorded) {
                 throw 'this refresh has already recorded its dependencies';
               }
-              env._recorded = true;
+              _this.refreshing = true;
+              recorded = true;
               try {
-                return recorder.record(_this, function() {
+                res = recorder.record(_this, function() {
                   return f.call(env);
                 });
               } finally {
                 _this.refreshing = false;
               }
+              if (isSynchronous) {
+                realDone(syncResult);
+              }
+              return res;
             }
           },
           done: function(x) {
-            _this.x = x;
-            if (old !== _this.x) {
-              return _this.onSet.pub([old, _this.x]);
+            if (old !== x) {
+              if (_this.refreshing) {
+                isSynchronous = true;
+                return syncResult = x;
+              } else {
+                return realDone(x);
+              }
             }
           }
         };
