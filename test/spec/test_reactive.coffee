@@ -482,6 +482,14 @@ describe 'cssify', ->
       margin: '0'
     }
     expect(cssified).toBe('border-left: 5px; margin: 0;')
+  it 'should automatically work for style attr', ->
+    staticElt = div {style: {fontSize: 10}}
+    disp = rx.cell()
+    dynamic = div {style: bind -> {display: disp.get()}}
+    expect(staticElt.attr('style')).toBe('font-size: 10px;')
+    expect(dynamic.attr('style')).toBe('')
+    disp.set('none')
+    expect(dynamic.attr('style')).toBe('display: none;')
 
 describe 'cast', ->
   it 'should work', ->

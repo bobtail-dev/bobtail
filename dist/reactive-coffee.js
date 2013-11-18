@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -1114,6 +1114,22 @@
     }
   };
 
+  setDynProp = function(elt, prop, val, xform) {
+    if (xform == null) {
+      xform = _.identity;
+    }
+    if (val instanceof ObsCell) {
+      return rx.autoSub(val.onSet, function(_arg) {
+        var n, o;
+
+        o = _arg[0], n = _arg[1];
+        return setProp(elt, prop, xform(n));
+      });
+    } else {
+      return setProp(elt, prop, xform(val));
+    }
+  };
+
   rxt.mktag = mktag = function(tag) {
     return function(arg1, arg2) {
       var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref4, _ref5;
@@ -1123,18 +1139,7 @@
       _ref5 = _.omit(attrs, _.keys(specialAttrs));
       for (name in _ref5) {
         value = _ref5[name];
-        if (value instanceof ObsCell) {
-          (function(name) {
-            return rx.autoSub(value.onSet, function(_arg) {
-              var old, val;
-
-              old = _arg[0], val = _arg[1];
-              return setProp(elt, name, val);
-            });
-          })(name);
-        } else {
-          setProp(elt, name, value);
-        }
+        setDynProp(elt, name, value);
       }
       if (contents != null) {
         toNodes = function(contents) {
@@ -1331,6 +1336,16 @@
       }
       return _results;
     })()).join(' ');
+  };
+
+  specialAttrs.style = function(elt, value) {
+    return setDynProp(elt, 'style', value, function(val) {
+      if (_.isString(val)) {
+        return val;
+      } else {
+        return rxt.cssify(val);
+      }
+    });
   };
 
 }).call(this);

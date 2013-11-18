@@ -534,6 +534,12 @@ setProp = (elt, prop, val) ->
   else
     elt.attr(prop, val)
 
+setDynProp = (elt, prop, val, xform = _.identity) ->
+  if val instanceof ObsCell
+    rx.autoSub val.onSet, ([o,n]) -> setProp(elt, prop, xform(n))
+  else
+    setProp(elt, prop, xform(val))
+
 rxt.mktag = mktag = (tag) ->
   (arg1, arg2) ->
     # arguments are either (), (attrs: Object), (contents: Contents), or
@@ -553,11 +559,7 @@ rxt.mktag = mktag = (tag) ->
 
     elt = $("<#{tag}/>")
     for name, value of _.omit(attrs, _.keys(specialAttrs))
-      if value instanceof ObsCell
-        do (name) ->
-          rx.autoSub value.onSet, ([old, val]) -> setProp(elt, name, val)
-      else
-        setProp(elt, name, value)
+      setDynProp(elt, name, value)
     if contents?
       toNodes = (contents) ->
         for child in contents
@@ -671,3 +673,7 @@ rxt.cssify = (map) ->
     for k,v of map when v?
       "#{_.str.dasherize(k)}: #{if _.isNumber(v) then v+'px' else v};"
   ).join(' ')
+
+specialAttrs.style = (elt, value) ->
+  setDynProp elt, 'style', value, (val) ->
+    if _.isString(val) then val else rxt.cssify(val)
