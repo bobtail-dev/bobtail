@@ -77,6 +77,7 @@ value:</p>
 <span class="nx">x</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="c1"># 3</span>
 </pre></div>
 
+<p>You can put arbitrary values into cells, such as arrays and objects.</p>
 <h2><a name="events">Events</a></h2>
 <p>The special thing about observables is that you can <em>subscribe</em> to events on
 them, where events are fired when the value of the cell changes in some way.
@@ -309,9 +310,11 @@ anywhere in a template structure:</p>
 <p><code>init</code> was an example of a <em>special attribute</em>.  These are just attributes
 that are intercepted and handled differently from others, which are simply
 passed on as regular HTML attributes on the DOM element.  Besides <code>init</code>,
-built-in special attributes include all jQuery events: <code>click</code>, <code>focus</code>,
-<code>mouseleave</code>, <code>keyup</code>, <code>load</code>, etc.  So we ould have bound the blur event
-directly (note it also takes a jQuery object as <code>this</code>):</p>
+built-in special attributes include <code>style</code>, which in addition to regular
+style strings accepts jQuery-style mappings like <code>{fontSize: 10}</code>, and all
+jQuery events: <code>click</code>, <code>focus</code>, <code>mouseleave</code>, <code>keyup</code>, <code>load</code>, etc.  So
+we ould have bound the blur event directly (note it also takes a jQuery
+object as <code>this</code>):</p>
 <div class="highlight"><pre><span class="p">...</span>
       <span class="nx">input</span> <span class="p">{</span>
         <span class="nv">type: </span><span class="s">&#39;text&#39;</span>

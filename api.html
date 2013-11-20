@@ -73,7 +73,9 @@ expected to call <code>this.record(f)</code> up to at most one time at some poin
 during its potentially asynchronous duration before calling
 <code>this.done(result)</code>.  The call to <code>this.record(f)</code> evaluates <code>f</code> while
 recording the implicit subscriptions triggered by accesses to
-observables.  The cell&#39;s initial value is <code>init</code>.</li>
+observables.  (You can call <code>done</code> from within <code>record</code> but the result
+won&#39;t be set on this cell until after <code>record</code> finishes.)  The cell&#39;s
+initial value is <code>init</code>.</li>
 <li><code>lagBind(lag, init, fn)</code>: same as <code>bind</code> but waits a 500ms delay after
 a dependency changes (or after initialization) before the <code>DepCell</code>
 refreshes.  For the first 500ms, the cell&#39;s value is <code>init</code>; you can set
@@ -84,9 +86,10 @@ return a <code>{val, ms}</code>, where <code>ms</code> indicates how long to wai
 publishing <code>val</code> as the new value of this <code>DepCell</code>.  Until the first
 published value, the cell is initialized to <code>init</code>.</li>
 <li><code>reactify(obj, spec)</code>: mutates an object to replace the specified fields
-with getters/setters powered by an observable cell/array, and returns the
-object.  <code>spec</code> is a mapping from field name to <code>{type, val}</code>, where
-<code>type</code> is <code>&#39;array&#39;</code> or <code>&#39;cell&#39;</code> and <code>val</code> is an optional initial value.</li>
+with ES5 getters/setters powered by an observable cell/array, and
+returns the object.  <code>spec</code> is a mapping from field name to <code>{type,
+val}</code>, where <code>type</code> is <code>&#39;array&#39;</code> or <code>&#39;cell&#39;</code> and <code>val</code> is an optional
+initial value.</li>
 <li><code>autoReactify(obj)</code>: mutates an object to <code>reactify</code> all fields
 (specifying <code>array</code> for arrays and <code>cell</code> for everything else), and
 returns the object</li>
@@ -106,8 +109,6 @@ suppressing the initial invocation at subscription time.</li>
 if this is called from within a <code>bind</code> context, the listener will be
 properly cleaned up (unsubscribed) on context disposal.  Returns the
 subscription ID.</li>
-<li><code>concat(arrays...)</code>: returns a dependent array that is the result of
-concatenating multiple <code>ObsArray</code>s (efficiently maintained).</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>
@@ -247,6 +248,9 @@ handler functions after constructing object.  The above example is equivalent to
 <ul>
 <li><p><code>init</code>: which is a 0-ary function that is run immediately upon
 instantiation of the element.</p>
+</li>
+<li><p><code>style</code>: automatically transforms the given value with <code>cssify</code> if it&#39;s
+not a string</p>
 </li>
 <li><p>events like <code>click</code>, <code>focus</code>, <code>mouseleave</code>, <code>keyup</code>, <code>load</code>, etc.,:
 these are available for all jQuery events.  The handlers are similar to
