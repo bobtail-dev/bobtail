@@ -98,7 +98,7 @@
   Ev = rx.Ev = (function() {
     function Ev(inits) {
       this.inits = inits;
-      this.subs = [];
+      this.subs = mkMap();
     }
 
     Ev.prototype.sub = function(listener) {

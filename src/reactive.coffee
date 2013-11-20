@@ -55,7 +55,7 @@ rx._depMgr = depMgr = new DepMgr()
 
 Ev = class rx.Ev
   constructor: (@inits) ->
-    @subs = []
+    @subs = mkMap()
   sub: (listener) ->
     uid = mkuid()
     if @inits?
