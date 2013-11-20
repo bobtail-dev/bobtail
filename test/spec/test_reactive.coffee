@@ -100,6 +100,14 @@ describe 'rxt of observable array', ->
     expect(cont[2]).toEqual(jasmine.any(Text))
     expect(cont.eq(2).text()).toBe('plain 2')
 
+describe 'SrcArray', ->
+  it 'should not remove anything if element not found', ->
+    xs = rx.array(['a','b','c'])
+    xs.remove('d')
+    expect(xs.raw()).toEqual(['a','b','c'])
+    xs.remove('b')
+    expect(xs.raw()).toEqual(['a','c'])
+
 describe 'DepArray', ->
   x = xs = ys = null
   beforeEach ->

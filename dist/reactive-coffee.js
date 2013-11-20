@@ -560,7 +560,12 @@
     };
 
     SrcArray.prototype.remove = function(x) {
-      return this.removeAt(_(this.raw()).indexOf(x));
+      var i;
+
+      i = _(this.raw()).indexOf(x);
+      if (i >= 0) {
+        return this.removeAt(i);
+      }
     };
 
     SrcArray.prototype.removeAt = function(index) {

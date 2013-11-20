@@ -288,7 +288,9 @@ SrcArray = class rx.SrcArray extends ObsArray
     @realSplice(index, count, additions)
   splice: (index, count, additions...) -> @spliceArray(index, count, additions)
   insert: (x, index) -> @splice(index, 0, x)
-  remove: (x) -> @removeAt(_(@raw()).indexOf(x))
+  remove: (x) ->
+    i = _(@raw()).indexOf(x)
+    @removeAt(i) if i >= 0
   removeAt: (index) -> @splice(index, 1)
   push: (x) -> @splice(@length(), 0, x)
   put: (i, x) -> @splice(i, 1, x)
