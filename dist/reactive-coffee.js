@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice,
@@ -44,8 +44,25 @@
     return nthWhere(xs, 0, f);
   };
 
-  mkMap = function() {
-    return Object.create(null);
+  mkMap = function(xs) {
+    var k, map, v, _i, _len, _ref;
+
+    if (xs == null) {
+      xs = [];
+    }
+    map = Object.create(null);
+    if (_.isArray(xs)) {
+      for (_i = 0, _len = xs.length; _i < _len; _i++) {
+        _ref = xs[_i], k = _ref[0], v = _ref[1];
+        map[k] = v;
+      }
+    } else {
+      for (k in xs) {
+        v = xs[k];
+        map[k] = v;
+      }
+    }
+    return map;
   };
 
   DepMgr = rx.DepMgr = (function() {
@@ -581,33 +598,30 @@
   DepArray = rx.DepArray = (function(_super) {
     __extends(DepArray, _super);
 
-    function DepArray(f) {
+    function DepArray(f, diff) {
       var _this = this;
 
       this.f = f;
+      this.diff = diff;
       DepArray.__super__.constructor.call(this);
       rx.autoSub((bind(function() {
         return _this.f();
       })).onSet, function(_arg) {
-        var additions, count, index, old, val, _i, _ref3, _ref4, _results;
+        var additions, count, fullSplice, index, old, splice, splices, val, _i, _len, _ref3, _results;
 
         old = _arg[0], val = _arg[1];
-        if (old != null) {
-          _ref4 = firstWhere((function() {
-            _results = [];
-            for (var _i = 0, _ref3 = Math.min(old.length, val.length); 0 <= _ref3 ? _i <= _ref3 : _i >= _ref3; 0 <= _ref3 ? _i++ : _i--){ _results.push(_i); }
-            return _results;
-          }).apply(this), function(i) {
-            return old[i] !== val[i];
-          }), index = _ref4[0], index = _ref4[1];
-        } else {
-          index = 0;
+        if (old == null) {
+          old = [];
         }
-        if (index > -1) {
-          count = old != null ? old.length - index : 0;
-          additions = val.slice(index);
-          return _this.realSplice(index, count, additions);
+        fullSplice = [0, old.length, val];
+        splices = _this.diff != null ? (_ref3 = permToSplices(old.length, val, _this.diff(old, val))) != null ? _ref3 : [fullSplice] : [fullSplice];
+        _results = [];
+        for (_i = 0, _len = splices.length; _i < _len; _i++) {
+          splice = splices[_i];
+          index = splice[0], count = splice[1], additions = splice[2];
+          _results.push(_this.realSplice(index, count, additions));
         }
+        return _results;
       });
     }
 
@@ -1010,6 +1024,120 @@
         return x != null;
       }).value();
     });
+  };
+
+  flatten = function(xss) {
+    var xs;
+
+    xs = _.flatten(xss);
+    return rx.cellToArray(bind(function() {
+      return _.flatten(xss);
+    }));
+  };
+
+  rx.cellToArray = function(cell, diff) {
+    if (diff == null) {
+      diff = rx.basicDiff();
+    }
+    return new DepArray((function() {
+      return cell.get();
+    }), diff);
+  };
+
+  rx.basicDiff = function(key) {
+    if (key == null) {
+      key = rx.smartUidify;
+    }
+    return function(oldXs, newXs) {
+      var i, oldKeys, x, _i, _len, _ref4, _results;
+
+      oldKeys = mkMap((function() {
+        var _i, _len, _results;
+
+        _results = [];
+        for (i = _i = 0, _len = oldXs.length; _i < _len; i = ++_i) {
+          x = oldXs[i];
+          _results.push([key(x), i]);
+        }
+        return _results;
+      })());
+      _results = [];
+      for (_i = 0, _len = newXs.length; _i < _len; _i++) {
+        x = newXs[_i];
+        _results.push((_ref4 = oldKeys[key(x)]) != null ? _ref4 : -1);
+      }
+      return _results;
+    };
+  };
+
+  rx.uidify = function(x) {
+    var _ref4;
+
+    return (_ref4 = x.__rxUid) != null ? _ref4 : (Object.defineProperty(x, '__rxUid', {
+      value: mkuid()
+    })).__rxUid;
+  };
+
+  rx.smartUidify = function(x) {
+    if (_.isObject(x)) {
+      return rx.uidify(x);
+    } else {
+      return JSON.stringify(x);
+    }
+  };
+
+  permToSplices = function(oldLength, newXs, perm) {
+    var cur, i, last, refs, splice, splices;
+
+    refs = (function() {
+      var _i, _len, _results;
+
+      _results = [];
+      for (_i = 0, _len = perm.length; _i < _len; _i++) {
+        i = perm[_i];
+        if (i >= 0) {
+          _results.push(i);
+        }
+      }
+      return _results;
+    })();
+    if (_.some((function() {
+      var _i, _ref4, _results;
+
+      _results = [];
+      for (i = _i = 0, _ref4 = refs.length - 1; 0 <= _ref4 ? _i < _ref4 : _i > _ref4; i = 0 <= _ref4 ? ++_i : --_i) {
+        _results.push(refs[i + 1] - refs[i] <= 0);
+      }
+      return _results;
+    })())) {
+      return null;
+    }
+    splices = [];
+    last = -1;
+    i = 0;
+    while (i < perm.length) {
+      while (i < perm.length && perm[i] === last + 1) {
+        last += 1;
+        i += 1;
+      }
+      splice = {
+        index: i,
+        count: 0,
+        additions: []
+      };
+      while (i < perm.length && perm[i] === -1) {
+        splice.additions.push(newXs[i]);
+        i += 1;
+      }
+      cur = i === perm.length ? oldLength : perm[i];
+      splice.count = cur - (last + 1);
+      if (splice.count > 0 || splice.additions.length > 0) {
+        splices.push([splice.index, splice.count, splice.additions]);
+      }
+      last = cur;
+      i += 1;
+    }
+    return splices;
   };
 
   $.fn.rx = function(prop) {

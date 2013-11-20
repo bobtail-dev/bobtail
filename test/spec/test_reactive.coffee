@@ -549,3 +549,28 @@ describe 'rxt', ->
       expect(outerHtml(div(maybeArray($('<em>hi</em>'))))).toBe('<div><em>hi</em></div>')
       expect(outerHtml(div(maybeArray(rxt.rawHtml('<em>hi</em>'))))).toBe('<div><em>hi</em></div>')
       expect(outerHtml(div(maybeArray($('<em>hi</em>')[0])))).toBe('<div><em>hi</em></div>')
+
+describe 'cellToArray', ->
+  it 'should propagate minimal splices for primitives', ->
+    x = rx.cell([1,2,3])
+    y = rx.cell([4,5,6])
+    z = bind -> _.flatten([x.get(), y.get()])
+    zs = rx.cellToArray(z)
+    rx.autoSub zs.onChange, rx.skipFirst ([index, removed, added]) ->
+      expect([index, removed, added]).toEqual([2, [3], [0]])
+    x.set([1,2,0])
+  it 'should propagate minimal splices for objects', ->
+    x = rx.cell([1,2,{x:3}])
+    y = rx.cell([[4],5,'6'])
+    z = bind -> _.flatten([x.get(), y.get()])
+    zs = rx.cellToArray(z)
+    rx.autoSub zs.onChange, rx.skipFirst ([index, removed, added]) ->
+      expect([index, removed, added]).toEqual([2, [{x:3}], [0]])
+    x.set([1,2,0])
+  it 'should not confuse different types', ->
+    x = rx.cell([1,'1'])
+    y = bind -> x.get()
+    ys = rx.cellToArray(y)
+    rx.autoSub ys.onChange, rx.skipFirst ([index, removed, added]) ->
+      expect(false).toBe(true)
+    x.set([1,'1'])

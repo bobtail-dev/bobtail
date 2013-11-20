@@ -21,7 +21,13 @@ nthWhere = (xs, n, f) ->
 
 firstWhere = (xs, f) -> nthWhere(xs, 0, f)
 
-mkMap = -> Object.create(null)
+mkMap = (xs = []) ->
+  map = Object.create(null)
+  if _.isArray(xs)
+    map[k] = v for [k,v] in xs
+  else
+    map[k] = v for k,v of xs
+  map
 
 #
 # Events and pub-sub dependency management
@@ -291,20 +297,18 @@ SrcArray = class rx.SrcArray extends ObsArray
 MappedDepArray = class rx.MappedDepArray extends ObsArray
 
 DepArray = class rx.DepArray extends ObsArray
-  constructor: (@f) ->
+  constructor: (@f, @diff) ->
     super()
     rx.autoSub (bind => @f()).onSet, ([old, val]) =>
-      if old?
-        # TODO use diff algo so shifts aren't catastrophic
-        [index, index] = firstWhere(
-          [0..Math.min(old.length, val.length)],
-          (i) -> old[i] != val[i]
-        )
-      else
-        index = 0
-      if index > -1 # if found any diffs
-        count = if old? then old.length - index else 0
-        additions = val[index..]
+      old ?= []
+      fullSplice = [0, old.length, val]
+      splices =
+        if @diff?
+          permToSplices(old.length, val, @diff(old, val)) ? [fullSplice]
+        else
+          [fullSplice]
+      for splice in splices
+        [index, count, additions] = splice
         @realSplice(index, count, additions)
 
 FakeSrcCell = class rx.FakeSrcCell extends SrcCell
@@ -462,6 +466,64 @@ rx.flatten = (xs) ->
       else
         x
   ).chain().flatten(true).filter((x) -> x?).value()
+
+flatten = (xss) ->
+  xs = _.flatten(xss)
+  rx.cellToArray bind -> _.flatten(xss)
+
+rx.cellToArray = (cell, diff = rx.basicDiff()) ->
+  new DepArray((-> cell.get()), diff)
+
+# O(n) using hash key
+rx.basicDiff = (key = rx.smartUidify) -> (oldXs, newXs) ->
+  oldKeys = mkMap([key(x), i] for x,i in oldXs)
+  ((oldKeys[key(x)] ? -1) for x in newXs)
+
+# This is invasive; WeakMaps can't come soon enough....
+rx.uidify = (x) ->
+  x.__rxUid ? (
+    Object.defineProperty x, '__rxUid',
+      value: mkuid()
+  ).__rxUid
+
+# Need a "hash" that distinguishes different types and distinguishes object
+# UIDs from ints.
+rx.smartUidify = (x) ->
+  if _.isObject(x)
+    rx.uidify(x)
+  else
+    JSON.stringify(x)
+
+# Note: this gives up and returns null if there are reorderings or
+# duplications; only handles (multiple) simple insertions and removals
+# (batching them together into splices).
+permToSplices = (oldLength, newXs, perm) ->
+  refs = (i for i in perm when i >= 0)
+  return null if _.some(refs[i + 1] - refs[i] <= 0 for i in [0...refs.length - 1])
+  splices = []
+  last = -1
+  i = 0
+  while i < perm.length
+    # skip over any good consecutive runs
+    while i < perm.length and perm[i] == last + 1
+      last += 1
+      i += 1
+    # lump any additions into this splice
+    splice = {index: i, count: 0, additions: []}
+    while i < perm.length and perm[i] == -1
+      splice.additions.push(newXs[i])
+      i += 1
+    # Find the step difference to find how many from old were removed/skipped;
+    # if no step (perm[i] == last + 1) then count should be 0.  If we see no
+    # more references to old elements, then we need oldLength to determine how
+    # many remaining old elements were logically removed.
+    cur = if i == perm.length then oldLength else perm[i]
+    splice.count = cur - (last + 1)
+    if splice.count > 0 or splice.additions.length > 0
+      splices.push([splice.index, splice.count, splice.additions])
+    last = cur
+    i += 1
+  splices
 
 #
 # jQuery extension
