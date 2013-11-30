@@ -598,3 +598,9 @@ describe 'DepArray', ->
     ys.push(6)
     xs.splice(0, 1, 0, 1)
     ys.replace([4,5,6,7])
+
+describe 'SrcArray', ->
+  it 'should not change anything if remove query not found', ->
+    xs = rx.array([0])
+    xs.remove(1)
+    expect(xs.raw()).toEqual([0])
