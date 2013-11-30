@@ -8,7 +8,7 @@ mkuid = -> nextUid += 1
 
 popKey = (x, k) ->
   if not k of x
-    throw 'object has no key ' + k
+    throw new Error('object has no key ' + k)
   v = x[k]
   delete x[k]
   v
@@ -229,7 +229,7 @@ DepCell = class rx.DepCell extends ObsCell
           # function (@body or an async body) when calling `.get()`
           if not @refreshing
             @disconnect()
-            throw 'this refresh has already recorded its dependencies' if recorded
+            throw new Error('this refresh has already recorded its dependencies') if recorded
             @refreshing = true
             recorded = true
             try res = recorder.record @, -> f.call(env)
@@ -448,7 +448,7 @@ rx.reactify = (obj, fieldspec) ->
                 set: (x) ->
                   view.splice(0, view.length, x...)
                   view
-            else throw "Unknown observable type: #{type}"
+            else throw new Error("Unknown observable type: #{type}")
           [name, desc]
     )
 
@@ -568,7 +568,7 @@ $.fn.rx = (prop) ->
         @change => checked.set(@is(':checked'))
         checked
       else
-        throw 'Unknown reactive property type'
+        throw new Error('Unknown reactive property type')
 
 #
 # reactive template DSL
@@ -649,13 +649,13 @@ rxt.mktag = mktag = (tag) ->
             child
           else if child instanceof RawHtml
             parsed = $(child.html)
-            throw 'RawHtml must wrap a single element' if parsed.length != 1
+            throw new Error('RawHtml must wrap a single element') if parsed.length != 1
             parsed[0]
           else if child instanceof $
-            throw 'jQuery object must wrap a single element' if child.length != 1
+            throw new Error('jQuery object must wrap a single element') if child.length != 1
             child[0]
           else
-            throw "Unknown element type in array: #{child.constructor.name} (must be string, Element, RawHtml, or jQuery objects)"
+            throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, Element, RawHtml, or jQuery objects)")
       updateContents = (contents) ->
         elt.html('')
         if _.isArray(contents)
@@ -675,7 +675,7 @@ rxt.mktag = mktag = (tag) ->
             contents instanceof RawHtml or contents instanceof $
           updateContents([contents])
         else
-          throw "Unknown type for element contents: #{contents.constructor.name} (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)"
+          throw new Error("Unknown type for element contents: #{contents.constructor.name} (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)")
       if contents instanceof ObsArray
         rx.autoSub contents.onChange, ([index, removed, added]) ->
           elt.contents().slice(index, index + removed.length).remove()
@@ -737,7 +737,7 @@ rxt.cast = (opts, types) ->
           else if value instanceof rx.ObsCell
             new rx.DepArray(-> value.get())
           else
-            throw 'Cannot cast to array: ' + value.constructor.name
+            throw new Error('Cannot cast to array: ' + value.constructor.name)
         when 'cell'
           if value instanceof rx.ObsCell
             value

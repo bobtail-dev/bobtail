@@ -21,7 +21,7 @@
     var v;
 
     if (!k in x) {
-      throw 'object has no key ' + k;
+      throw new Error('object has no key ' + k);
     }
     v = x[k];
     delete x[k];
@@ -395,7 +395,7 @@
             if (!_this.refreshing) {
               _this.disconnect();
               if (recorded) {
-                throw 'this refresh has already recorded its dependencies';
+                throw new Error('this refresh has already recorded its dependencies');
               }
               _this.refreshing = true;
               recorded = true;
@@ -1004,7 +1004,7 @@
                 };
                 break;
               default:
-                throw "Unknown observable type: " + type;
+                throw new Error("Unknown observable type: " + type);
             }
             return [name, desc];
           })(name, spec));
@@ -1230,7 +1230,7 @@
           });
           return checked;
         default:
-          throw 'Unknown reactive property type';
+          throw new Error('Unknown reactive property type');
       }
     }).call(this);
   };
@@ -1334,16 +1334,16 @@
             } else if (child instanceof RawHtml) {
               parsed = $(child.html);
               if (parsed.length !== 1) {
-                throw 'RawHtml must wrap a single element';
+                throw new Error('RawHtml must wrap a single element');
               }
               _results.push(parsed[0]);
             } else if (child instanceof $) {
               if (child.length !== 1) {
-                throw 'jQuery object must wrap a single element';
+                throw new Error('jQuery object must wrap a single element');
               }
               _results.push(child[0]);
             } else {
-              throw "Unknown element type in array: " + child.constructor.name + " (must be string, Element, RawHtml, or jQuery objects)";
+              throw new Error("Unknown element type in array: " + child.constructor.name + " (must be string, Element, RawHtml, or jQuery objects)");
             }
           }
           return _results;
@@ -1398,7 +1398,7 @@
           } else if (_.isString(contents) || contents instanceof Element || contents instanceof RawHtml || contents instanceof $) {
             return updateContents([contents]);
           } else {
-            throw "Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)";
+            throw new Error("Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)");
           }
         };
         if (contents instanceof ObsArray) {
@@ -1478,7 +1478,7 @@
                   return value.get();
                 });
               } else {
-                throw 'Cannot cast to array: ' + value.constructor.name;
+                throw new Error('Cannot cast to array: ' + value.constructor.name);
               }
               break;
             case 'cell':
