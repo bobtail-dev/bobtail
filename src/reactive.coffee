@@ -22,7 +22,7 @@ nthWhere = (xs, n, f) ->
 firstWhere = (xs, f) -> nthWhere(xs, 0, f)
 
 mkMap = (xs = []) ->
-  map = Object.create(null)
+  map = if Object.create? then Object.create(null) else {}
   if _.isArray(xs)
     map[k] = v for [k,v] in xs
   else

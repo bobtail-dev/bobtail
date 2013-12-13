@@ -50,7 +50,7 @@
     if (xs == null) {
       xs = [];
     }
-    map = Object.create(null);
+    map = Object.create != null ? Object.create(null) : {};
     if (_.isArray(xs)) {
       for (_i = 0, _len = xs.length; _i < _len; _i++) {
         _ref = xs[_i], k = _ref[0], v = _ref[1];
