@@ -7,7 +7,7 @@ nextUid = 0
 mkuid = -> nextUid += 1
 
 popKey = (x, k) ->
-  if not k of x
+  if k not of x
     throw new Error('object has no key ' + k)
   v = x[k]
   delete x[k]
@@ -395,7 +395,7 @@ DepMap = class rx.DepMap extends ObsMap
     super()
     rx.autoSub new DepCell(@f).onSet, ([old, val]) ->
       for k,v of old
-        if not k of val
+        if k not of val
           @realRemove(k)
       for k,v of val
         if @x[k] != v

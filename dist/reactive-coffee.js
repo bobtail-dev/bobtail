@@ -20,7 +20,7 @@
   popKey = function(x, k) {
     var v;
 
-    if (!k in x) {
+    if (!(k in x)) {
       throw new Error('object has no key ' + k);
     }
     v = x[k];
@@ -902,7 +902,7 @@
         old = _arg[0], val = _arg[1];
         for (k in old) {
           v = old[k];
-          if (!k in val) {
+          if (!(k in val)) {
             this.realRemove(k);
           }
         }
