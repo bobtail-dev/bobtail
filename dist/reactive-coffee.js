@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4,
     __slice = [].slice,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -466,6 +466,7 @@
       this.onChange = new Ev(function() {
         return [[0, [], _this.xs]];
       });
+      this.indexed_ = null;
     }
 
     ObsArray.prototype.all = function() {
@@ -533,6 +534,21 @@
         return ys.realSplice(index, removed.length, added.map(f));
       });
       return ys;
+    };
+
+    ObsArray.prototype.indexed = function() {
+      var _this = this;
+
+      if (this.indexed_ == null) {
+        this.indexed_ = new IndexedDepArray();
+        rx.autoSub(this.onChange, function(_arg) {
+          var added, index, removed;
+
+          index = _arg[0], removed = _arg[1], added = _arg[2];
+          return _this.indexed_.realSplice(index, removed.length, added);
+        });
+      }
+      return this.indexed_;
     };
 
     ObsArray.prototype.concat = function(that) {
@@ -618,6 +634,90 @@
 
   })(ObsArray);
 
+  IndexedDepArray = rx.IndexedDepArray = (function(_super) {
+    __extends(IndexedDepArray, _super);
+
+    function IndexedDepArray(xs) {
+      var i, x,
+        _this = this;
+
+      this.xs = xs != null ? xs : [];
+      this.is = (function() {
+        var _i, _len, _ref3, _results;
+
+        _ref3 = this.xs;
+        _results = [];
+        for (i = _i = 0, _len = _ref3.length; _i < _len; i = ++_i) {
+          x = _ref3[i];
+          _results.push(rx.cell(i));
+        }
+        return _results;
+      }).call(this);
+      this.onChange = new Ev(function() {
+        return [[0, [], _.zip(_this.xs, _this.is)]];
+      });
+    }
+
+    IndexedDepArray.prototype.map = function(f) {
+      var ys;
+
+      ys = new IndexedMappedDepArray();
+      rx.autoSub(this.onChange, function(_arg) {
+        var a, added, i, index, removed;
+
+        index = _arg[0], removed = _arg[1], added = _arg[2];
+        return ys.realSplice(index, removed.length, (function() {
+          var _i, _len, _ref3, _results;
+
+          _results = [];
+          for (_i = 0, _len = added.length; _i < _len; _i++) {
+            _ref3 = added[_i], a = _ref3[0], i = _ref3[1];
+            _results.push(f(a, i));
+          }
+          return _results;
+        })());
+      });
+      return ys;
+    };
+
+    IndexedDepArray.prototype.realSplice = function(index, count, additions) {
+      var i, newIs, offset, removed, _i, _len, _ref3, _ref4, _ref5;
+
+      removed = (_ref3 = this.xs).splice.apply(_ref3, [index, count].concat(__slice.call(additions)));
+      _ref4 = this.is.slice(index + count);
+      for (offset = _i = 0, _len = _ref4.length; _i < _len; offset = ++_i) {
+        i = _ref4[offset];
+        i.set(index + additions.length + offset);
+      }
+      newIs = (function() {
+        var _j, _ref5, _results;
+
+        _results = [];
+        for (i = _j = 0, _ref5 = additions.length; 0 <= _ref5 ? _j < _ref5 : _j > _ref5; i = 0 <= _ref5 ? ++_j : --_j) {
+          _results.push(rx.cell(index + i));
+        }
+        return _results;
+      })();
+      (_ref5 = this.is).splice.apply(_ref5, [index, count].concat(__slice.call(newIs)));
+      return this.onChange.pub([index, removed, _.zip(additions, newIs)]);
+    };
+
+    return IndexedDepArray;
+
+  })(ObsArray);
+
+  IndexedMappedDepArray = rx.IndexedMappedDepArray = (function(_super) {
+    __extends(IndexedMappedDepArray, _super);
+
+    function IndexedMappedDepArray() {
+      _ref3 = IndexedMappedDepArray.__super__.constructor.apply(this, arguments);
+      return _ref3;
+    }
+
+    return IndexedMappedDepArray;
+
+  })(IndexedDepArray);
+
   DepArray = rx.DepArray = (function(_super) {
     __extends(DepArray, _super);
 
@@ -630,14 +730,14 @@
       rx.autoSub((bind(function() {
         return _this.f();
       })).onSet, function(_arg) {
-        var additions, count, fullSplice, index, old, splice, splices, val, _i, _len, _ref3, _results;
+        var additions, count, fullSplice, index, old, splice, splices, val, _i, _len, _ref4, _results;
 
         old = _arg[0], val = _arg[1];
         if (old == null) {
           old = [];
         }
         fullSplice = [0, old.length, val];
-        splices = _this.diff != null ? (_ref3 = permToSplices(old.length, val, _this.diff(old, val))) != null ? _ref3 : [fullSplice] : [fullSplice];
+        splices = _this.diff != null ? (_ref4 = permToSplices(old.length, val, _this.diff(old, val))) != null ? _ref4 : [fullSplice] : [fullSplice];
         _results = [];
         for (_i = 0, _len = splices.length; _i < _len; _i++) {
           splice = splices[_i];
@@ -651,6 +751,30 @@
     return DepArray;
 
   })(ObsArray);
+
+  IndexedArray = rx.IndexedArray = (function(_super) {
+    __extends(IndexedArray, _super);
+
+    function IndexedArray(xs) {
+      this.xs = xs;
+    }
+
+    IndexedArray.prototype.map = function(f) {
+      var ys;
+
+      ys = new MappedDepArray();
+      rx.autoSub(this.xs.onChange, function(_arg) {
+        var added, index, removed;
+
+        index = _arg[0], removed = _arg[1], added = _arg[2];
+        return ys.realSplice(index, removed.length, added.map(f));
+      });
+      return ys;
+    };
+
+    return IndexedArray;
+
+  })(DepArray);
 
   rx.concat = function() {
     var repLens, xs, xss, ys;
@@ -862,8 +986,8 @@
     __extends(SrcMap, _super);
 
     function SrcMap() {
-      _ref3 = SrcMap.__super__.constructor.apply(this, arguments);
-      return _ref3;
+      _ref4 = SrcMap.__super__.constructor.apply(this, arguments);
+      return _ref4;
     }
 
     SrcMap.prototype.put = function(key, val) {
@@ -929,25 +1053,25 @@
     if (_.isArray(obj)) {
       arr = rx.array(_.clone(obj));
       Object.defineProperties(obj, _.object((function() {
-        var _i, _len, _ref4, _results;
+        var _i, _len, _ref5, _results;
 
-        _ref4 = _.functions(arr);
+        _ref5 = _.functions(arr);
         _results = [];
-        for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
-          methName = _ref4[_i];
+        for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+          methName = _ref5[_i];
           if (methName !== 'length') {
             _results.push((function(methName) {
               var meth, newMeth, spec;
 
               meth = obj[methName];
               newMeth = function() {
-                var args, res, _ref5;
+                var args, res, _ref6;
 
                 args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
                 if (meth != null) {
                   res = meth.call.apply(meth, [obj].concat(__slice.call(args)));
                 }
-                (_ref5 = arr[methName]).call.apply(_ref5, [arr].concat(__slice.call(args)));
+                (_ref6 = arr[methName]).call.apply(_ref6, [arr].concat(__slice.call(args)));
                 return res;
               };
               spec = {
@@ -971,12 +1095,12 @@
         for (name in fieldspec) {
           spec = fieldspec[name];
           _results.push((function(name, spec) {
-            var desc, obs, view, _ref4, _ref5;
+            var desc, obs, view, _ref5, _ref6;
 
             desc = null;
             switch (spec.type) {
               case 'cell':
-                obs = rx.cell((_ref4 = spec.val) != null ? _ref4 : null);
+                obs = rx.cell((_ref5 = spec.val) != null ? _ref5 : null);
                 desc = {
                   configurable: true,
                   enumerable: true,
@@ -989,7 +1113,7 @@
                 };
                 break;
               case 'array':
-                view = rx.reactify((_ref5 = spec.val) != null ? _ref5 : []);
+                view = rx.reactify((_ref6 = spec.val) != null ? _ref6 : []);
                 desc = {
                   configurable: true,
                   enumerable: true,
@@ -1018,12 +1142,12 @@
     var name, type, val;
 
     return rx.reactify(obj, _.object((function() {
-      var _i, _len, _ref4, _results;
+      var _i, _len, _ref5, _results;
 
-      _ref4 = Object.getOwnPropertyNames(obj);
+      _ref5 = Object.getOwnPropertyNames(obj);
       _results = [];
-      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
-        name = _ref4[_i];
+      for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+        name = _ref5[_i];
         val = obj[name];
         if (val instanceof ObsMap || val instanceof ObsCell || val instanceof ObsArray) {
           continue;
@@ -1100,7 +1224,7 @@
       key = rx.smartUidify;
     }
     return function(oldXs, newXs) {
-      var i, oldKeys, x, _i, _len, _ref4, _results;
+      var i, oldKeys, x, _i, _len, _ref5, _results;
 
       oldKeys = mkMap((function() {
         var _i, _len, _results;
@@ -1115,16 +1239,16 @@
       _results = [];
       for (_i = 0, _len = newXs.length; _i < _len; _i++) {
         x = newXs[_i];
-        _results.push((_ref4 = oldKeys[key(x)]) != null ? _ref4 : -1);
+        _results.push((_ref5 = oldKeys[key(x)]) != null ? _ref5 : -1);
       }
       return _results;
     };
   };
 
   rx.uidify = function(x) {
-    var _ref4;
+    var _ref5;
 
-    return (_ref4 = x.__rxUid) != null ? _ref4 : (Object.defineProperty(x, '__rxUid', {
+    return (_ref5 = x.__rxUid) != null ? _ref5 : (Object.defineProperty(x, '__rxUid', {
       value: mkuid()
     })).__rxUid;
   };
@@ -1153,10 +1277,10 @@
       return _results;
     })();
     if (_.some((function() {
-      var _i, _ref4, _results;
+      var _i, _ref5, _results;
 
       _results = [];
-      for (i = _i = 0, _ref4 = refs.length - 1; 0 <= _ref4 ? _i < _ref4 : _i > _ref4; i = 0 <= _ref4 ? ++_i : --_i) {
+      for (i = _i = 0, _ref5 = refs.length - 1; 0 <= _ref5 ? _i < _ref5 : _i > _ref5; i = 0 <= _ref5 ? ++_i : --_i) {
         _results.push(refs[i + 1] - refs[i] <= 0);
       }
       return _results;
@@ -1311,13 +1435,13 @@
 
   rxt.mktag = mktag = function(tag) {
     return function(arg1, arg2) {
-      var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref4, _ref5;
+      var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref5, _ref6;
 
-      _ref4 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref4[0], contents = _ref4[1];
+      _ref5 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref5[0], contents = _ref5[1];
       elt = $("<" + tag + "/>");
-      _ref5 = _.omit(attrs, _.keys(specialAttrs));
-      for (name in _ref5) {
-        value = _ref5[name];
+      _ref6 = _.omit(attrs, _.keys(specialAttrs));
+      for (name in _ref6) {
+        value = _ref6[name];
         setDynProp(elt, name, value);
       }
       if (contents != null) {
@@ -1367,16 +1491,16 @@
                 }
               };
               covers = (function() {
-                var _j, _len1, _ref6, _ref7, _results;
+                var _j, _len1, _ref7, _ref8, _results;
 
-                _ref6 = nodes != null ? nodes : [];
+                _ref7 = nodes != null ? nodes : [];
                 _results = [];
-                for (_j = 0, _len1 = _ref6.length; _j < _len1; _j++) {
-                  node = _ref6[_j];
+                for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
+                  node = _ref7[_j];
                   if (!(hasWidth(node))) {
                     continue;
                   }
-                  _ref7 = $(node).offset(), left = _ref7.left, top = _ref7.top;
+                  _ref8 = $(node).offset(), left = _ref8.left, top = _ref8.top;
                   _results.push($('<div/>').appendTo($('body').first()).addClass('updated-element').offset({
                     top: top,
                     left: left

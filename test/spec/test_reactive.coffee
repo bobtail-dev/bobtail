@@ -604,3 +604,15 @@ describe 'SrcArray', ->
     xs = rx.array([0])
     xs.remove(1)
     expect(xs.raw()).toEqual([0])
+
+describe 'IndexedArray', ->
+  it 'should', ->
+    xs = rx.array(['a','b','c'])
+    ys = xs.indexed().map (x,i) ->
+      bind -> "#{x} #{i.get()}"
+    readYs = -> ys.map((x) -> x.get()).raw()
+    expect(readYs()).toEqual(['a 0','b 1','c 2'])
+    xs.removeAt(1)
+    expect(readYs()).toEqual(['a 0','c 1'])
+    xs.insert('B', 1)
+    expect(readYs()).toEqual(['a 0','B 1','c 2'])

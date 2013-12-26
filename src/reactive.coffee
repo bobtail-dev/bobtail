@@ -265,6 +265,7 @@ ObsArray = class rx.ObsArray
   constructor: (@xs) ->
     @xs = @xs ? []
     @onChange = new Ev(=> [[0, [], @xs]]) # [index, removed, added]
+    @indexed_ = null
   all: ->
     recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
     _.clone(@xs)
@@ -284,6 +285,12 @@ ObsArray = class rx.ObsArray
     rx.autoSub @onChange, ([index, removed, added]) ->
       ys.realSplice(index, removed.length, added.map(f))
     ys
+  indexed: ->
+    if not @indexed_?
+      @indexed_ = new IndexedDepArray()
+      rx.autoSub @onChange, ([index, removed, added]) =>
+        @indexed_.realSplice(index, removed.length, added)
+    @indexed_
   concat: (that) -> rx.concat(this, that)
   realSplice: (index, count, additions) ->
     removed = @xs.splice.apply(@xs, [index, count].concat(additions))
@@ -303,6 +310,24 @@ SrcArray = class rx.SrcArray extends ObsArray
   replace: (xs) -> @spliceArray(0, @length(), xs)
 
 MappedDepArray = class rx.MappedDepArray extends ObsArray
+IndexedDepArray = class rx.IndexedDepArray extends ObsArray
+  constructor: (@xs = []) ->
+    @is = (rx.cell(i) for x,i in @xs)
+    @onChange = new Ev(=> [[0, [], _.zip(@xs, @is)]]) # [index, removed, added]
+  map: (f) ->
+    ys = new IndexedMappedDepArray()
+    rx.autoSub @onChange, ([index, removed, added]) ->
+      ys.realSplice(index, removed.length, (f(a,i) for [a,i] in added))
+    ys
+  realSplice: (index, count, additions) ->
+    # rx.transaction =>
+    removed = @xs.splice(index, count, additions...)
+    for i, offset in @is[index + count...]
+      i.set(index + additions.length + offset)
+    newIs = (rx.cell(index + i) for i in [0...additions.length])
+    @is.splice(index, count, newIs...)
+    @onChange.pub([index, removed, _.zip(additions, newIs)])
+IndexedMappedDepArray = class rx.IndexedMappedDepArray extends IndexedDepArray
 
 DepArray = class rx.DepArray extends ObsArray
   constructor: (@f, @diff) ->
@@ -318,6 +343,14 @@ DepArray = class rx.DepArray extends ObsArray
       for splice in splices
         [index, count, additions] = splice
         @realSplice(index, count, additions)
+
+IndexedArray = class rx.IndexedArray extends DepArray
+  constructor: (@xs) ->
+  map: (f) ->
+    ys = new MappedDepArray()
+    rx.autoSub @xs.onChange, ([index, removed, added]) ->
+      ys.realSplice(index, removed.length, added.map(f))
+    ys
 
 rx.concat = (xss...) ->
   ys = new MappedDepArray()
