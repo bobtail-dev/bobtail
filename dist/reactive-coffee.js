@@ -457,12 +457,11 @@
   })(ObsCell);
 
   ObsArray = rx.ObsArray = (function() {
-    function ObsArray(xs) {
-      var _ref1,
-        _this = this;
+    function ObsArray(xs, diff) {
+      var _this = this;
 
-      this.xs = xs;
-      this.xs = (_ref1 = this.xs) != null ? _ref1 : [];
+      this.xs = xs != null ? xs : [];
+      this.diff = diff != null ? diff : rx.basicDiff();
       this.onChange = new Ev(function() {
         return [[0, [], _this.xs]];
       });
@@ -562,6 +561,25 @@
       return this.onChange.pub([index, removed, additions]);
     };
 
+    ObsArray.prototype._update = function(val, diff) {
+      var additions, count, fullSplice, index, old, splice, splices, x, _i, _len, _ref1, _results;
+
+      if (diff == null) {
+        diff = this.diff;
+      }
+      old = this.xs;
+      fullSplice = [0, old.length, val];
+      x = null;
+      splices = diff != null ? (_ref1 = permToSplices(old.length, val, diff(old, val))) != null ? _ref1 : [fullSplice] : [fullSplice];
+      _results = [];
+      for (_i = 0, _len = splices.length; _i < _len; _i++) {
+        splice = splices[_i];
+        index = splice[0], count = splice[1], additions = splice[2];
+        _results.push(this.realSplice(index, count, additions));
+      }
+      return _results;
+    };
+
     return ObsArray;
 
   })();
@@ -618,6 +636,14 @@
       return this.spliceArray(0, this.length(), xs);
     };
 
+    SrcArray.prototype.update = function(xs) {
+      var _this = this;
+
+      return recorder.mutating(function() {
+        return _this._update(xs);
+      });
+    };
+
     return SrcArray;
 
   })(ObsArray);
@@ -637,11 +663,14 @@
   IndexedDepArray = rx.IndexedDepArray = (function(_super) {
     __extends(IndexedDepArray, _super);
 
-    function IndexedDepArray(xs) {
+    function IndexedDepArray(xs, diff) {
       var i, x,
         _this = this;
 
-      this.xs = xs != null ? xs : [];
+      if (xs == null) {
+        xs = [];
+      }
+      IndexedDepArray.__super__.constructor.call(this, xs, diff);
       this.is = (function() {
         var _i, _len, _ref3, _results;
 
@@ -725,26 +754,14 @@
       var _this = this;
 
       this.f = f;
-      this.diff = diff;
-      DepArray.__super__.constructor.call(this);
+      DepArray.__super__.constructor.call(this, [], diff);
       rx.autoSub((bind(function() {
         return _this.f();
       })).onSet, function(_arg) {
-        var additions, count, fullSplice, index, old, splice, splices, val, _i, _len, _ref4, _results;
+        var old, val;
 
         old = _arg[0], val = _arg[1];
-        if (old == null) {
-          old = [];
-        }
-        fullSplice = [0, old.length, val];
-        splices = _this.diff != null ? (_ref4 = permToSplices(old.length, val, _this.diff(old, val))) != null ? _ref4 : [fullSplice] : [fullSplice];
-        _results = [];
-        for (_i = 0, _len = splices.length; _i < _len; _i++) {
-          splice = splices[_i];
-          index = splice[0], count = splice[1], additions = splice[2];
-          _results.push(_this.realSplice(index, count, additions));
-        }
-        return _results;
+        return _this._update(val);
       });
     }
 
@@ -1211,9 +1228,6 @@
   };
 
   rx.cellToArray = function(cell, diff) {
-    if (diff == null) {
-      diff = rx.basicDiff();
-    }
     return new DepArray((function() {
       return cell.get();
     }), diff);

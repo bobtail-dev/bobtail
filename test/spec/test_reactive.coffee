@@ -604,9 +604,20 @@ describe 'SrcArray', ->
     xs = rx.array([0])
     xs.remove(1)
     expect(xs.raw()).toEqual([0])
+  it 'should issue only minimal events for updates', ->
+    xs = rx.array([1,2,3])
+    lastEvent = null
+    xs.onChange.sub (e) -> lastEvent = e
+    expect(lastEvent).toEqual([0,[],[1,2,3]])
+    lastEvent = null
+    xs.update([1,2,3])
+    expect(lastEvent).toEqual(null)
+    lastEvent = null
+    xs.update([1,2])
+    expect(lastEvent).toEqual([2,[3],[]])
 
 describe 'IndexedArray', ->
-  it 'should', ->
+  it 'should update indexes', ->
     xs = rx.array(['a','b','c'])
     ys = xs.indexed().map (x,i) ->
       bind -> "#{x} #{i.get()}"

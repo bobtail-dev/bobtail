@@ -262,8 +262,7 @@ DepCell = class rx.DepCell extends ObsCell
     @cleanups.push(cleanup)
 
 ObsArray = class rx.ObsArray
-  constructor: (@xs) ->
-    @xs = @xs ? []
+  constructor: (@xs = [], @diff = rx.basicDiff()) ->
     @onChange = new Ev(=> [[0, [], @xs]]) # [index, removed, added]
     @indexed_ = null
   all: ->
@@ -295,6 +294,19 @@ ObsArray = class rx.ObsArray
   realSplice: (index, count, additions) ->
     removed = @xs.splice.apply(@xs, [index, count].concat(additions))
     @onChange.pub([index, removed, additions])
+  _update: (val, diff = @diff) ->
+    old = @xs
+    fullSplice = [0, old.length, val]
+    x = null
+    splices =
+      if diff?
+        permToSplices(old.length, val, diff(old, val)) ? [fullSplice]
+      else
+        [fullSplice]
+    #console.log(old, val, splices, fullSplice, diff, @diff)
+    for splice in splices
+      [index, count, additions] = splice
+      @realSplice(index, count, additions)
 
 SrcArray = class rx.SrcArray extends ObsArray
   spliceArray: (index, count, additions) -> recorder.mutating =>
@@ -308,10 +320,12 @@ SrcArray = class rx.SrcArray extends ObsArray
   push: (x) -> @splice(@length(), 0, x)
   put: (i, x) -> @splice(i, 1, x)
   replace: (xs) -> @spliceArray(0, @length(), xs)
+  update: (xs) -> recorder.mutating => @_update(xs)
 
 MappedDepArray = class rx.MappedDepArray extends ObsArray
 IndexedDepArray = class rx.IndexedDepArray extends ObsArray
-  constructor: (@xs = []) ->
+  constructor: (xs = [], diff) ->
+    super(xs, diff)
     @is = (rx.cell(i) for x,i in @xs)
     @onChange = new Ev(=> [[0, [], _.zip(@xs, @is)]]) # [index, removed, added]
   map: (f) ->
@@ -330,19 +344,9 @@ IndexedDepArray = class rx.IndexedDepArray extends ObsArray
 IndexedMappedDepArray = class rx.IndexedMappedDepArray extends IndexedDepArray
 
 DepArray = class rx.DepArray extends ObsArray
-  constructor: (@f, @diff) ->
-    super()
-    rx.autoSub (bind => @f()).onSet, ([old, val]) =>
-      old ?= []
-      fullSplice = [0, old.length, val]
-      splices =
-        if @diff?
-          permToSplices(old.length, val, @diff(old, val)) ? [fullSplice]
-        else
-          [fullSplice]
-      for splice in splices
-        [index, count, additions] = splice
-        @realSplice(index, count, additions)
+  constructor: (@f, diff) ->
+    super([], diff)
+    rx.autoSub (bind => @f()).onSet, ([old, val]) => @_update(val)
 
 IndexedArray = class rx.IndexedArray extends DepArray
   constructor: (@xs) ->
@@ -522,7 +526,7 @@ flatten = (xss) ->
   xs = _.flatten(xss)
   rx.cellToArray bind -> _.flatten(xss)
 
-rx.cellToArray = (cell, diff = rx.basicDiff()) ->
+rx.cellToArray = (cell, diff) ->
   new DepArray((-> cell.get()), diff)
 
 # O(n) using hash key
