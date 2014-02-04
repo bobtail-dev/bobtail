@@ -1185,8 +1185,8 @@
     cell: function(x) {
       return new SrcCell(x);
     },
-    array: function(xs) {
-      return new SrcArray(xs);
+    array: function(xs, diff) {
+      return new SrcArray(xs, diff);
     },
     map: function(x) {
       return new SrcMap(x);

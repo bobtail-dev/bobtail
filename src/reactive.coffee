@@ -503,7 +503,7 @@ rx.autoReactify = (obj) ->
 
 _.extend(rx, {
   cell: (x) -> new SrcCell(x)
-  array: (xs) -> new SrcArray(xs)
+  array: (xs, diff) -> new SrcArray(xs, diff)
   map: (x) -> new SrcMap(x)
 })
 
