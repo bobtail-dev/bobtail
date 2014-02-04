@@ -627,3 +627,13 @@ describe 'IndexedArray', ->
     expect(readYs()).toEqual(['a 0','c 1'])
     xs.insert('B', 1)
     expect(readYs()).toEqual(['a 0','B 1','c 2'])
+
+describe 'smushClasses', ->
+  it 'should remove undefined', ->
+    expect(rxt.smushClasses([
+      'alpha'
+      'beta'
+      'gamma' if true
+      'delta' if false
+      'epsilon'
+    ])).toBe('alpha beta gamma epsilon')

@@ -794,3 +794,10 @@ rxt.cssify = (map) ->
 specialAttrs.style = (elt, value) ->
   setDynProp elt, 'style', value, (val) ->
     if _.isString(val) then val else rxt.cssify(val)
+
+rxt.smushClasses = (xs) ->
+  _(xs).chain().flatten().compact().value().join(' ').replace(/\s+/, ' ').trim()
+
+specialAttrs.class = (elt, value) ->
+  setDynProp elt, 'class', value, (val) ->
+    if _.isString(val) then val else rxt.smushClasses(val)

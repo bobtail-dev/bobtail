@@ -1665,4 +1665,18 @@
     });
   };
 
+  rxt.smushClasses = function(xs) {
+    return _(xs).chain().flatten().compact().value().join(' ').replace(/\s+/, ' ').trim();
+  };
+
+  specialAttrs["class"] = function(elt, value) {
+    return setDynProp(elt, 'class', value, function(val) {
+      if (_.isString(val)) {
+        return val;
+      } else {
+        return rxt.smushClasses(val);
+      }
+    });
+  };
+
 }).call(this);
