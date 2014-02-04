@@ -439,6 +439,49 @@ DepMap = class rx.DepMap extends ObsMap
           @realPut(k,v)
 
 #
+# Converting POJO attributes to reactive ones.
+#
+
+rx.liftSpec = (obj) ->
+  _.object(
+    for name in Object.getOwnPropertyNames(obj)
+      val = obj[name]
+      continue if val? and (val instanceof rx.ObsMap or val instanceof rx.ObsCell or val instanceof rx.ObsArray)
+      type =
+        if _.isFunction(val) then null
+        else if _.isArray(val) then 'array'
+        else 'cell'
+      [name, {type, val}]
+  )
+
+rx.lift = (x, fieldspec = rx.liftSpec(x)) ->
+  for name, spec of fieldspec
+    x[name] = switch spec.type
+      when 'cell'
+        rx.cell(x[name])
+      when 'array'
+        rx.array(x[name])
+      when 'map'
+        rx.map(x[name])
+      else
+        x[name]
+  x
+
+rx.unlift = (x) ->
+  _.object(
+    for k,v of x
+      [
+        k
+        if v instanceof rx.ObsCell
+          v.get()
+        else if v instanceof rx.ObsArray
+          v.all()
+        else
+          v
+      ]
+  )
+
+#
 # Implicitly reactive objects
 #
 

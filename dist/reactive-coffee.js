@@ -1064,6 +1064,71 @@
 
   })(ObsMap);
 
+  rx.liftSpec = function(obj) {
+    var name, type, val;
+
+    return _.object((function() {
+      var _i, _len, _ref5, _results;
+
+      _ref5 = Object.getOwnPropertyNames(obj);
+      _results = [];
+      for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+        name = _ref5[_i];
+        val = obj[name];
+        if ((val != null) && (val instanceof rx.ObsMap || val instanceof rx.ObsCell || val instanceof rx.ObsArray)) {
+          continue;
+        }
+        type = _.isFunction(val) ? null : _.isArray(val) ? 'array' : 'cell';
+        _results.push([
+          name, {
+            type: type,
+            val: val
+          }
+        ]);
+      }
+      return _results;
+    })());
+  };
+
+  rx.lift = function(x, fieldspec) {
+    var name, spec;
+
+    if (fieldspec == null) {
+      fieldspec = rx.liftSpec(x);
+    }
+    for (name in fieldspec) {
+      spec = fieldspec[name];
+      x[name] = (function() {
+        switch (spec.type) {
+          case 'cell':
+            return rx.cell(x[name]);
+          case 'array':
+            return rx.array(x[name]);
+          case 'map':
+            return rx.map(x[name]);
+          default:
+            return x[name];
+        }
+      })();
+    }
+    return x;
+  };
+
+  rx.unlift = function(x) {
+    var k, v;
+
+    return _.object((function() {
+      var _results;
+
+      _results = [];
+      for (k in x) {
+        v = x[k];
+        _results.push([k, v instanceof rx.ObsCell ? v.get() : v instanceof rx.ObsArray ? v.all() : v]);
+      }
+      return _results;
+    })());
+  };
+
   rx.reactify = function(obj, fieldspec) {
     var arr, methName, name, spec;
 

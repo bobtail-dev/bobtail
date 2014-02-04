@@ -639,11 +639,29 @@ describe 'smushClasses', ->
     ])).toBe('alpha beta gamma epsilon')
 
 describe 'smartUidify', ->
-  it 'should treat objects', ->
+  it 'should return JSON string of scalars', ->
     expect(rx.smartUidify(0)).toBe('0')
     expect(rx.smartUidify('0')).toBe('"0"')
+  it 'should attach non-enumerable __rxUid to objects', ->
     for x in [{}, []]
       uid = rx.smartUidify(x)
       expect(uid).toEqual(jasmine.any(Number))
       expect(_.keys(x)).toEqual([])
       expect(x.__rxUid).toBe(uid)
+
+describe 'lift', ->
+  it 'should have no effect on empty objects', ->
+    expect(rx.lift({})).toEqual({})
+  it 'should convert POJO attributes to observable ones', ->
+    x = {x:0, y:[], z:{}, n:null}
+    expect(rx.lift(x)).toBe(x)
+    expect(x.x).toEqual(jasmine.any(rx.ObsCell))
+    expect(x.y).toEqual(jasmine.any(rx.ObsArray))
+    expect(x.z).toEqual(jasmine.any(rx.ObsCell))
+    expect(x.n).toEqual(jasmine.any(rx.ObsCell))
+    expect(
+      x:x.x.get()
+      y:x.y.all()
+      z:x.z.get()
+      n:x.n.get()
+    ).toEqual({x:0, y:[], z:{}, n:null})
