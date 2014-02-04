@@ -538,13 +538,14 @@ rx.basicDiff = (key = rx.smartUidify) -> (oldXs, newXs) ->
 rx.uidify = (x) ->
   x.__rxUid ? (
     Object.defineProperty x, '__rxUid',
+      enumerable: false
       value: mkuid()
   ).__rxUid
 
 # Need a "hash" that distinguishes different types and distinguishes object
 # UIDs from ints.
 rx.smartUidify = (x) ->
-  if _.isObject(x)
+  if _.isObject(x) and not _.isArray(x)
     rx.uidify(x)
   else
     JSON.stringify(x)

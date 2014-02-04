@@ -1263,12 +1263,13 @@
     var _ref5;
 
     return (_ref5 = x.__rxUid) != null ? _ref5 : (Object.defineProperty(x, '__rxUid', {
+      enumerable: false,
       value: mkuid()
     })).__rxUid;
   };
 
   rx.smartUidify = function(x) {
-    if (_.isObject(x)) {
+    if (_.isObject(x) && !_.isArray(x)) {
       return rx.uidify(x);
     } else {
       return JSON.stringify(x);

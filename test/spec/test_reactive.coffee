@@ -637,3 +637,14 @@ describe 'smushClasses', ->
       'delta' if false
       'epsilon'
     ])).toBe('alpha beta gamma epsilon')
+
+describe 'smartUidify', ->
+  it 'should treat objects', ->
+    expect(rx.smartUidify(0)).toBe('0')
+    expect(rx.smartUidify('0')).toBe('"0"')
+    expect(rx.smartUidify([])).toBe('[]')
+    x = {}
+    uid = rx.smartUidify(x)
+    expect(uid).toEqual(jasmine.any(Number))
+    expect(_.keys(x)).toEqual([])
+    expect(x.__rxUid).toBe(uid)
