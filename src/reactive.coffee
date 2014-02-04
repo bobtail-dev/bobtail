@@ -545,7 +545,7 @@ rx.uidify = (x) ->
 # Need a "hash" that distinguishes different types and distinguishes object
 # UIDs from ints.
 rx.smartUidify = (x) ->
-  if _.isObject(x) and not _.isArray(x)
+  if _.isObject(x)
     rx.uidify(x)
   else
     JSON.stringify(x)

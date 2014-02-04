@@ -1269,7 +1269,7 @@
   };
 
   rx.smartUidify = function(x) {
-    if (_.isObject(x) && !_.isArray(x)) {
+    if (_.isObject(x)) {
       return rx.uidify(x);
     } else {
       return JSON.stringify(x);
