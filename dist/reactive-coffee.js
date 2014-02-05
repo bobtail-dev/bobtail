@@ -19,7 +19,6 @@
 
   popKey = function(x, k) {
     var v;
-
     if (!(k in x)) {
       throw new Error('object has no key ' + k);
     }
@@ -30,7 +29,6 @@
 
   nthWhere = function(xs, n, f) {
     var i, x, _i, _len;
-
     for (i = _i = 0, _len = xs.length; _i < _len; i = ++_i) {
       x = xs[i];
       if (f(x) && (n -= 1) < 0) {
@@ -46,7 +44,6 @@
 
   mkMap = function(xs) {
     var k, map, v, _i, _len, _ref;
-
     if (xs == null) {
       xs = [];
     }
@@ -67,7 +64,6 @@
 
   sum = function(xs) {
     var n, x, _i, _len;
-
     n = 0;
     for (_i = 0, _len = xs.length; _i < _len; _i++) {
       x = xs[_i];
@@ -93,7 +89,6 @@
 
     DepMgr.prototype.transaction = function(f) {
       var b, res, _i, _len, _ref;
-
       this.buffering = true;
       try {
         res = f();
@@ -123,7 +118,6 @@
 
     Ev.prototype.sub = function(listener) {
       var init, uid, _i, _len, _ref;
-
       uid = mkuid();
       if (this.inits != null) {
         _ref = this.inits();
@@ -140,7 +134,6 @@
     Ev.prototype.pub = function(data) {
       var listener, uid, _ref, _results,
         _this = this;
-
       if (depMgr.buffering) {
         return depMgr.buffer.push(function() {
           return _this.pub(data);
@@ -163,7 +156,6 @@
 
     Ev.prototype.scoped = function(listener, context) {
       var uid;
-
       uid = this.sub(listener);
       try {
         return context();
@@ -178,11 +170,9 @@
 
   rx.skipFirst = function(f) {
     var first;
-
     first = true;
     return function() {
       var args;
-
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       if (first) {
         return first = false;
@@ -202,7 +192,6 @@
 
     Recorder.prototype.record = function(dep, f) {
       var wasIgnoring, wasMutating;
-
       if (this.stack.length > 0 && !this.isMutating) {
         _(this.stack).last().addNestedBind(dep);
       }
@@ -222,7 +211,6 @@
 
     Recorder.prototype.sub = function(sub) {
       var handle, topCell;
-
       if (this.stack.length > 0 && !this.isIgnoring) {
         topCell = _(this.stack).last();
         return handle = sub(topCell);
@@ -237,7 +225,6 @@
 
     Recorder.prototype.mutating = function(f) {
       var wasMutating;
-
       if (this.stack.length > 0) {
         console.warn('Mutation to observable detected during a bind context');
         this.onMutationWarning.pub(null);
@@ -253,7 +240,6 @@
 
     Recorder.prototype.ignoring = function(f) {
       var wasIgnoring;
-
       wasIgnoring = this.isIgnoring;
       this.isIgnoring = true;
       try {
@@ -271,7 +257,6 @@
 
   rx.asyncBind = asyncBind = function(init, f) {
     var dep;
-
     dep = new DepCell(f, init);
     dep.refresh();
     return dep;
@@ -285,11 +270,9 @@
 
   rx.lagBind = lagBind = function(lag, init, f) {
     var timeout;
-
     timeout = null;
     return asyncBind(init, function() {
       var _this = this;
-
       if (timeout != null) {
         clearTimeout(timeout);
       }
@@ -301,12 +284,10 @@
 
   rx.postLagBind = postLagBind = function(init, f) {
     var timeout;
-
     timeout = null;
     return asyncBind(init, function() {
       var ms, val, _ref,
         _this = this;
-
       _ref = this.record(f), val = _ref.val, ms = _ref.ms;
       if (timeout != null) {
         clearTimeout(timeout);
@@ -327,7 +308,6 @@
 
   rx.autoSub = function(ev, listener) {
     var subid;
-
     subid = ev.sub(listener);
     rx.onDispose(function() {
       return ev.unsub(subid);
@@ -339,7 +319,6 @@
     function ObsCell(x) {
       var _ref,
         _this = this;
-
       this.x = x;
       this.x = (_ref = this.x) != null ? _ref : null;
       this.onSet = new Ev(function() {
@@ -349,7 +328,6 @@
 
     ObsCell.prototype.get = function() {
       var _this = this;
-
       recorder.sub(function(target) {
         return rx.autoSub(_this.onSet, function() {
           return target.refresh();
@@ -372,10 +350,8 @@
 
     SrcCell.prototype.set = function(x) {
       var _this = this;
-
       return recorder.mutating(function() {
         var old;
-
         if (_this.x !== x) {
           old = _this.x;
           _this.x = x;
@@ -403,7 +379,6 @@
     DepCell.prototype.refresh = function() {
       var env, isSynchronous, old, realDone, syncResult,
         _this = this;
-
       if (!this.refreshing) {
         old = this.x;
         realDone = function(x) {
@@ -418,7 +393,6 @@
         env = {
           record: function(f) {
             var recorded, res;
-
             if (!_this.refreshing) {
               _this.disconnect();
               if (recorded) {
@@ -456,7 +430,6 @@
 
     DepCell.prototype.disconnect = function() {
       var cleanup, nestedBind, _i, _j, _len, _len1, _ref1, _ref2;
-
       _ref1 = this.cleanups;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         cleanup = _ref1[_i];
@@ -486,7 +459,6 @@
   ObsArray = rx.ObsArray = (function() {
     function ObsArray(xs, diff) {
       var _this = this;
-
       this.xs = xs != null ? xs : [];
       this.diff = diff != null ? diff : rx.basicDiff();
       this.onChange = new Ev(function() {
@@ -497,7 +469,6 @@
 
     ObsArray.prototype.all = function() {
       var _this = this;
-
       recorder.sub(function(target) {
         return rx.autoSub(_this.onChange, function() {
           return target.refresh();
@@ -508,7 +479,6 @@
 
     ObsArray.prototype.raw = function() {
       var _this = this;
-
       recorder.sub(function(target) {
         return rx.autoSub(_this.onChange, function() {
           return target.refresh();
@@ -519,11 +489,9 @@
 
     ObsArray.prototype.at = function(i) {
       var _this = this;
-
       recorder.sub(function(target) {
         return rx.autoSub(_this.onChange, function(_arg) {
           var added, index, removed;
-
           index = _arg[0], removed = _arg[1], added = _arg[2];
           if (index === i) {
             return target.refresh();
@@ -535,11 +503,9 @@
 
     ObsArray.prototype.length = function() {
       var _this = this;
-
       recorder.sub(function(target) {
         return rx.autoSub(_this.onChange, function(_arg) {
           var added, index, removed;
-
           index = _arg[0], removed = _arg[1], added = _arg[2];
           if (removed.length !== added.length) {
             return target.refresh();
@@ -551,11 +517,9 @@
 
     ObsArray.prototype.map = function(f) {
       var ys;
-
       ys = new MappedDepArray();
       rx.autoSub(this.onChange, function(_arg) {
         var added, index, removed;
-
         index = _arg[0], removed = _arg[1], added = _arg[2];
         return ys.realSplice(index, removed.length, added.map(f));
       });
@@ -564,12 +528,10 @@
 
     ObsArray.prototype.indexed = function() {
       var _this = this;
-
       if (this.indexed_ == null) {
         this.indexed_ = new IndexedDepArray();
         rx.autoSub(this.onChange, function(_arg) {
           var added, index, removed;
-
           index = _arg[0], removed = _arg[1], added = _arg[2];
           return _this.indexed_.realSplice(index, removed.length, added);
         });
@@ -583,14 +545,12 @@
 
     ObsArray.prototype.realSplice = function(index, count, additions) {
       var removed;
-
       removed = this.xs.splice.apply(this.xs, [index, count].concat(additions));
       return this.onChange.pub([index, removed, additions]);
     };
 
     ObsArray.prototype._update = function(val, diff) {
       var additions, count, fullSplice, index, old, splice, splices, x, _i, _len, _ref1, _results;
-
       if (diff == null) {
         diff = this.diff;
       }
@@ -621,7 +581,6 @@
 
     SrcArray.prototype.spliceArray = function(index, count, additions) {
       var _this = this;
-
       return recorder.mutating(function() {
         return _this.realSplice(index, count, additions);
       });
@@ -629,7 +588,6 @@
 
     SrcArray.prototype.splice = function() {
       var additions, count, index;
-
       index = arguments[0], count = arguments[1], additions = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
       return this.spliceArray(index, count, additions);
     };
@@ -640,7 +598,6 @@
 
     SrcArray.prototype.remove = function(x) {
       var i;
-
       i = _(this.raw()).indexOf(x);
       if (i >= 0) {
         return this.removeAt(i);
@@ -665,7 +622,6 @@
 
     SrcArray.prototype.update = function(xs) {
       var _this = this;
-
       return recorder.mutating(function() {
         return _this._update(xs);
       });
@@ -693,14 +649,12 @@
     function IndexedDepArray(xs, diff) {
       var i, x,
         _this = this;
-
       if (xs == null) {
         xs = [];
       }
       IndexedDepArray.__super__.constructor.call(this, xs, diff);
       this.is = (function() {
         var _i, _len, _ref3, _results;
-
         _ref3 = this.xs;
         _results = [];
         for (i = _i = 0, _len = _ref3.length; _i < _len; i = ++_i) {
@@ -716,15 +670,12 @@
 
     IndexedDepArray.prototype.map = function(f) {
       var ys;
-
       ys = new IndexedMappedDepArray();
       rx.autoSub(this.onChange, function(_arg) {
         var a, added, i, index, removed;
-
         index = _arg[0], removed = _arg[1], added = _arg[2];
         return ys.realSplice(index, removed.length, (function() {
           var _i, _len, _ref3, _results;
-
           _results = [];
           for (_i = 0, _len = added.length; _i < _len; _i++) {
             _ref3 = added[_i], a = _ref3[0], i = _ref3[1];
@@ -738,7 +689,6 @@
 
     IndexedDepArray.prototype.realSplice = function(index, count, additions) {
       var i, newIs, offset, removed, _i, _len, _ref3, _ref4, _ref5;
-
       removed = (_ref3 = this.xs).splice.apply(_ref3, [index, count].concat(__slice.call(additions)));
       _ref4 = this.is.slice(index + count);
       for (offset = _i = 0, _len = _ref4.length; _i < _len; offset = ++_i) {
@@ -747,7 +697,6 @@
       }
       newIs = (function() {
         var _j, _ref5, _results;
-
         _results = [];
         for (i = _j = 0, _ref5 = additions.length; 0 <= _ref5 ? _j < _ref5 : _j > _ref5; i = 0 <= _ref5 ? ++_j : --_j) {
           _results.push(rx.cell(index + i));
@@ -779,14 +728,12 @@
 
     function DepArray(f, diff) {
       var _this = this;
-
       this.f = f;
       DepArray.__super__.constructor.call(this, [], diff);
       rx.autoSub((bind(function() {
         return _this.f();
       })).onSet, function(_arg) {
         var old, val;
-
         old = _arg[0], val = _arg[1];
         return _this._update(val);
       });
@@ -805,11 +752,9 @@
 
     IndexedArray.prototype.map = function(f) {
       var ys;
-
       ys = new MappedDepArray();
       rx.autoSub(this.xs.onChange, function(_arg) {
         var added, index, removed;
-
         index = _arg[0], removed = _arg[1], added = _arg[2];
         return ys.realSplice(index, removed.length, added.map(f));
       });
@@ -822,12 +767,10 @@
 
   rx.concat = function() {
     var repLens, xs, xss, ys;
-
     xss = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     ys = new MappedDepArray();
     repLens = (function() {
       var _i, _len, _results;
-
       _results = [];
       for (_i = 0, _len = xss.length; _i < _len; _i++) {
         xs = xss[_i];
@@ -838,7 +781,6 @@
     xss.map(function(xs, i) {
       return rx.autoSub(xs.onChange, function(_arg) {
         var added, index, removed, xsOffset;
-
         index = _arg[0], removed = _arg[1], added = _arg[2];
         xsOffset = sum(repLens.slice(0, i));
         repLens[i] += added.length - removed.length;
@@ -922,11 +864,9 @@
   ObsMap = rx.ObsMap = (function() {
     function ObsMap(x) {
       var _this = this;
-
       this.x = x != null ? x : {};
       this.onAdd = new Ev(function() {
         var k, v, _results;
-
         _results = [];
         for (k in x) {
           v = x[k];
@@ -940,11 +880,9 @@
 
     ObsMap.prototype.get = function(key) {
       var _this = this;
-
       recorder.sub(function(target) {
         return rx.autoSub(_this.onAdd, function(_arg) {
           var subkey, val;
-
           subkey = _arg[0], val = _arg[1];
           if (key === subkey) {
             return target.refresh();
@@ -954,7 +892,6 @@
       recorder.sub(function(target) {
         return rx.autoSub(_this.onChange, function(_arg) {
           var old, subkey, val;
-
           subkey = _arg[0], old = _arg[1], val = _arg[2];
           if (key === subkey) {
             return target.refresh();
@@ -964,7 +901,6 @@
       recorder.sub(function(target) {
         return rx.autoSub(_this.onRemove, function(_arg) {
           var old, subkey;
-
           subkey = _arg[0], old = _arg[1];
           if (key === subkey) {
             return target.refresh();
@@ -976,7 +912,6 @@
 
     ObsMap.prototype.all = function() {
       var _this = this;
-
       recorder.sub(function(target) {
         return rx.autoSub(_this.onAdd, function() {
           return target.refresh();
@@ -997,7 +932,6 @@
 
     ObsMap.prototype.realPut = function(key, val) {
       var old;
-
       if (key in this.x) {
         old = this.x[key];
         this.x[key] = val;
@@ -1012,7 +946,6 @@
 
     ObsMap.prototype.realRemove = function(key) {
       var val;
-
       val = popKey(this.x, key);
       this.onRemove.pub([key, val]);
       return val;
@@ -1036,7 +969,6 @@
 
     SrcMap.prototype.put = function(key, val) {
       var _this = this;
-
       return recorder.mutating(function() {
         return _this.realPut(key, val);
       });
@@ -1044,7 +976,6 @@
 
     SrcMap.prototype.remove = function(key) {
       var _this = this;
-
       return recorder.mutating(function() {
         return _this.realRemove(key);
       });
@@ -1066,7 +997,6 @@
       DepMap.__super__.constructor.call(this);
       rx.autoSub(new DepCell(this.f).onSet, function(_arg) {
         var k, old, v, val, _results;
-
         old = _arg[0], val = _arg[1];
         for (k in old) {
           v = old[k];
@@ -1093,10 +1023,8 @@
 
   rx.liftSpec = function(obj) {
     var name, type, val;
-
     return _.object((function() {
       var _i, _len, _ref5, _results;
-
       _ref5 = Object.getOwnPropertyNames(obj);
       _results = [];
       for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
@@ -1119,7 +1047,6 @@
 
   rx.lift = function(x, fieldspec) {
     var name, spec;
-
     if (fieldspec == null) {
       fieldspec = rx.liftSpec(x);
     }
@@ -1143,10 +1070,8 @@
 
   rx.unlift = function(x) {
     var k, v;
-
     return _.object((function() {
       var _results;
-
       _results = [];
       for (k in x) {
         v = x[k];
@@ -1158,12 +1083,10 @@
 
   rx.reactify = function(obj, fieldspec) {
     var arr, methName, name, spec;
-
     if (_.isArray(obj)) {
       arr = rx.array(_.clone(obj));
       Object.defineProperties(obj, _.object((function() {
         var _i, _len, _ref5, _results;
-
         _ref5 = _.functions(arr);
         _results = [];
         for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
@@ -1171,11 +1094,9 @@
           if (methName !== 'length') {
             _results.push((function(methName) {
               var meth, newMeth, spec;
-
               meth = obj[methName];
               newMeth = function() {
                 var args, res, _ref6;
-
                 args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
                 if (meth != null) {
                   res = meth.call.apply(meth, [obj].concat(__slice.call(args)));
@@ -1199,13 +1120,11 @@
     } else {
       return Object.defineProperties(obj, _.object((function() {
         var _results;
-
         _results = [];
         for (name in fieldspec) {
           spec = fieldspec[name];
           _results.push((function(name, spec) {
             var desc, obs, view, _ref5, _ref6;
-
             desc = null;
             switch (spec.type) {
               case 'cell':
@@ -1249,10 +1168,8 @@
 
   rx.autoReactify = function(obj) {
     var name, type, val;
-
     return rx.reactify(obj, _.object((function() {
       var _i, _len, _ref5, _results;
-
       _ref5 = Object.getOwnPropertyNames(obj);
       _results = [];
       for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
@@ -1288,10 +1205,8 @@
   rx.flatten = function(xs) {
     return new DepArray(function() {
       var x;
-
       return _((function() {
         var _i, _len, _results;
-
         _results = [];
         for (_i = 0, _len = xs.length; _i < _len; _i++) {
           x = xs[_i];
@@ -1312,7 +1227,6 @@
 
   flatten = function(xss) {
     var xs;
-
     xs = _.flatten(xss);
     return rx.cellToArray(bind(function() {
       return _.flatten(xss);
@@ -1331,10 +1245,8 @@
     }
     return function(oldXs, newXs) {
       var i, oldKeys, x, _i, _len, _ref5, _results;
-
       oldKeys = mkMap((function() {
         var _i, _len, _results;
-
         _results = [];
         for (i = _i = 0, _len = oldXs.length; _i < _len; i = ++_i) {
           x = oldXs[i];
@@ -1353,7 +1265,6 @@
 
   rx.uidify = function(x) {
     var _ref5;
-
     return (_ref5 = x.__rxUid) != null ? _ref5 : (Object.defineProperty(x, '__rxUid', {
       enumerable: false,
       value: mkuid()
@@ -1370,10 +1281,8 @@
 
   permToSplices = function(oldLength, newXs, perm) {
     var cur, i, last, refs, splice, splices;
-
     refs = (function() {
       var _i, _len, _results;
-
       _results = [];
       for (_i = 0, _len = perm.length; _i < _len; _i++) {
         i = perm[_i];
@@ -1385,7 +1294,6 @@
     })();
     if (_.some((function() {
       var _i, _ref5, _results;
-
       _results = [];
       for (i = _i = 0, _ref5 = refs.length - 1; 0 <= _ref5 ? _i < _ref5 : _i > _ref5; i = 0 <= _ref5 ? ++_i : --_i) {
         _results.push(refs[i + 1] - refs[i] <= 0);
@@ -1428,7 +1336,6 @@
 
   $.fn.rx = function(prop) {
     var checked, focused, map, val;
-
     map = this.data('rx-map');
     if (map == null) {
       this.data('rx-map', map = mkMap());
@@ -1438,7 +1345,6 @@
     }
     return map[prop] = (function() {
       var _this = this;
-
       switch (prop) {
         case 'focused':
           focused = rx.cell(this.is(':focus'));
@@ -1509,7 +1415,6 @@
 
   propSet = _.object((function() {
     var _j, _len1, _results;
-
     _results = [];
     for (_j = 0, _len1 = props.length; _j < _len1; _j++) {
       prop = props[_j];
@@ -1535,7 +1440,6 @@
     if (val instanceof ObsCell) {
       return rx.autoSub(val.onSet, function(_arg) {
         var n, o;
-
         o = _arg[0], n = _arg[1];
         return setProp(elt, prop, xform(n));
       });
@@ -1547,7 +1451,6 @@
   rxt.mktag = mktag = function(tag) {
     return function(arg1, arg2) {
       var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref5, _ref6;
-
       _ref5 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref5[0], contents = _ref5[1];
       elt = $("<" + tag + "/>");
       _ref6 = _.omit(attrs, _.keys(specialAttrs));
@@ -1558,7 +1461,6 @@
       if (contents != null) {
         toNodes = function(contents) {
           var child, parsed, _j, _len1, _results;
-
           _results = [];
           for (_j = 0, _len1 = contents.length; _j < _len1; _j++) {
             child = contents[_j];
@@ -1585,7 +1487,6 @@
         };
         updateContents = function(contents) {
           var covers, hasWidth, left, node, nodes, top;
-
           elt.html('');
           if (_.isArray(contents)) {
             nodes = toNodes(contents);
@@ -1593,7 +1494,6 @@
             if (false) {
               hasWidth = function(node) {
                 var e;
-
                 try {
                   return ($(node).width() != null) !== 0;
                 } catch (_error) {
@@ -1603,7 +1503,6 @@
               };
               covers = (function() {
                 var _j, _len1, _ref7, _ref8, _results;
-
                 _ref7 = nodes != null ? nodes : [];
                 _results = [];
                 for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
@@ -1621,7 +1520,6 @@
               })();
               return setTimeout((function() {
                 var cover, _j, _len1, _results;
-
                 _results = [];
                 for (_j = 0, _len1 = covers.length; _j < _len1; _j++) {
                   cover = covers[_j];
@@ -1639,7 +1537,6 @@
         if (contents instanceof ObsArray) {
           rx.autoSub(contents.onChange, function(_arg) {
             var added, index, removed, toAdd;
-
             index = _arg[0], removed = _arg[1], added = _arg[2];
             elt.contents().slice(index, index + removed.length).remove();
             toAdd = toNodes(added);
@@ -1652,7 +1549,6 @@
         } else if (contents instanceof ObsCell) {
           rx.autoSub(contents.onSet, function(_arg) {
             var old, val;
-
             old = _arg[0], val = _arg[1];
             return updateContents(val);
           });
@@ -1673,7 +1569,6 @@
 
   rxt.tags = _.object((function() {
     var _j, _len1, _results;
-
     _results = [];
     for (_j = 0, _len1 = tags.length; _j < _len1; _j++) {
       tag = tags[_j];
@@ -1692,10 +1587,8 @@
 
   rxt.cast = function(opts, types) {
     var key, newval, value;
-
     return _.object((function() {
       var _results;
-
       _results = [];
       for (key in opts) {
         value = opts[key];
@@ -1737,10 +1630,8 @@
 
   rxt.cssify = function(map) {
     var k, v;
-
     return ((function() {
       var _results;
-
       _results = [];
       for (k in map) {
         v = map[k];
