@@ -58,8 +58,10 @@ type</li>
 <ul>
 <li><code>cell(value)</code>: return a <code>SrcCell</code> initialized to the given value (optional;
 defaults to <code>undefined</code>)</li>
-<li><code>array(value)</code>: return a <code>SrcArray</code> initialized to the given array (optional;
-defaults to <code>[]</code>)</li>
+<li><code>array(value[, diff])</code>: return a <code>SrcArray</code> initialized to the given
+array (optional; defaults to <code>[]</code>) and the given <code>diff</code> function for
+computing/propagating the minimal set of change events (defaults to
+<code>rx.basicDiff()</code>).</li>
 <li><code>bind(fn)</code>: given a 0-ary function, return a <code>DepCell</code> whose value is
 bound to the result of evaluating that function.  The function is immediately
 evaluated once, and each time it&#39;s evaluated, for any accesses of
@@ -96,7 +98,7 @@ returns the object</li>
 <li><code>flatten(xs)</code>: given an array of either arrays, observable arrays,
 observable cells, or other elements, flatten them into one dependent
 array, which will be able to react to changes in any of the observables.
-It furthermore strips out undefined/null elements (for convenient
+It furthermore strips out <code>undefined</code>/<code>null</code> elements (for convenient
 conditionals in the array).</li>
 <li><code>onDispose(callback)</code>: add a (0-ary) cleanup listener, which gets fired
 whenever the current (enclosing) bind is removed or refreshed.  This is
@@ -109,6 +111,36 @@ suppressing the initial invocation at subscription time.</li>
 if this is called from within a <code>bind</code> context, the listener will be
 properly cleaned up (unsubscribed) on context disposal.  Returns the
 subscription ID.</li>
+<li><code>concat(arrays...)</code>: returns a dependent array that is the result of
+concatenating multiple <code>ObsArray</code>s (efficiently maintained).</li>
+<li><code>cellToArray(cell[, diff])</code>: given an <code>ObsCell</code> of an array, return a
+<code>DepArray</code> that issues the minimal set of change events by diffing the
+contents of the array to determine what has changed.  Similar in
+mechanism to <code>SrcArray.update</code>.  <code>diff</code> is an optional diff function (see
+<code>SrcArray.update</code> documentation) and defaults to <code>rx.basicDiff()</code>.</li>
+<li><code>basicDiff([key])</code>: returns a diff function that takes two arrays and
+uses the given key function, which defaults to <code>rx.smartUidify</code>, to
+efficiently hash-compare elements between the two arrays.  Used by
+<code>rx.cellToArray</code>.</li>
+<li><code>smartUidify(x)</code>: returns a unique identifier for the given object.  If
+the item is a scalar, then return its JSON string.  If the item is an
+object/array/etc., create a unique ID for it, insert it (this is a
+standard &quot;hashing hack&quot; for JS) as a non-enumerable property <code>__rxUid</code>,
+and return it (or just return any already-existing <code>__rxUid</code>).  I.e.,
+this implements reference equality.  Used by <code>rx.basicDiff</code>.</li>
+<li><code>lift(x[, spec])</code>: convert an object <code>x</code> containing regular
+non-observable fields to one with observable fields instead.  <code>spec</code> is a
+mapping from field name to either <code>&#39;cell&#39;</code>, <code>&#39;array&#39;</code>, or <code>&#39;map&#39;</code>, based
+on what kind of observable data structure we want.  By default this is
+supplied by <code>rx.liftSpec</code>.</li>
+<li><code>liftSpec(x)</code>: given an object <code>x</code>, return a spec for <code>rx.lift</code> where any
+field that is an array is to be stored in an <code>rx.array</code>, and otherwise in
+an <code>rx.cell</code>.</li>
+<li><code>transaction(f)</code>: run the given function in a <em>transaction</em>, during which
+updates to observables will not emit change events to their subscribers.
+Only once the transaction ends will all events be fired (at which time the
+state of the source cells will no longer be in flux, and thus a
+consistent view of the universe can always be maintained).</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>
@@ -142,9 +174,16 @@ changed.  The event data is an array of three elements: <code>[index, added,
 removed]</code>, where <code>index</code> is the index where the change occurred, <code>added</code>
 is the sub-array of elements that were added, and <code>removed</code> is the
 sub-array of elements that were removed.</li>
+<li><code>indexed()</code>: return a <code>DepArray</code> that mirrors this array, but whose <code>map</code>
+method passes in the index as well.  The mapper function takes <code>(x,i)</code>
+where <code>x</code> is the current element and <code>i</code> is a cell whose value always
+reflects the index of the current element.</li>
 </ul>
 <p><strong><code>SrcArray</code> members</strong></p>
 <ul>
+<li><code>SrcArray([xs[, diff]])</code>: constructor that initializes the content array
+to <code>xs</code> (note: keeps a reference and does not create a copy) and the diff
+function for <code>update</code> to <code>diff</code> (defaults to <code>rx.basicDiff()</code>).</li>
 <li><code>splice(index, count, additions...)</code>: replace <code>count</code> elements starting at
 <code>index</code> with <code>additions</code></li>
 <li><code>insert(x, i)</code>: insert value <code>x</code> at index <code>i</code></li>
@@ -153,6 +192,11 @@ sub-array of elements that were removed.</li>
 <li><code>push(x)</code>: append <code>x</code> to the end of the array</li>
 <li><code>put(i, x)</code>: replace element <code>i</code> with value <code>x</code></li>
 <li><code>replace(xs)</code>: replace entire array with raw array <code>xs</code></li>
+<li><code>update(xs[, diff])</code>: replace entire array with raw array <code>xs</code>, but apply
+the <code>diff</code> algorithm to determine the minimal set of changes for which to
+emit events.  This enables flexible updating of the array, representing
+arbtirary transformations, while at the same time minimizing the
+downstream recomputation necessary (particularly DOM manipulations).</li>
 <li>inherits <code>ObsArray</code></li>
 </ul>
 <p><strong><code>DepArray</code> members</strong></p>
@@ -221,7 +265,11 @@ arrays).</li>
 strings suitable for use as a <code>style</code> attribute.  Takes an object mapping
 camelCase versions of style property names and values that are either
 strings (which are put in verbatim), numbers (which are written as pixels),
-or null/undefined (which omits that property altogether).</li>
+or <code>null</code>/<code>undefined</code> (which omits that property altogether).</li>
+<li><code>rxt.smushClasses(classes)</code>: convenience utility for programmatically
+constructing strings suitable for use as a <code>class</code> attribute.  Takes an
+array of strings or <code>undefined</code>s (useful for conditionally including a
+class), and filters out the <code>null</code>/<code>undefined</code>.</li>
 <li>Tags: <code>p</code>, <code>br</code>, <code>ul</code>, <code>li</code>, <code>span</code>, <code>anchor</code>, <code>div</code>, <code>input</code>, <code>select</code>,
 <code>option</code>, <code>label</code>, <code>button</code>, <code>fieldset</code>, <code>legend</code>, <code>section</code>, <code>header</code>,
 <code>footer</code>, <code>strong</code>, <code>h1</code>, <code>h2</code>, <code>h3</code>, <code>h4</code>, <code>h5</code>, <code>h6</code>, <code>h7</code></li>
@@ -251,6 +299,9 @@ instantiation of the element.</p>
 </li>
 <li><p><code>style</code>: automatically transforms the given value with <code>cssify</code> if it&#39;s
 not a string</p>
+</li>
+<li><p><code>class</code>: automatically transforms the given value with <code>smushClasses</code> if
+it&#39;s not a string</p>
 </li>
 <li><p>events like <code>click</code>, <code>focus</code>, <code>mouseleave</code>, <code>keyup</code>, <code>load</code>, etc.,:
 these are available for all jQuery events.  The handlers are similar to

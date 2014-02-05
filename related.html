@@ -105,23 +105,21 @@ property transfer, controlling update propagation (<code>shouldComponentUpdate</
 <code>componentWillReceiveProps</code>, etc.), and more.  React also requires its own
 way of doing things such as low-level DOM manipulation—something that
 Reactive intentionally delegates to jQuery.</p>
-<p>React re-constructs a lightweight representation of the entire updated
-DOM and computes diffs to determine what actual DOM operations to
-execute.  Programmability-wise, this is not as straightforward as working
-with the actual DOM objects, requiring some awkward concepts such as
-refs, and this does lead to some tricky situations involving the
-predictability of re-rendering and also the control of things such as
-<a href="https://groups.google.com/forum/#!searchin/reactjs/0.4/reactjs/-XHqDfKN5Ws/KbdNuGTg6IkJ">element focus</a>.  Performance-wise, the approach is adequate for certain
-classes of applications, though the process takes on the order of 1ms for
-simple applications such as TodoMVC.  For other applications performance
-does unfortunately matter, e.g. for more complex views (such as a web
-page editor, where not only the controls but the web page DOM itself is
-rendered as a view) and for when you&#39;re trying to produce smooth
-responses to mouse move/drag events.  It&#39;s also more straightforward to
-interact with the rendered DOM element, as that is the primary
-representation being worked with.  That said, it would be neat to
-implement this in Reactive anyway (see &quot;Cell-Free Re-Rendering Analysis&quot;
-in <a href="ideas.html">Ideas</a>).</p>
+<p>React, like <a href="https://github.com/drcode/webfui">WebFUI</a>, re-constructs a lightweight representation of the
+entire updated DOM and computes diffs to determine what actual DOM
+operations to execute.  Programmability-wise, this is not as
+straightforward as working with the actual DOM objects, requiring some
+awkward concepts such as refs, and this does lead to some tricky
+situations involving the predictability of re-rendering and also the
+control of things such as <a href="https://groups.google.com/forum/#!searchin/reactjs/0.4/reactjs/-XHqDfKN5Ws/KbdNuGTg6IkJ">element focus</a>.  Performance-wise, the
+approach is adequate for certain classes of applications/contexts, though
+the process takes on the order of 1ms in a modern desktop/laptop browser
+for simple applications such as TodoMVC.  For other applications or on
+mobile devices, performance/battery life do unfortunately matter.  This
+is more frequently the case as rich client-side application complexity
+grows.  Consider a browser-based Photoshop clone—smooth dragging controls
+affecting a small number of on-screen components cannot incur the
+full DOM diff algorithm per frame.</p>
 <p>Feel free to dig into our clone of the React tutorial, under
 <code>examples/react-tut/</code>.</p>
 </li>

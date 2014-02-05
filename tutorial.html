@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
-            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
+            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#transactions">Transactions</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#more-on-arrays-and-reactive-templates">More on Arrays and Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#lifting">Lifting</a></li><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
             <li><a href="advanced.html">Advanced Concepts</a></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
@@ -37,7 +37,7 @@
 </pre></div>
 
 <p>Reactive is hosted on <a href="http://cdnjs.com/">cdnjs</a> as well, so you can source directly from there:</p>
-<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/reactive-coffee/0.0.5/reactive-coffee.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&#39;//cdnjs.cloudflare.com/ajax/libs/reactive-coffee/1.0.0/reactive-coffee.min.js&#39;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </pre></div>
 
 <p>If you&#39;re using <a href="http://bower.io/">Bower</a>, you can also add Reactive as a dependency for your
@@ -169,15 +169,43 @@ you to think of binds/cells not as reacting to discrete events, but more
 abstractly as continuous time-varying signals.  In general, your cells are
 encouraged to be deterministic in their effects, if not <a href="https://en.wikipedia.org/wiki/Pure_function">pure functions</a>
 altogether.</p>
+<h2><a name="transactions">Transactions</a></h2>
+<p>Sometimes you want to make a more complex update on some cells, while
+preserving certain semantics/invariants over them.  For instance, consider
+two cells representing the balances in two different bank accounts.  When
+transferring funds from one to the other, there will transiently be a
+moment when the total funds across both will be either greater or less than
+what it really should be:</p>
+<div class="highlight"><pre><span class="nv">a = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="nv">b = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="nv">sum = </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">a</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">+</span> <span class="nx">b</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+<span class="c1"># sum should always be 8, but when transferring 1 from a to b...</span>
+<span class="nx">a</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">a</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c1"># sum is now 7!</span>
+<span class="nx">b</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">b</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c1"># sum back to 8</span>
+</pre></div>
+
+<p>To prevent these &quot;glitches&quot; from being visible, we can bundle up the
+operations into a <em>transaction</em>.  Throughout the duration of this
+transaction, events will not be propagated.  For instance:</p>
+<div class="highlight"><pre><span class="nx">rx</span><span class="p">.</span><span class="nx">transaction</span> <span class="o">=&gt;</span>
+  <span class="nx">a</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">a</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="c1"># sum will not yet have received any events</span>
+  <span class="nx">b</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">b</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c1"># now sum will have received notifications, but it will see that the `a`</span>
+<span class="c1"># and `b` still sum to 8.</span>
+</pre></div>
+
 <h2><a name="arrays-and-maps">Arrays and Maps</a></h2>
 <p>Cells are the most general type of observable container.  However, there are
 also observable containers with special support for arrays and objects.  This
-special support is to support more efficient and fine-grained event types
+special support is for more efficient and fine-grained event types
 reflecting changes to particular sub-parts rather than an all-encompassing
 <code>onSet</code> event.  For instance, arrays commonly have elements inserted or removed
 from them, in which case we&#39;d like to avoid re-rendering entire dependent
 sections of the DOM or otherwise needing to figure out what parts have changed.</p>
-<p>Arrays support a <code>onChange</code> is a particularly special type of event.  It fires
+<p>Arrays support an <code>onChange</code> event.  It fires
 with a triple <code>[index, removed, added]</code>, where <code>index</code> is the offset into the
 array where the change is happening, <code>removed</code> is the sub-array of elements
 removed, and <code>added</code> is the sub-array of elements inserted.  Example:</p>
@@ -185,6 +213,36 @@ removed, and <code>added</code> is the sub-array of elements inserted.  Example:
 <span class="nx">xs</span><span class="p">.</span><span class="nx">onChange</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([index, removed, added]) -&gt;</span>
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;replaced </span><span class="si">#{</span><span class="nx">removed</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="s"> element(s) at offset </span><span class="si">#{</span><span class="nx">index</span><span class="si">}</span><span class="s"> with </span><span class="si">#{</span><span class="nx">removed</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="s"> new element(s)&quot;</span>
 <span class="nx">xs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="c1"># replaced 0 element(s) at offset 3 with 1 new element(s)</span>
+</pre></div>
+
+<p>From a declarative point of view, you can define a <em>dependent array</em> to be
+a mapped transformation of a <em>source array</em>:</p>
+<div class="highlight"><pre><span class="nv">ys = </span><span class="nx">xs</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(x) -&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="nx">x</span>
+<span class="c1"># ys.all() is now [2, 4, 6, 8]</span>
+<span class="nx">xs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="c1"># ys.all() is now [2, 4, 6, 8, 10]</span>
+</pre></div>
+
+<p>Besides <code>push</code> as shown in the above example, there are a few other
+mutation methods built in.  Some are modeled after Javascript&#39;s <code>Array</code>
+methods, e.g. <code>splice</code>, while others are new, e.g. <code>insert</code>.</p>
+<p>However, for arbitrary transformations of arrays, you can use the <code>update</code>
+method, which actually does the smart thing and performs a diff between the
+old and new contents of the array, so as to minimize the downstream
+dependencies.  So in fact, you could implement all other update methods in
+terms of <code>update</code>.  The above <code>push</code> example could also have been written
+with <code>xs.update(xs.all().concat([4]))</code>, and that would have similarly
+resulted in just a single element insertion in the downstream mapped array.</p>
+<p>In the same spirit, you can convert an <code>ObsCell</code> containing an array to a
+<code>DepArray</code> with <code>cellToArray</code>, which simply maintains the <code>DepArray</code> via
+the <code>update</code> mechanism (diffing and issuing minimal downstream change
+events):</p>
+<div class="highlight"><pre><span class="nv">cell = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="nv">xs = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cellToArray</span><span class="p">(</span><span class="nx">cell</span><span class="p">)</span>
+<span class="nx">xs</span><span class="p">.</span><span class="nx">onChange</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([index, removed, added]) -&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;replaced </span><span class="si">#{</span><span class="nx">removed</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="s"> element(s) at offset </span><span class="si">#{</span><span class="nx">index</span><span class="si">}</span><span class="s"> with </span><span class="si">#{</span><span class="nx">removed</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="s"> new element(s)&quot;</span>
+<span class="nx">cell</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">cell</span><span class="p">.</span><span class="nx">get</span><span class="p">().</span><span class="nx">concat</span><span class="p">([</span><span class="mi">4</span><span class="p">]))</span>
 <span class="c1"># replaced 0 element(s) at offset 3 with 1 new element(s)</span>
 </pre></div>
 
@@ -310,11 +368,35 @@ anywhere in a template structure:</p>
 <p><code>init</code> was an example of a <em>special attribute</em>.  These are just attributes
 that are intercepted and handled differently from others, which are simply
 passed on as regular HTML attributes on the DOM element.  Besides <code>init</code>,
-built-in special attributes include <code>style</code>, which in addition to regular
-style strings accepts jQuery-style mappings like <code>{fontSize: 10}</code>, and all
-jQuery events: <code>click</code>, <code>focus</code>, <code>mouseleave</code>, <code>keyup</code>, <code>load</code>, etc.  So
-we ould have bound the blur event directly (note it also takes a jQuery
-object as <code>this</code>):</p>
+built-in special attributes include:</p>
+<ul>
+<li><p><code>style</code>, which in addition to regular style strings accepts jQuery-style
+mappings like <code>{fontSize: 10}</code>, so you can write:</p>
+<div class="highlight"><pre><span class="nx">div</span> <span class="p">{</span>
+  <span class="nv">style: </span><span class="nx">bind</span> <span class="nf">-&gt;</span>
+    <span class="nv">width: </span><span class="nx">score</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+    <span class="nv">color: </span><span class="k">if</span> <span class="nx">team</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;a&#39;</span> <span class="k">then</span> <span class="s">&#39;red&#39;</span> <span class="k">else</span> <span class="s">&#39;blue&#39;</span>
+    <span class="nv">display: </span><span class="s">&#39;none&#39;</span> <span class="k">if</span> <span class="nx">gameMode</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">!=</span> <span class="s">&#39;running&#39;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>(You can also access this transform directly via <code>rxt.cssify</code>.)</p>
+</li>
+<li><p><code>class</code>, which in addition to regular class strings accepts an array of
+class names (filtering out <code>undefined</code>), e.g.:</p>
+<div class="highlight"><pre><span class="nx">button</span> <span class="p">{</span>
+  <span class="k">class</span><span class="o">:</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span>
+    <span class="s">&#39;btn&#39;</span>
+    <span class="s">&#39;btn-primary&#39;</span> <span class="k">if</span> <span class="nx">formComplete</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>(You can also access this transform directly via <code>rxt.smushClasses</code>.)</p>
+</li>
+<li><p>and all jQuery events: <code>click</code>, <code>focus</code>, <code>mouseleave</code>, <code>keyup</code>, <code>load</code>,
+etc.  So we could have bound the blur event in the earlier example
+directly (note it also takes a jQuery object as <code>this</code>):</p>
 <div class="highlight"><pre><span class="p">...</span>
       <span class="nx">input</span> <span class="p">{</span>
         <span class="nv">type: </span><span class="s">&#39;text&#39;</span>
@@ -327,6 +409,8 @@ object as <code>this</code>):</p>
 <span class="p">...</span>
 </pre></div>
 
+</li>
+</ul>
 <p>You can also add your own special attribute by inserting a function into
 the <code>specialAttrs</code> global structure.</p>
 <h2><a name="reactive-templates">Reactive Templates</a></h2>
@@ -472,6 +556,23 @@ For these situations, there&#39;s a handy <code>rx.flatten</code> utility functi
 
 <p>(These behaviors may be folded into core <code>rxt</code> behavior if it proves to be
 a sensible default.)</p>
+<h2><a name="more-on-arrays-and-reactive-templates">More on Arrays and Reactive Templates</a></h2>
+<p>Arrays also support an <code>indexed</code> method which returns a copy of the array,
+but which actually tracks the indices of its elements, such that when you
+<code>map</code> the array, the mapper function is given the index (as a reactive
+cell) in addition to the current element.  This way you can react to shifts
+in the position of each element.</p>
+<p>For instance, if you had a list where you wanted the rows to be styled
+based on whether they&#39;re prime:</p>
+<div class="highlight"><pre><span class="nv">xs = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">(...)</span>
+<span class="nx">ul</span> <span class="nx">xs</span><span class="p">.</span><span class="nx">indexed</span><span class="p">().</span><span class="nx">map</span> <span class="nf">(x,i) -&gt;</span>
+  <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="k">if</span> <span class="nx">isPrime</span><span class="p">(</span><span class="nx">i</span><span class="p">.</span><span class="nx">get</span><span class="p">())</span> <span class="k">then</span> <span class="s">&#39;prime&#39;</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">},</span> <span class="nx">x</span>
+<span class="c1"># shifts the entire array, but still only prime rows have class &quot;prime&quot;</span>
+<span class="nx">xs</span><span class="p">.</span><span class="nx">removeAt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+<p>This is not built into <code>map</code> since it would make <code>map</code>s more expensive, and
+in general this is a less-frequently used feature.</p>
 <h2><a name="components">Components</a></h2>
 <p>Making reusable components is as simple as defining a function, where the
 convention is to pass in a single named argument object, as opposed to
@@ -575,6 +676,35 @@ focused on the input text field:</p>
 <p>We are using three different types of reactive element attributes.
 <code>rx(property)</code> returns the value of the given property (<code>focused</code>,
 <code>checked</code>, <code>val</code>) as a cell.</p>
+<h2><a name="lifting">Lifting</a></h2>
+<p>Often times your models will consist of objects or instances with various observable fields.  For instance, consider the <code>User</code> class defined earlier:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nx">User</span>
+  <span class="nv">constructor: </span><span class="nf">(id, name) -&gt;</span>
+    <span class="vi">@id = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span>
+    <span class="vi">@name = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span>
+</pre></div>
+
+<p>You can alternatively take advantage of the dynamic runtime and use the
+meta-facility <code>rx.lift</code> to convert a plain old Javascript object containing
+non-observable fields to one with observable fields:</p>
+<div class="highlight"><pre><span class="nv">x = </span><span class="p">{</span><span class="nx">a</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="p">[],</span> <span class="nx">c</span><span class="o">:</span><span class="p">{},</span> <span class="nx">d</span><span class="o">:</span><span class="kc">null</span><span class="p">}</span>
+<span class="nx">rx</span><span class="p">.</span><span class="nx">lift</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="c1"># also returns x</span>
+<span class="nx">x</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="c1"># 0</span>
+<span class="nx">x</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">all</span><span class="p">()</span> <span class="c1"># []</span>
+<span class="nx">x</span><span class="p">.</span><span class="nx">c</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="c1"># {}</span>
+<span class="nx">x</span><span class="p">.</span><span class="nx">d</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="c1"># null</span>
+</pre></div>
+
+<p>It also makes writing <code>User</code> above simpler:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nx">User</span>
+  <span class="nv">constructor: </span><span class="nf">(@id, @name) -&gt;</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">lift</span><span class="p">(</span><span class="nx">@</span><span class="p">)</span>
+<span class="k">new</span> <span class="nx">User</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;Joe&#39;</span><span class="p">).</span><span class="nx">name</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="c1"># Joe</span>
+</pre></div>
+
+<p>By default, fields that are arrays are turned into <code>rx.array</code>, while others
+are turned into <code>rx.cell</code>.  You can control/refine how fields are lifted by
+passing in a spec (by default, uses <code>rx.liftSpec</code> to generate one).  See
+the <a href="api.html">API documentation</a> for more details.</p>
 <h2><a name="es5-properties">ES5 Properties</a></h2>
 <p>So far, everything is built on observable data structures, which are just
 plain classes with explicit getter/setter calls.  To make working with

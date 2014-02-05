@@ -31,12 +31,22 @@
         <section id="main-content"><h1>Change Log</h1>
 <p>Changes for each version are roughly listed in order of descending
 noteworthiness.</p>
-<p><strong>v0.0.6 – under development</strong></p>
+<p><strong>v1.0.0 – 2014-02-05</strong></p>
 <ul>
-<li>Add fake <code>SrcCell</code> adapters for <code>ObsMap</code> entries.</li>
+<li>Add flexible array auto-diffing via <code>cellToArray</code> and <code>ObsArray.update</code>.</li>
+<li>Add <code>ObsArray.indexed</code> for indexed maps.</li>
+<li>Add <code>rx.concat</code> for efficient concatenation of <code>ObsArray</code>s.</li>
+<li>Make arguments to tag constructors more flexible.</li>
+<li>Add transactions.</li>
+<li>Add <code>rx.lift</code>.</li>
 <li>Make <code>autoReactify</code> smarter.</li>
+<li>Add fake <code>SrcCell</code> adapters for <code>ObsMap</code> entries.</li>
 <li>Fix <code>RawHtml</code> element count bug.</li>
 <li>Make <code>style</code> a special attribute that automatically uses <code>cssify</code>.</li>
+<li>Make <code>class</code> a special attribute that uses <code>rxt.smushClasses</code>.</li>
+<li>Throw proper Errors rather than strings.</li>
+<li>Fix and test for IE compat.</li>
+<li>Fix various other bugs.</li>
 </ul>
 <p><strong>v0.0.5 – 2013-09-13</strong></p>
 <ul>
