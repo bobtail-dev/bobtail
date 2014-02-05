@@ -665,3 +665,15 @@ describe 'lift', ->
       z:x.z.get()
       n:x.n.get()
     ).toEqual({x:0, y:[], z:{}, n:null})
+
+describe 'transaction', ->
+  it 'should buffer up events', ->
+    x = rx.cell(5)
+    y = rx.cell(0)
+    z = bind -> x.get() + y.get()
+    rx.transaction =>
+      x.set(0)
+      expect(z.get()).toBe(5)
+      y.set(5)
+      expect(z.get()).toBe(5)
+    expect(z.get()).toBe(5)

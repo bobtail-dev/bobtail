@@ -44,12 +44,24 @@ sum = (xs) ->
 DepMgr = class rx.DepMgr
   constructor: ->
     @uid2src = {}
+    @buffering = false
+    @buffer = []
   # called by Ev.sub to register a new subscription
   sub: (uid, src) ->
     @uid2src[uid] = src
   # called by Ev.unsub to unregister a subscription
   unsub: (uid) ->
     popKey(@uid2src, uid)
+  # transactions
+  transaction: (f) ->
+    @buffering = true
+    try
+      res = f()
+    finally
+      b() for b in @buffer
+      @buffer = []
+      @buffering = false
+    res
 
 rx._depMgr = depMgr = new DepMgr()
 
@@ -66,8 +78,11 @@ Ev = class rx.Ev
     uid
   # callable only by the src
   pub: (data) ->
-    for uid, listener of @subs
-      listener(data)
+    if depMgr.buffering
+      depMgr.buffer.push => @pub(data)
+    else
+      for uid, listener of @subs
+        listener(data)
   unsub: (uid) ->
     popKey(@subs, uid)
     depMgr.unsub(uid, this)
@@ -623,6 +638,8 @@ permToSplices = (oldLength, newXs, perm) ->
     last = cur
     i += 1
   splices
+
+rx.transaction = (f) -> depMgr.transaction(f)
 
 #
 # jQuery extension

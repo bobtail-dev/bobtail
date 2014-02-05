@@ -79,6 +79,8 @@
   DepMgr = rx.DepMgr = (function() {
     function DepMgr() {
       this.uid2src = {};
+      this.buffering = false;
+      this.buffer = [];
     }
 
     DepMgr.prototype.sub = function(uid, src) {
@@ -87,6 +89,24 @@
 
     DepMgr.prototype.unsub = function(uid) {
       return popKey(this.uid2src, uid);
+    };
+
+    DepMgr.prototype.transaction = function(f) {
+      var b, res, _i, _len, _ref;
+
+      this.buffering = true;
+      try {
+        res = f();
+      } finally {
+        _ref = this.buffer;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          b = _ref[_i];
+          b();
+        }
+        this.buffer = [];
+        this.buffering = false;
+      }
+      return res;
     };
 
     return DepMgr;
@@ -118,15 +138,22 @@
     };
 
     Ev.prototype.pub = function(data) {
-      var listener, uid, _ref, _results;
+      var listener, uid, _ref, _results,
+        _this = this;
 
-      _ref = this.subs;
-      _results = [];
-      for (uid in _ref) {
-        listener = _ref[uid];
-        _results.push(listener(data));
+      if (depMgr.buffering) {
+        return depMgr.buffer.push(function() {
+          return _this.pub(data);
+        });
+      } else {
+        _ref = this.subs;
+        _results = [];
+        for (uid in _ref) {
+          listener = _ref[uid];
+          _results.push(listener(data));
+        }
+        return _results;
       }
-      return _results;
     };
 
     Ev.prototype.unsub = function(uid) {
@@ -1393,6 +1420,10 @@
       i += 1;
     }
     return splices;
+  };
+
+  rx.transaction = function(f) {
+    return depMgr.transaction(f);
   };
 
   $.fn.rx = function(prop) {
