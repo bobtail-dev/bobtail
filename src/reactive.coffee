@@ -641,224 +641,225 @@ permToSplices = (oldLength, newXs, perm) ->
 
 rx.transaction = (f) -> depMgr.transaction(f)
 
-#
-# jQuery extension
-#
+if $?
+  #
+  # jQuery extension
+  #
 
-$.fn.rx = (prop) ->
-  map = @data('rx-map')
-  if not map? then @data('rx-map', map = mkMap())
-  if prop of map then return map[prop]
-  map[prop] =
-    switch prop
-      when 'focused'
-        focused = rx.cell(@is(':focus'))
-        @focus -> focused.set(true)
-        @blur -> focused.set(false)
-        focused
-      when 'val'
-        val = rx.cell(@val())
-        @change => val.set(@val())
-        @on 'input', => val.set(@val())
-        val
-      when 'checked'
-        checked = rx.cell(@is(':checked'))
-        @change => checked.set(@is(':checked'))
-        checked
-      else
-        throw new Error('Unknown reactive property type')
-
-#
-# reactive template DSL
-#
-
-if typeof exports is 'undefined'
-  @rxt = rxt = {}
-else
-  rxt = exports
-
-RawHtml = class rxt.RawHtml
-  constructor: (@html) ->
-
-# jQuery events are special attrs, along with `init`
-
-events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin",
-  "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown",
-  "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup",
-  "ready", "resize", "scroll", "select", "submit", "toggle", "unload"]
-
-specialAttrs = rxt.specialAttrs = {
-  init: (elt, fn) -> fn.call(elt)
-}
-
-for ev in events
-  do (ev) ->
-    specialAttrs[ev] = (elt, fn) -> elt[ev]((e) -> fn.call(elt, e))
-
-# attr vs prop:
-# http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
-# http://api.jquery.com/prop/
-
-props = ['async', 'autofocus', 'checked', 'location', 'multiple', 'readOnly',
-  'selected', 'selectedIndex', 'tagName', 'nodeName', 'nodeType',
-  'ownerDocument', 'defaultChecked', 'defaultSelected']
-propSet = _.object([prop, null] for prop in props)
-
-setProp = (elt, prop, val) ->
-  if prop == 'value'
-    elt.val(val)
-  else if prop of propSet
-    elt.prop(prop, val)
-  else
-    elt.attr(prop, val)
-
-setDynProp = (elt, prop, val, xform = _.identity) ->
-  if val instanceof ObsCell
-    rx.autoSub val.onSet, ([o,n]) -> setProp(elt, prop, xform(n))
-  else
-    setProp(elt, prop, xform(val))
-
-rxt.mktag = mktag = (tag) ->
-  (arg1, arg2) ->
-    # arguments are either (), (attrs: Object), (contents: Contents), or
-    # (attrs: Object, contents: Contents), where Contents is:
-    # string | Element | RawHtml | $ | Array | ObsCell | ObsArray
-    [attrs, contents] =
-      if not arg1? and not arg2?
-        [{}, null]
-      else if arg2?
-        [arg1, arg2]
-      else if _.isString(arg1) or arg1 instanceof Element or
-          arg1 instanceof RawHtml or arg1 instanceof $ or _.isArray(arg1) or
-          arg1 instanceof ObsCell or arg1 instanceof ObsArray
-        [{}, arg1]
-      else
-        [arg1, null]
-
-    elt = $("<#{tag}/>")
-    for name, value of _.omit(attrs, _.keys(specialAttrs))
-      setDynProp(elt, name, value)
-    if contents?
-      toNodes = (contents) ->
-        for child in contents
-          if _.isString(child)
-            document.createTextNode(child)
-          else if child instanceof Element
-            child
-          else if child instanceof RawHtml
-            parsed = $(child.html)
-            throw new Error('RawHtml must wrap a single element') if parsed.length != 1
-            parsed[0]
-          else if child instanceof $
-            throw new Error('jQuery object must wrap a single element') if child.length != 1
-            child[0]
-          else
-            throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, Element, RawHtml, or jQuery objects)")
-      updateContents = (contents) ->
-        elt.html('')
-        if _.isArray(contents)
-          nodes = toNodes(contents)
-          elt.append(nodes)
-          if false # this is super slow
-            hasWidth = (node) ->
-              try $(node).width()? != 0
-              catch e then false
-            covers = for node in nodes ? [] when hasWidth(node)
-              {left, top} = $(node).offset()
-              $('<div/>').appendTo($('body').first())
-                .addClass('updated-element').offset({top,left})
-                .width($(node).width()).height($(node).height())
-            setTimeout (-> $(cover).remove() for cover in covers), 2000
-        else if _.isString(contents) or contents instanceof Element or
-            contents instanceof RawHtml or contents instanceof $
-          updateContents([contents])
+  $.fn.rx = (prop) ->
+    map = @data('rx-map')
+    if not map? then @data('rx-map', map = mkMap())
+    if prop of map then return map[prop]
+    map[prop] =
+      switch prop
+        when 'focused'
+          focused = rx.cell(@is(':focus'))
+          @focus -> focused.set(true)
+          @blur -> focused.set(false)
+          focused
+        when 'val'
+          val = rx.cell(@val())
+          @change => val.set(@val())
+          @on 'input', => val.set(@val())
+          val
+        when 'checked'
+          checked = rx.cell(@is(':checked'))
+          @change => checked.set(@is(':checked'))
+          checked
         else
-          throw new Error("Unknown type for element contents: #{contents.constructor.name} (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)")
-      if contents instanceof ObsArray
-        rx.autoSub contents.onChange, ([index, removed, added]) ->
-          elt.contents().slice(index, index + removed.length).remove()
-          toAdd = toNodes(added)
-          if index == elt.contents().length
-            elt.append(toAdd)
-          else
-            elt.contents().eq(index).before(toAdd)
-      else if contents instanceof ObsCell
-        # TODO: make this more efficient by checking each element to see if it
-        # changed (i.e. layer a MappedDepArray over this, and make DepArrays
-        # propagate the minimal change set)
-        rx.autoSub contents.onSet, ([old, val]) -> updateContents(val)
-      else
-        updateContents(contents)
-    for key of attrs when key of specialAttrs
-      specialAttrs[key](elt, attrs[key], attrs, contents)
-    elt
+          throw new Error('Unknown reactive property type')
 
-# From <https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list>
-#
-# Extract with:
-#
-#     "['"+document.body.innerText.match(/<.*?>/g).map(function(x){return x.substring(1, x.length-1);}).join("', '")+"']";
+  #
+  # reactive template DSL
+  #
 
-tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script',
-  'noscript', 'body', 'body', 'section', 'nav', 'article', 'aside', 'h1', 'h2',
-  'h3', 'h4', 'h5', 'h6', 'h1', 'h6', 'header', 'footer', 'address', 'main',
-  'main', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd',
-  'dd', 'figure', 'figcaption', 'div', 'a', 'em', 'strong', 'small', 's',
-  'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd',
-  'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo',
-  'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'object',
-  'param', 'object', 'video', 'audio', 'source', 'video', 'audio', 'track',
-  'video', 'audio', 'canvas', 'map', 'area', 'area', 'map', 'svg', 'math',
-  'table', 'caption', 'colgroup', 'col', 'tbody', 'thead', 'tfoot', 'tr', 'td',
-  'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button',
-  'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea',
-  'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details',
-  'menuitem', 'menu']
+  if typeof exports is 'undefined'
+    @rxt = rxt = {}
+  else
+    rxt = exports
 
-rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
-rxt.rawHtml = (html) -> new RawHtml(html)
-rxt.importTags = (x) => _(x ? this).extend(rxt.tags)
+  RawHtml = class rxt.RawHtml
+    constructor: (@html) ->
 
-#
-# rxt utilities
-#
+  # jQuery events are special attrs, along with `init`
 
-rxt.cast = (opts, types) ->
-  _.object(
-    for key, value of opts
-      newval = switch types[key]
-        when 'array'
-          if value instanceof rx.ObsArray
-            value
-          else if _.isArray(value)
-            new rx.DepArray(-> value)
-          else if value instanceof rx.ObsCell
-            new rx.DepArray(-> value.get())
-          else
-            throw new Error('Cannot cast to array: ' + value.constructor.name)
-        when 'cell'
-          if value instanceof rx.ObsCell
-            value
-          else
-            bind -> value
+  events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin",
+    "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown",
+    "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup",
+    "ready", "resize", "scroll", "select", "submit", "toggle", "unload"]
+
+  specialAttrs = rxt.specialAttrs = {
+    init: (elt, fn) -> fn.call(elt)
+  }
+
+  for ev in events
+    do (ev) ->
+      specialAttrs[ev] = (elt, fn) -> elt[ev]((e) -> fn.call(elt, e))
+
+  # attr vs prop:
+  # http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
+  # http://api.jquery.com/prop/
+
+  props = ['async', 'autofocus', 'checked', 'location', 'multiple', 'readOnly',
+    'selected', 'selectedIndex', 'tagName', 'nodeName', 'nodeType',
+    'ownerDocument', 'defaultChecked', 'defaultSelected']
+  propSet = _.object([prop, null] for prop in props)
+
+  setProp = (elt, prop, val) ->
+    if prop == 'value'
+      elt.val(val)
+    else if prop of propSet
+      elt.prop(prop, val)
+    else
+      elt.attr(prop, val)
+
+  setDynProp = (elt, prop, val, xform = _.identity) ->
+    if val instanceof ObsCell
+      rx.autoSub val.onSet, ([o,n]) -> setProp(elt, prop, xform(n))
+    else
+      setProp(elt, prop, xform(val))
+
+  rxt.mktag = mktag = (tag) ->
+    (arg1, arg2) ->
+      # arguments are either (), (attrs: Object), (contents: Contents), or
+      # (attrs: Object, contents: Contents), where Contents is:
+      # string | Element | RawHtml | $ | Array | ObsCell | ObsArray
+      [attrs, contents] =
+        if not arg1? and not arg2?
+          [{}, null]
+        else if arg2?
+          [arg1, arg2]
+        else if _.isString(arg1) or arg1 instanceof Element or
+            arg1 instanceof RawHtml or arg1 instanceof $ or _.isArray(arg1) or
+            arg1 instanceof ObsCell or arg1 instanceof ObsArray
+          [{}, arg1]
         else
-          value
-      [key, newval]
-  )
+          [arg1, null]
 
-rxt.cssify = (map) ->
-  (
-    for k,v of map when v?
-      "#{_.str.dasherize(k)}: #{if _.isNumber(v) then v+'px' else v};"
-  ).join(' ')
+      elt = $("<#{tag}/>")
+      for name, value of _.omit(attrs, _.keys(specialAttrs))
+        setDynProp(elt, name, value)
+      if contents?
+        toNodes = (contents) ->
+          for child in contents
+            if _.isString(child)
+              document.createTextNode(child)
+            else if child instanceof Element
+              child
+            else if child instanceof RawHtml
+              parsed = $(child.html)
+              throw new Error('RawHtml must wrap a single element') if parsed.length != 1
+              parsed[0]
+            else if child instanceof $
+              throw new Error('jQuery object must wrap a single element') if child.length != 1
+              child[0]
+            else
+              throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, Element, RawHtml, or jQuery objects)")
+        updateContents = (contents) ->
+          elt.html('')
+          if _.isArray(contents)
+            nodes = toNodes(contents)
+            elt.append(nodes)
+            if false # this is super slow
+              hasWidth = (node) ->
+                try $(node).width()? != 0
+                catch e then false
+              covers = for node in nodes ? [] when hasWidth(node)
+                {left, top} = $(node).offset()
+                $('<div/>').appendTo($('body').first())
+                  .addClass('updated-element').offset({top,left})
+                  .width($(node).width()).height($(node).height())
+              setTimeout (-> $(cover).remove() for cover in covers), 2000
+          else if _.isString(contents) or contents instanceof Element or
+              contents instanceof RawHtml or contents instanceof $
+            updateContents([contents])
+          else
+            throw new Error("Unknown type for element contents: #{contents.constructor.name} (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)")
+        if contents instanceof ObsArray
+          rx.autoSub contents.onChange, ([index, removed, added]) ->
+            elt.contents().slice(index, index + removed.length).remove()
+            toAdd = toNodes(added)
+            if index == elt.contents().length
+              elt.append(toAdd)
+            else
+              elt.contents().eq(index).before(toAdd)
+        else if contents instanceof ObsCell
+          # TODO: make this more efficient by checking each element to see if it
+          # changed (i.e. layer a MappedDepArray over this, and make DepArrays
+          # propagate the minimal change set)
+          rx.autoSub contents.onSet, ([old, val]) -> updateContents(val)
+        else
+          updateContents(contents)
+      for key of attrs when key of specialAttrs
+        specialAttrs[key](elt, attrs[key], attrs, contents)
+      elt
 
-specialAttrs.style = (elt, value) ->
-  setDynProp elt, 'style', value, (val) ->
-    if _.isString(val) then val else rxt.cssify(val)
+  # From <https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list>
+  #
+  # Extract with:
+  #
+  #     "['"+document.body.innerText.match(/<.*?>/g).map(function(x){return x.substring(1, x.length-1);}).join("', '")+"']";
 
-rxt.smushClasses = (xs) ->
-  _(xs).chain().flatten().compact().value().join(' ').replace(/\s+/, ' ').trim()
+  tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script',
+    'noscript', 'body', 'body', 'section', 'nav', 'article', 'aside', 'h1', 'h2',
+    'h3', 'h4', 'h5', 'h6', 'h1', 'h6', 'header', 'footer', 'address', 'main',
+    'main', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd',
+    'dd', 'figure', 'figcaption', 'div', 'a', 'em', 'strong', 'small', 's',
+    'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd',
+    'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo',
+    'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'object',
+    'param', 'object', 'video', 'audio', 'source', 'video', 'audio', 'track',
+    'video', 'audio', 'canvas', 'map', 'area', 'area', 'map', 'svg', 'math',
+    'table', 'caption', 'colgroup', 'col', 'tbody', 'thead', 'tfoot', 'tr', 'td',
+    'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button',
+    'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea',
+    'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details',
+    'menuitem', 'menu']
 
-specialAttrs.class = (elt, value) ->
-  setDynProp elt, 'class', value, (val) ->
-    if _.isString(val) then val else rxt.smushClasses(val)
+  rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
+  rxt.rawHtml = (html) -> new RawHtml(html)
+  rxt.importTags = (x) => _(x ? this).extend(rxt.tags)
+
+  #
+  # rxt utilities
+  #
+
+  rxt.cast = (opts, types) ->
+    _.object(
+      for key, value of opts
+        newval = switch types[key]
+          when 'array'
+            if value instanceof rx.ObsArray
+              value
+            else if _.isArray(value)
+              new rx.DepArray(-> value)
+            else if value instanceof rx.ObsCell
+              new rx.DepArray(-> value.get())
+            else
+              throw new Error('Cannot cast to array: ' + value.constructor.name)
+          when 'cell'
+            if value instanceof rx.ObsCell
+              value
+            else
+              bind -> value
+          else
+            value
+        [key, newval]
+    )
+
+  rxt.cssify = (map) ->
+    (
+      for k,v of map when v?
+        "#{_.str.dasherize(k)}: #{if _.isNumber(v) then v+'px' else v};"
+    ).join(' ')
+
+  specialAttrs.style = (elt, value) ->
+    setDynProp elt, 'style', value, (val) ->
+      if _.isString(val) then val else rxt.cssify(val)
+
+  rxt.smushClasses = (xs) ->
+    _(xs).chain().flatten().compact().value().join(' ').replace(/\s+/, ' ').trim()
+
+  specialAttrs.class = (elt, value) ->
+    setDynProp elt, 'class', value, (val) ->
+      if _.isString(val) then val else rxt.smushClasses(val)

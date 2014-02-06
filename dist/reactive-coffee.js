@@ -1334,337 +1334,320 @@
     return depMgr.transaction(f);
   };
 
-  $.fn.rx = function(prop) {
-    var checked, focused, map, val;
-    map = this.data('rx-map');
-    if (map == null) {
-      this.data('rx-map', map = mkMap());
-    }
-    if (prop in map) {
-      return map[prop];
-    }
-    return map[prop] = (function() {
-      var _this = this;
-      switch (prop) {
-        case 'focused':
-          focused = rx.cell(this.is(':focus'));
-          this.focus(function() {
-            return focused.set(true);
-          });
-          this.blur(function() {
-            return focused.set(false);
-          });
-          return focused;
-        case 'val':
-          val = rx.cell(this.val());
-          this.change(function() {
-            return val.set(_this.val());
-          });
-          this.on('input', function() {
-            return val.set(_this.val());
-          });
-          return val;
-        case 'checked':
-          checked = rx.cell(this.is(':checked'));
-          this.change(function() {
-            return checked.set(_this.is(':checked'));
-          });
-          return checked;
-        default:
-          throw new Error('Unknown reactive property type');
+  if (typeof $ !== "undefined" && $ !== null) {
+    $.fn.rx = function(prop) {
+      var checked, focused, map, val;
+      map = this.data('rx-map');
+      if (map == null) {
+        this.data('rx-map', map = mkMap());
       }
-    }).call(this);
-  };
-
-  if (typeof exports === 'undefined') {
-    this.rxt = rxt = {};
-  } else {
-    rxt = exports;
-  }
-
-  RawHtml = rxt.RawHtml = (function() {
-    function RawHtml(html) {
-      this.html = html;
-    }
-
-    return RawHtml;
-
-  })();
-
-  events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "ready", "resize", "scroll", "select", "submit", "toggle", "unload"];
-
-  specialAttrs = rxt.specialAttrs = {
-    init: function(elt, fn) {
-      return fn.call(elt);
-    }
-  };
-
-  _fn = function(ev) {
-    return specialAttrs[ev] = function(elt, fn) {
-      return elt[ev](function(e) {
-        return fn.call(elt, e);
-      });
-    };
-  };
-  for (_i = 0, _len = events.length; _i < _len; _i++) {
-    ev = events[_i];
-    _fn(ev);
-  }
-
-  props = ['async', 'autofocus', 'checked', 'location', 'multiple', 'readOnly', 'selected', 'selectedIndex', 'tagName', 'nodeName', 'nodeType', 'ownerDocument', 'defaultChecked', 'defaultSelected'];
-
-  propSet = _.object((function() {
-    var _j, _len1, _results;
-    _results = [];
-    for (_j = 0, _len1 = props.length; _j < _len1; _j++) {
-      prop = props[_j];
-      _results.push([prop, null]);
-    }
-    return _results;
-  })());
-
-  setProp = function(elt, prop, val) {
-    if (prop === 'value') {
-      return elt.val(val);
-    } else if (prop in propSet) {
-      return elt.prop(prop, val);
-    } else {
-      return elt.attr(prop, val);
-    }
-  };
-
-  setDynProp = function(elt, prop, val, xform) {
-    if (xform == null) {
-      xform = _.identity;
-    }
-    if (val instanceof ObsCell) {
-      return rx.autoSub(val.onSet, function(_arg) {
-        var n, o;
-        o = _arg[0], n = _arg[1];
-        return setProp(elt, prop, xform(n));
-      });
-    } else {
-      return setProp(elt, prop, xform(val));
-    }
-  };
-
-  rxt.mktag = mktag = function(tag) {
-    return function(arg1, arg2) {
-      var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref5, _ref6;
-      _ref5 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref5[0], contents = _ref5[1];
-      elt = $("<" + tag + "/>");
-      _ref6 = _.omit(attrs, _.keys(specialAttrs));
-      for (name in _ref6) {
-        value = _ref6[name];
-        setDynProp(elt, name, value);
+      if (prop in map) {
+        return map[prop];
       }
-      if (contents != null) {
-        toNodes = function(contents) {
-          var child, parsed, _j, _len1, _results;
-          _results = [];
-          for (_j = 0, _len1 = contents.length; _j < _len1; _j++) {
-            child = contents[_j];
-            if (_.isString(child)) {
-              _results.push(document.createTextNode(child));
-            } else if (child instanceof Element) {
-              _results.push(child);
-            } else if (child instanceof RawHtml) {
-              parsed = $(child.html);
-              if (parsed.length !== 1) {
-                throw new Error('RawHtml must wrap a single element');
-              }
-              _results.push(parsed[0]);
-            } else if (child instanceof $) {
-              if (child.length !== 1) {
-                throw new Error('jQuery object must wrap a single element');
-              }
-              _results.push(child[0]);
-            } else {
-              throw new Error("Unknown element type in array: " + child.constructor.name + " (must be string, Element, RawHtml, or jQuery objects)");
-            }
-          }
-          return _results;
-        };
-        updateContents = function(contents) {
-          var covers, hasWidth, left, node, nodes, top;
-          elt.html('');
-          if (_.isArray(contents)) {
-            nodes = toNodes(contents);
-            elt.append(nodes);
-            if (false) {
-              hasWidth = function(node) {
-                var e;
-                try {
-                  return ($(node).width() != null) !== 0;
-                } catch (_error) {
-                  e = _error;
-                  return false;
-                }
-              };
-              covers = (function() {
-                var _j, _len1, _ref7, _ref8, _results;
-                _ref7 = nodes != null ? nodes : [];
-                _results = [];
-                for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
-                  node = _ref7[_j];
-                  if (!(hasWidth(node))) {
-                    continue;
-                  }
-                  _ref8 = $(node).offset(), left = _ref8.left, top = _ref8.top;
-                  _results.push($('<div/>').appendTo($('body').first()).addClass('updated-element').offset({
-                    top: top,
-                    left: left
-                  }).width($(node).width()).height($(node).height()));
-                }
-                return _results;
-              })();
-              return setTimeout((function() {
-                var cover, _j, _len1, _results;
-                _results = [];
-                for (_j = 0, _len1 = covers.length; _j < _len1; _j++) {
-                  cover = covers[_j];
-                  _results.push($(cover).remove());
-                }
-                return _results;
-              }), 2000);
-            }
-          } else if (_.isString(contents) || contents instanceof Element || contents instanceof RawHtml || contents instanceof $) {
-            return updateContents([contents]);
-          } else {
-            throw new Error("Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)");
-          }
-        };
-        if (contents instanceof ObsArray) {
-          rx.autoSub(contents.onChange, function(_arg) {
-            var added, index, removed, toAdd;
-            index = _arg[0], removed = _arg[1], added = _arg[2];
-            elt.contents().slice(index, index + removed.length).remove();
-            toAdd = toNodes(added);
-            if (index === elt.contents().length) {
-              return elt.append(toAdd);
-            } else {
-              return elt.contents().eq(index).before(toAdd);
-            }
-          });
-        } else if (contents instanceof ObsCell) {
-          rx.autoSub(contents.onSet, function(_arg) {
-            var old, val;
-            old = _arg[0], val = _arg[1];
-            return updateContents(val);
-          });
-        } else {
-          updateContents(contents);
+      return map[prop] = (function() {
+        var _this = this;
+        switch (prop) {
+          case 'focused':
+            focused = rx.cell(this.is(':focus'));
+            this.focus(function() {
+              return focused.set(true);
+            });
+            this.blur(function() {
+              return focused.set(false);
+            });
+            return focused;
+          case 'val':
+            val = rx.cell(this.val());
+            this.change(function() {
+              return val.set(_this.val());
+            });
+            this.on('input', function() {
+              return val.set(_this.val());
+            });
+            return val;
+          case 'checked':
+            checked = rx.cell(this.is(':checked'));
+            this.change(function() {
+              return checked.set(_this.is(':checked'));
+            });
+            return checked;
+          default:
+            throw new Error('Unknown reactive property type');
         }
-      }
-      for (key in attrs) {
-        if (key in specialAttrs) {
-          specialAttrs[key](elt, attrs[key], attrs, contents);
-        }
-      }
-      return elt;
+      }).call(this);
     };
-  };
-
-  tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script', 'noscript', 'body', 'body', 'section', 'nav', 'article', 'aside', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h1', 'h6', 'header', 'footer', 'address', 'main', 'main', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'dd', 'figure', 'figcaption', 'div', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'object', 'param', 'object', 'video', 'audio', 'source', 'video', 'audio', 'track', 'video', 'audio', 'canvas', 'map', 'area', 'area', 'map', 'svg', 'math', 'table', 'caption', 'colgroup', 'col', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details', 'menuitem', 'menu'];
-
-  rxt.tags = _.object((function() {
-    var _j, _len1, _results;
-    _results = [];
-    for (_j = 0, _len1 = tags.length; _j < _len1; _j++) {
-      tag = tags[_j];
-      _results.push([tag, rxt.mktag(tag)]);
+    if (typeof exports === 'undefined') {
+      this.rxt = rxt = {};
+    } else {
+      rxt = exports;
     }
-    return _results;
-  })());
+    RawHtml = rxt.RawHtml = (function() {
+      function RawHtml(html) {
+        this.html = html;
+      }
 
-  rxt.rawHtml = function(html) {
-    return new RawHtml(html);
-  };
+      return RawHtml;
 
-  rxt.importTags = function(x) {
-    return _(x != null ? x : _this).extend(rxt.tags);
-  };
-
-  rxt.cast = function(opts, types) {
-    var key, newval, value;
-    return _.object((function() {
-      var _results;
+    })();
+    events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "ready", "resize", "scroll", "select", "submit", "toggle", "unload"];
+    specialAttrs = rxt.specialAttrs = {
+      init: function(elt, fn) {
+        return fn.call(elt);
+      }
+    };
+    _fn = function(ev) {
+      return specialAttrs[ev] = function(elt, fn) {
+        return elt[ev](function(e) {
+          return fn.call(elt, e);
+        });
+      };
+    };
+    for (_i = 0, _len = events.length; _i < _len; _i++) {
+      ev = events[_i];
+      _fn(ev);
+    }
+    props = ['async', 'autofocus', 'checked', 'location', 'multiple', 'readOnly', 'selected', 'selectedIndex', 'tagName', 'nodeName', 'nodeType', 'ownerDocument', 'defaultChecked', 'defaultSelected'];
+    propSet = _.object((function() {
+      var _j, _len1, _results;
       _results = [];
-      for (key in opts) {
-        value = opts[key];
-        newval = (function() {
-          switch (types[key]) {
-            case 'array':
-              if (value instanceof rx.ObsArray) {
-                return value;
-              } else if (_.isArray(value)) {
-                return new rx.DepArray(function() {
-                  return value;
-                });
-              } else if (value instanceof rx.ObsCell) {
-                return new rx.DepArray(function() {
-                  return value.get();
-                });
-              } else {
-                throw new Error('Cannot cast to array: ' + value.constructor.name);
-              }
-              break;
-            case 'cell':
-              if (value instanceof rx.ObsCell) {
-                return value;
-              } else {
-                return bind(function() {
-                  return value;
-                });
-              }
-              break;
-            default:
-              return value;
-          }
-        })();
-        _results.push([key, newval]);
+      for (_j = 0, _len1 = props.length; _j < _len1; _j++) {
+        prop = props[_j];
+        _results.push([prop, null]);
       }
       return _results;
     })());
-  };
-
-  rxt.cssify = function(map) {
-    var k, v;
-    return ((function() {
-      var _results;
-      _results = [];
-      for (k in map) {
-        v = map[k];
-        if (v != null) {
-          _results.push("" + (_.str.dasherize(k)) + ": " + (_.isNumber(v) ? v + 'px' : v) + ";");
+    setProp = function(elt, prop, val) {
+      if (prop === 'value') {
+        return elt.val(val);
+      } else if (prop in propSet) {
+        return elt.prop(prop, val);
+      } else {
+        return elt.attr(prop, val);
+      }
+    };
+    setDynProp = function(elt, prop, val, xform) {
+      if (xform == null) {
+        xform = _.identity;
+      }
+      if (val instanceof ObsCell) {
+        return rx.autoSub(val.onSet, function(_arg) {
+          var n, o;
+          o = _arg[0], n = _arg[1];
+          return setProp(elt, prop, xform(n));
+        });
+      } else {
+        return setProp(elt, prop, xform(val));
+      }
+    };
+    rxt.mktag = mktag = function(tag) {
+      return function(arg1, arg2) {
+        var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref5, _ref6;
+        _ref5 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref5[0], contents = _ref5[1];
+        elt = $("<" + tag + "/>");
+        _ref6 = _.omit(attrs, _.keys(specialAttrs));
+        for (name in _ref6) {
+          value = _ref6[name];
+          setDynProp(elt, name, value);
         }
+        if (contents != null) {
+          toNodes = function(contents) {
+            var child, parsed, _j, _len1, _results;
+            _results = [];
+            for (_j = 0, _len1 = contents.length; _j < _len1; _j++) {
+              child = contents[_j];
+              if (_.isString(child)) {
+                _results.push(document.createTextNode(child));
+              } else if (child instanceof Element) {
+                _results.push(child);
+              } else if (child instanceof RawHtml) {
+                parsed = $(child.html);
+                if (parsed.length !== 1) {
+                  throw new Error('RawHtml must wrap a single element');
+                }
+                _results.push(parsed[0]);
+              } else if (child instanceof $) {
+                if (child.length !== 1) {
+                  throw new Error('jQuery object must wrap a single element');
+                }
+                _results.push(child[0]);
+              } else {
+                throw new Error("Unknown element type in array: " + child.constructor.name + " (must be string, Element, RawHtml, or jQuery objects)");
+              }
+            }
+            return _results;
+          };
+          updateContents = function(contents) {
+            var covers, hasWidth, left, node, nodes, top;
+            elt.html('');
+            if (_.isArray(contents)) {
+              nodes = toNodes(contents);
+              elt.append(nodes);
+              if (false) {
+                hasWidth = function(node) {
+                  var e;
+                  try {
+                    return ($(node).width() != null) !== 0;
+                  } catch (_error) {
+                    e = _error;
+                    return false;
+                  }
+                };
+                covers = (function() {
+                  var _j, _len1, _ref7, _ref8, _results;
+                  _ref7 = nodes != null ? nodes : [];
+                  _results = [];
+                  for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
+                    node = _ref7[_j];
+                    if (!(hasWidth(node))) {
+                      continue;
+                    }
+                    _ref8 = $(node).offset(), left = _ref8.left, top = _ref8.top;
+                    _results.push($('<div/>').appendTo($('body').first()).addClass('updated-element').offset({
+                      top: top,
+                      left: left
+                    }).width($(node).width()).height($(node).height()));
+                  }
+                  return _results;
+                })();
+                return setTimeout((function() {
+                  var cover, _j, _len1, _results;
+                  _results = [];
+                  for (_j = 0, _len1 = covers.length; _j < _len1; _j++) {
+                    cover = covers[_j];
+                    _results.push($(cover).remove());
+                  }
+                  return _results;
+                }), 2000);
+              }
+            } else if (_.isString(contents) || contents instanceof Element || contents instanceof RawHtml || contents instanceof $) {
+              return updateContents([contents]);
+            } else {
+              throw new Error("Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)");
+            }
+          };
+          if (contents instanceof ObsArray) {
+            rx.autoSub(contents.onChange, function(_arg) {
+              var added, index, removed, toAdd;
+              index = _arg[0], removed = _arg[1], added = _arg[2];
+              elt.contents().slice(index, index + removed.length).remove();
+              toAdd = toNodes(added);
+              if (index === elt.contents().length) {
+                return elt.append(toAdd);
+              } else {
+                return elt.contents().eq(index).before(toAdd);
+              }
+            });
+          } else if (contents instanceof ObsCell) {
+            rx.autoSub(contents.onSet, function(_arg) {
+              var old, val;
+              old = _arg[0], val = _arg[1];
+              return updateContents(val);
+            });
+          } else {
+            updateContents(contents);
+          }
+        }
+        for (key in attrs) {
+          if (key in specialAttrs) {
+            specialAttrs[key](elt, attrs[key], attrs, contents);
+          }
+        }
+        return elt;
+      };
+    };
+    tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script', 'noscript', 'body', 'body', 'section', 'nav', 'article', 'aside', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h1', 'h6', 'header', 'footer', 'address', 'main', 'main', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'dd', 'figure', 'figcaption', 'div', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'object', 'param', 'object', 'video', 'audio', 'source', 'video', 'audio', 'track', 'video', 'audio', 'canvas', 'map', 'area', 'area', 'map', 'svg', 'math', 'table', 'caption', 'colgroup', 'col', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details', 'menuitem', 'menu'];
+    rxt.tags = _.object((function() {
+      var _j, _len1, _results;
+      _results = [];
+      for (_j = 0, _len1 = tags.length; _j < _len1; _j++) {
+        tag = tags[_j];
+        _results.push([tag, rxt.mktag(tag)]);
       }
       return _results;
-    })()).join(' ');
-  };
-
-  specialAttrs.style = function(elt, value) {
-    return setDynProp(elt, 'style', value, function(val) {
-      if (_.isString(val)) {
-        return val;
-      } else {
-        return rxt.cssify(val);
-      }
-    });
-  };
-
-  rxt.smushClasses = function(xs) {
-    return _(xs).chain().flatten().compact().value().join(' ').replace(/\s+/, ' ').trim();
-  };
-
-  specialAttrs["class"] = function(elt, value) {
-    return setDynProp(elt, 'class', value, function(val) {
-      if (_.isString(val)) {
-        return val;
-      } else {
-        return rxt.smushClasses(val);
-      }
-    });
-  };
+    })());
+    rxt.rawHtml = function(html) {
+      return new RawHtml(html);
+    };
+    rxt.importTags = function(x) {
+      return _(x != null ? x : _this).extend(rxt.tags);
+    };
+    rxt.cast = function(opts, types) {
+      var key, newval, value;
+      return _.object((function() {
+        var _results;
+        _results = [];
+        for (key in opts) {
+          value = opts[key];
+          newval = (function() {
+            switch (types[key]) {
+              case 'array':
+                if (value instanceof rx.ObsArray) {
+                  return value;
+                } else if (_.isArray(value)) {
+                  return new rx.DepArray(function() {
+                    return value;
+                  });
+                } else if (value instanceof rx.ObsCell) {
+                  return new rx.DepArray(function() {
+                    return value.get();
+                  });
+                } else {
+                  throw new Error('Cannot cast to array: ' + value.constructor.name);
+                }
+                break;
+              case 'cell':
+                if (value instanceof rx.ObsCell) {
+                  return value;
+                } else {
+                  return bind(function() {
+                    return value;
+                  });
+                }
+                break;
+              default:
+                return value;
+            }
+          })();
+          _results.push([key, newval]);
+        }
+        return _results;
+      })());
+    };
+    rxt.cssify = function(map) {
+      var k, v;
+      return ((function() {
+        var _results;
+        _results = [];
+        for (k in map) {
+          v = map[k];
+          if (v != null) {
+            _results.push("" + (_.str.dasherize(k)) + ": " + (_.isNumber(v) ? v + 'px' : v) + ";");
+          }
+        }
+        return _results;
+      })()).join(' ');
+    };
+    specialAttrs.style = function(elt, value) {
+      return setDynProp(elt, 'style', value, function(val) {
+        if (_.isString(val)) {
+          return val;
+        } else {
+          return rxt.cssify(val);
+        }
+      });
+    };
+    rxt.smushClasses = function(xs) {
+      return _(xs).chain().flatten().compact().value().join(' ').replace(/\s+/, ' ').trim();
+    };
+    specialAttrs["class"] = function(elt, value) {
+      return setDynProp(elt, 'class', value, function(val) {
+        if (_.isString(val)) {
+          return val;
+        } else {
+          return rxt.smushClasses(val);
+        }
+      });
+    };
+  }
 
 }).call(this);
