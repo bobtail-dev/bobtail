@@ -720,9 +720,16 @@ setDynProp = (elt, prop, val, xform = _.identity) ->
 
 rxt.mktag = mktag = (tag) ->
   (arg1, arg2) ->
-    # arguments are either (), (attrs: Object), (contents: Contents), or
-    # (attrs: Object, contents: Contents), where Contents is:
-    # string | Element | RawHtml | $ | Array | ObsCell | ObsArray
+    # arguments may be:
+    #   ()
+    #   (attrs: Object)
+    #   (contents: Contents)
+    #   (attrs: Object, contents: Contents)
+    # where Contents is:
+    #   string | Element | RawHtml | $ | Array | ObsCell | ObsArray
+    #
+    # if Contents is a function it will be evaluated, and expected to
+    #   return an allowable Contents instance
     [attrs, contents] =
       if not arg1? and not arg2?
         [{}, null]
@@ -730,10 +737,13 @@ rxt.mktag = mktag = (tag) ->
         [arg1, arg2]
       else if _.isString(arg1) or arg1 instanceof Element or
           arg1 instanceof RawHtml or arg1 instanceof $ or _.isArray(arg1) or
-          arg1 instanceof ObsCell or arg1 instanceof ObsArray
+          arg1 instanceof ObsCell or arg1 instanceof ObsArray or
+          arg1 instanceof Function
         [{}, arg1]
       else
         [arg1, null]
+
+    contents = contents.apply() if contents instanceof Function
 
     elt = $("<#{tag}/>")
     for name, value of _.omit(attrs, _.keys(specialAttrs))

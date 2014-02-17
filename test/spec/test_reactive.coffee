@@ -35,10 +35,11 @@ describe 'dependent cell', ->
     expect(-> dep.set(0)).toThrow()
 
 describe 'tag', ->
-  size = elt = null
+  size = elt = ul = li = button = header = null
   beforeEach ->
+    [ul, li, button, header] = [rxt.tags.ul, rxt.tags.li, rxt.tags.button, rxt.tags.header]
     size = rx.cell(10)
-    elt = rxt.tags.header {
+    elt = header {
       class: 'my-class'
       style: bind -> "font-size: #{size.get()}px"
       id: 'my-elt'
@@ -46,7 +47,7 @@ describe 'tag', ->
       init: -> @data('foo', 'bar')
     }, bind -> [
       'hello world'
-      rxt.tags.button ['click me']
+      button ['click me']
     ]
   it 'should have the right tag', ->
     expect(elt.is('header')).toBe(true)
@@ -71,6 +72,26 @@ describe 'tag', ->
   it 'should not have special attrs set', ->
     expect(elt.attr('init')).toBe(undefined)
     expect(elt.attr('click')).toBe(undefined)
+
+  describe 'creation of nodes', ->
+    describe 'stabby proc style', ->
+      it 'should be usable', ->
+        testlist = div ->
+          ul ['wontoo'].map (item) ->
+            li item
+        expect(testlist.html()).toBe('<ul><li>wontoo</li></ul>')
+
+      it 'should allow nesting of tags', ->
+        testlist = div ->
+          ul ->
+            li -> 'wontoo'
+        expect(testlist.html()).toBe('<ul><li>wontoo</li></ul>')
+
+      it 'should allow tag hash', ->
+        testlist = div ->
+          ul = ul {class:'foo'}, ->
+            li -> 'wontoo'
+        expect(ul.hasClass('foo')).toBe(true)
 
 describe 'rxt of observable array', ->
   xs = elt = null
