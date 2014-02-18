@@ -1,5 +1,5 @@
 bind = rx.bind
-div = rxt.tags.div
+{div, ul, li, button, header} = rxt.tags
 outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
 describe 'source cell', ->
@@ -35,9 +35,9 @@ describe 'dependent cell', ->
     expect(-> dep.set(0)).toThrow()
 
 describe 'tag', ->
-  size = elt = ul = li = button = header = null
+  size = elt = null
   beforeEach ->
-    [ul, li, button, header] = [rxt.tags.ul, rxt.tags.li, rxt.tags.button, rxt.tags.header]
+    {ul, li, button, header} = rxt.tags
     size = rx.cell(10)
     elt = header {
       class: 'my-class'
@@ -93,6 +93,30 @@ describe 'tag', ->
           ul ->
             li -> 'wontoo'
         expect(testlist.html()).toBe('<ul><li>wontoo</li></ul>')
+
+      it 'should work with multiple nested nodes with array notation', ->
+        testlist = div ->
+          ul -> [
+            li -> 'won'
+            li -> 'too'
+          ]
+        expect(testlist.html()).toBe('<ul><li>won</li><li>too</li></ul>')
+
+      it 'should work with multiple nested nodes with string contents', ->
+        testlist = div ->
+          ul -> [
+            li 'won'
+            li 'too'
+          ]
+        expect(testlist.html()).toBe('<ul><li>won</li><li>too</li></ul>')
+
+      it 'should work with multiple nested nodes with implicit array semantics' #, ->
+        # testlist = div ->
+        #   ul ->
+        #     li -> 'won'
+        #     li -> 'too'
+        # expect(testlist.html()).toBe('<ul><li>won</li><li>too</li></ul>')
+
 
       it 'should allow attr hash', ->
         testlist = div ->
