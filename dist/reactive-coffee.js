@@ -1,5 +1,5 @@
 (function() {
-  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4,
+  var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4,
     __slice = [].slice,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -1439,10 +1439,33 @@
         return setProp(elt, prop, xform(val));
       }
     };
+    rxt.mkAtts = mkAtts = function(attstr) {
+      return (function(atts) {
+        var cls, match;
+        match = attstr.match(/[#](\w+)/);
+        if (match) {
+          atts.id = match[1];
+        }
+        atts["class"] = ((function() {
+          var _j, _len1, _ref5, _results;
+          _ref5 = attstr.match(/\.\w+/g);
+          _results = [];
+          for (_j = 0, _len1 = _ref5.length; _j < _len1; _j++) {
+            cls = _ref5[_j];
+            _results.push(cls.replace(/^\./, ''));
+          }
+          return _results;
+        })()).join(' ');
+        return atts;
+      })({});
+    };
     rxt.mktag = mktag = function(tag) {
       return function(arg1, arg2) {
         var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref5, _ref6;
-        _ref5 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg2 != null ? [arg1, arg2] : _.isString(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref5[0], contents = _ref5[1];
+        _ref5 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg1 instanceof Object && (arg2 != null) ? [arg1, arg2] : _.isString(arg1) && (arg2 != null) ? [mkAtts(arg1), arg2] : (arg2 == null) && _.isString(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray || arg1 instanceof Function ? [{}, arg1] : [arg1, null], attrs = _ref5[0], contents = _ref5[1];
+        if (contents instanceof Function) {
+          contents = contents.apply();
+        }
         elt = $("<" + tag + "/>");
         _ref6 = _.omit(attrs, _.keys(specialAttrs));
         for (name in _ref6) {

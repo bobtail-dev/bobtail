@@ -1,5 +1,5 @@
 bind = rx.bind
-div = rxt.tags.div
+{div, ul, li, button, header} = rxt.tags
 outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
 describe 'source cell', ->
@@ -35,42 +35,115 @@ describe 'dependent cell', ->
     expect(-> dep.set(0)).toThrow()
 
 describe 'tag', ->
-  size = elt = null
-  beforeEach ->
-    size = rx.cell(10)
-    elt = rxt.tags.header {
-      class: 'my-class'
-      style: bind -> "font-size: #{size.get()}px"
-      id: 'my-elt'
-      click: ->
-      init: -> @data('foo', 'bar')
-    }, bind -> [
-      'hello world'
-      rxt.tags.button ['click me']
-    ]
-  it 'should have the right tag', ->
-    expect(elt.is('header')).toBe(true)
-  it 'should have the set attributes', ->
-    expect(elt.prop('class')).toBe('my-class')
-    expect(elt.attr('style')).toBe('font-size: 10px')
-    expect(elt.prop('id')).toBe('my-elt')
-    expect(elt.hasClass('my-class')).toBe(true)
-    expect(elt.css('font-size')).toBe('10px')
-    expect(elt.data('foo')).toBe('bar')
-  it 'should update attrs in response to size changes', ->
-    size.set(9)
-    expect(elt.attr('style')).toBe('font-size: 9px')
-    expect(elt.css('font-size')).toBe('9px')
-  it 'should have the given child contents', ->
-    cont = elt.contents()
-    expect(cont.length).toBe(2)
-    expect(cont[0]).toEqual(jasmine.any(Text))
-    expect(cont[0].textContent).toBe('hello world')
-    expect(cont.last().is('button')).toBe(true)
-    expect(cont.last().text()).toBe('click me')
-  it 'should not have special attrs set', ->
-    expect(elt.attr('init')).toBe(undefined)
-    expect(elt.attr('click')).toBe(undefined)
+  describe 'feature smoke tests', ->
+    size = elt = null
+    beforeEach ->
+      {ul, li, button, header} = rxt.tags
+      size = rx.cell(10)
+      elt = header {
+        class: 'my-class'
+        style: bind -> "font-size: #{size.get()}px"
+        id: 'my-elt'
+        click: ->
+        init: -> @data('foo', 'bar')
+      }, bind -> [
+        'hello world'
+        button ['click me']
+      ]
+    it 'should be a $-wrapped dom node', ->
+      expect(elt.constructor).toBe(jQuery)
+
+    it 'should have the right tag', ->
+      expect(elt.is('header')).toBe(true)
+    it 'should have the set attributes', ->
+      expect(elt.prop('class')).toBe('my-class')
+      expect(elt.attr('style')).toBe('font-size: 10px')
+      expect(elt.prop('id')).toBe('my-elt')
+      expect(elt.hasClass('my-class')).toBe(true)
+      expect(elt.css('font-size')).toBe('10px')
+      expect(elt.data('foo')).toBe('bar')
+    it 'should update attrs in response to size changes', ->
+      size.set(9)
+      expect(elt.attr('style')).toBe('font-size: 9px')
+      expect(elt.css('font-size')).toBe('9px')
+    it 'should have the given child contents', ->
+      cont = elt.contents()
+      expect(cont.length).toBe(2)
+      expect(cont[0]).toEqual(jasmine.any(Text))
+      expect(cont[0].textContent).toBe('hello world')
+      expect(cont.last().is('button')).toBe(true)
+      expect(cont.last().text()).toBe('click me')
+    it 'should not have special attrs set', ->
+      expect(elt.attr('init')).toBe(undefined)
+      expect(elt.attr('click')).toBe(undefined)
+
+  describe 'attribute id and class parsing', ->
+    it 'should be creatable with a shortcut syntax for attrs object', ->
+      elt = div '#zip.zap.zop', 'text'
+      expect(elt.prop('id')).toBe('zip')
+      expect(elt.hasClass('zap')).toBe(true)
+      expect(elt.hasClass('zop')).toBe(true)
+
+  describe 'creation of nodes', ->
+    describe 'stabby proc style', ->
+      it 'should be usable', ->
+        testlist = div ->
+          ul ['wontoo'].map (item) ->
+            li item
+        expect(testlist.html()).toBe('<ul><li>wontoo</li></ul>')
+
+      it 'should allow nesting of tags', ->
+        testlist = div ->
+          ul ->
+            li -> 'wontoo'
+        expect(testlist.html()).toBe('<ul><li>wontoo</li></ul>')
+
+      it 'should work with multiple nested nodes with array notation', ->
+        testlist = div ->
+          ul -> [
+            li -> 'won'
+            li -> 'too'
+          ]
+        expect(testlist.html()).toBe('<ul><li>won</li><li>too</li></ul>')
+
+      it 'should work with multiple nested nodes with string contents', ->
+        testlist = div ->
+          ul -> [
+            li 'won'
+            li 'too'
+          ]
+        expect(testlist.html()).toBe('<ul><li>won</li><li>too</li></ul>')
+
+      it 'should work with multiple nested nodes with implicit array semantics' #, ->
+        # testlist = div ->
+        #   ul ->
+        #     li -> 'won'
+        #     li -> 'too'
+        # expect(testlist.html()).toBe('<ul><li>won</li><li>too</li></ul>')
+
+
+      it 'should allow attr hash', ->
+        testlist = div ->
+          ul {class:'foo'}, ->
+            li -> 'wontoo'
+        expect(testlist.find('ul').hasClass('foo')).toBe(true)
+
+      it 'should allow attr string', ->
+        testlist = div ->
+          ul "#bar.foo", ->
+            li -> 'wontoo'
+        expect(testlist.find('ul').hasClass('foo')).toBe(true)
+        expect(testlist.find('ul').prop('id')).toBe('bar')
+
+      it 'should still work with rx.binds', ->
+        c = rx.cell('juan')
+        testlist = div ->
+          ul = ul ->
+            li -> rx.bind -> c.get()
+        expect(testlist.html()).toBe('<ul><li>juan</li></ul>')
+        c.set('juantu')
+        expect(testlist.html()).toBe('<ul><li>juantu</li></ul>')
+
 
 describe 'rxt of observable array', ->
   xs = elt = null
