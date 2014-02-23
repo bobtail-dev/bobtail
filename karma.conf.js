@@ -19,7 +19,7 @@ files = [
 ];
 
 // list of files to exclude
-exclude = [];
+exclude = ['test/nodeTest.js'];
 
 // test results reporter to use
 // possible values: dots || progress || growl

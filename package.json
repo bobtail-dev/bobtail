@@ -23,7 +23,12 @@
     "matchdep": "~0.1.2",
     "grunt-google-cdn": "~0.1.4",
     "phantomjs": "~1.9.7-1",
-    "grunt-bower-task": "~0.2.3"
+    "grunt-bower-task": "~0.2.3",
+    "underscore": "~1.6.0",
+    "underscore.string": "~2.3.3"
+  },
+  "scripts": {
+    "test": "grunt test && node test/nodeTest.js"
   },
   "engines": {
     "node": ">=0.8.0"
