@@ -9,6 +9,9 @@ mdConverter = new Showdown.converter()
 
 markdown = (x) -> rxt.rawHtml(mdConverter.makeHtml(x))
 
+# if youve got server-side code to handle persistence, set to true
+useServer = false
+
 Comment = (args) ->
   div {class: 'comment'}, [
     h2 {class: 'commentAuthor'}, [args.author]
@@ -41,15 +44,21 @@ CommentBox = (args) ->
       success: (data) -> comments.replace(data.comments)
       error: -> console.log(arguments)
     })
-  setInterval(loadCommentsFromServer, args.pollInterval)
+  if useServer
+    setInterval(loadCommentsFromServer, args.pollInterval)
+  else
+    setTimeout(loadCommentsFromServer, 0)
   handleCommentSubmit = (comment) ->
     comments.push(comment)
-    $.ajax({
-      url: args.url
-      type: 'POST'
-      data: comment
-      success: (data) -> comments.replace(data.comments)
-    })
+    if useServer
+      $.ajax({
+        url: args.url
+        type: 'POST'
+        data: comment
+        success: (data) -> comments.replace(data.comments)
+      })
+    else
+      console.log 'Simulating saving comment...'
   $base = div {class: 'commentBox'}, [
     h1 'Comments'
     CommentList {comments: comments}
