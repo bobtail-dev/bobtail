@@ -7,10 +7,11 @@
   "ignore": [
     "**/.*",
     "node_modules",
-    "components"
+    "components",
+    "bower_components"
   ],
   "dependencies": {
-    "reactive-coffee": "~0.0.2",
+    "reactive-coffee": "~1.0.0",
     "todomvc-common": "~0.1.7"
   }
 }
