@@ -1,18 +1,12 @@
-define ['reactive-coffee'], (rx) ->
+define ['reactive-coffee', 'task'], (rx, Task) ->
   (tasks) ->
-    class Task
-      constructor: (title) ->
-        @title = rx.cell(title)
-        @isEditing = rx.cell(false)
-        @isCompleted = rx.cell(false)
-
     incomplete = ->
       (task for task in tasks.all() when not task.isCompleted.get()).length
 
 
     {section, header, footer, h1, div, span
     strong, input, button, label, ul, li} = rx.rxt.tags
-    # can also do rx.rxt.importTags() at this or higher level 
+    # can also do rx.rxt.importTags() at this or higher level
     # to bring all into global scope
     bind = rx.bind
 

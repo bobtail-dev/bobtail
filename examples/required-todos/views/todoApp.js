@@ -3,16 +3,6 @@
   define(['reactive-coffee', 'task'], function(rx, Task) {
     return function(tasks) {
       var bind, button, div, footer, h1, header, incomplete, input, label, li, section, span, strong, ul, _ref;
-      Task = (function() {
-        function Task(title) {
-          this.title = rx.cell(title);
-          this.isEditing = rx.cell(false);
-          this.isCompleted = rx.cell(false);
-        }
-
-        return Task;
-
-      })();
       incomplete = function() {
         var task;
         return ((function() {
@@ -28,8 +18,8 @@
           return _results;
         })()).length;
       };
+      _ref = rx.rxt.tags, section = _ref.section, header = _ref.header, footer = _ref.footer, h1 = _ref.h1, div = _ref.div, span = _ref.span, strong = _ref.strong, input = _ref.input, button = _ref.button, label = _ref.label, ul = _ref.ul, li = _ref.li;
       bind = rx.bind;
-      _ref = rx.rxt.tags, section = _ref.section, header = _ref.header, footer = _ref.footer, h1 = _ref.h1, strong = _ref.strong, span = _ref.span, input = _ref.input, button = _ref.button, div = _ref.div, label = _ref.label, ul = _ref.ul, li = _ref.li;
       return section({
         id: 'todoapp'
       }, [
