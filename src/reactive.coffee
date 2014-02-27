@@ -863,8 +863,6 @@ rxFactory = (_, _str, $) ->
 # end rxFactory definition
 
 do(root = this, factory = rxFactory, deps = ['underscore','underscore.string','jquery']) ->
-  console.log "Invoking factory version 1.03"
-
   if define?.amd?
     define deps, factory
   else if module?.exports?
