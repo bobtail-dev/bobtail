@@ -41,7 +41,7 @@ rxFactory = (_, _str, $) ->
   DepMgr = class rx.DepMgr
     constructor: ->
       @uid2src = {}
-      @buffering = false
+      @buffering = 0
       @buffer = []
     # called by Ev.sub to register a new subscription
     sub: (uid, src) ->
@@ -51,13 +51,14 @@ rxFactory = (_, _str, $) ->
       popKey(@uid2src, uid)
     # transactions
     transaction: (f) ->
-      @buffering = true
+      @buffering += 1
       try
         res = f()
       finally
-        b() for b in @buffer
-        @buffer = []
-        @buffering = false
+        @buffering -= 1
+        if @buffering == 0
+          b() for b in @buffer
+          @buffer = []
       res
 
   rx._depMgr = depMgr = new DepMgr()
