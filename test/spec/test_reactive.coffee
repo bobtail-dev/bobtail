@@ -1,4 +1,4 @@
-bind = rx.bind
+{bind, Ev, rxt} = rx
 div = rxt.tags.div
 outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
