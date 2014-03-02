@@ -74,7 +74,10 @@ describe 'tag', ->
       expect(elt.attr('click')).toBe(undefined)
 
   describe 'attribute id and class parsing', ->
-    it 'should be creatable with a shortcut syntax for attrs object', ->
+    it 'should be creatable with #id', ->
+      elt = div '#zip', 'text'
+      expect(elt.prop('id')).toBe('zip')
+    it 'should be creatable with #id.cls1.cls2', ->
       elt = div '#zip.zap.zop', 'text'
       expect(elt.prop('id')).toBe('zip')
       expect(elt.hasClass('zap')).toBe(true)

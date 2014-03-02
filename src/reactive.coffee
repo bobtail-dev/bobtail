@@ -716,9 +716,11 @@ rxFactory = (_, _str, $) ->
 
     rxt.mkAtts = mkAtts = (attstr) ->
       do(atts = {}) ->
-        match = attstr.match /[#](\w+)/
-        atts.id = match[1] if match
-        atts.class = (cls.replace(/^\./, '') for cls in attstr.match(/\.\w+/g)).join(' ')
+        id = attstr.match /[#](\w+)/
+        atts.id = id[1] if id
+        classes = attstr.match(/\.\w+/g)
+        if classes
+          atts.class = (cls.replace(/^\./, '') for cls in classes).join(' ')
         atts
     
 
