@@ -1481,23 +1481,25 @@
       };
       rxt.mkAtts = mkAtts = function(attstr) {
         return (function(atts) {
-          var cls, match;
+          var classes, cls, id;
 
-          match = attstr.match(/[#](\w+)/);
-          if (match) {
-            atts.id = match[1];
+          id = attstr.match(/[#](\w+)/);
+          if (id) {
+            atts.id = id[1];
           }
-          atts["class"] = ((function() {
-            var _j, _len1, _ref5, _results;
+          classes = attstr.match(/\.\w+/g);
+          if (classes) {
+            atts["class"] = ((function() {
+              var _j, _len1, _results;
 
-            _ref5 = attstr.match(/\.\w+/g);
-            _results = [];
-            for (_j = 0, _len1 = _ref5.length; _j < _len1; _j++) {
-              cls = _ref5[_j];
-              _results.push(cls.replace(/^\./, ''));
-            }
-            return _results;
-          })()).join(' ');
+              _results = [];
+              for (_j = 0, _len1 = classes.length; _j < _len1; _j++) {
+                cls = classes[_j];
+                _results.push(cls.replace(/^\./, ''));
+              }
+              return _results;
+            })()).join(' ');
+          }
           return atts;
         })({});
       };
