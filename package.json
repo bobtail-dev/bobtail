@@ -6,7 +6,8 @@
     "url": "git://github.com/yang/reactive-coffee.git"
   },
   "author": {
-    "name": "Yang Zhang"
+    "name": "Yang Zhang",
+    "url": "http://yz.mit.edu/"
   },
   "devDependencies": {
     "grunt": "~0.4.2",
