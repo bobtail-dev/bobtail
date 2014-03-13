@@ -469,15 +469,16 @@ rxFactory = (_, _str, $) ->
 
   rx.lift = (x, fieldspec = rx.liftSpec(x)) ->
     for name, spec of fieldspec
-      x[name] = switch spec.type
-        when 'cell'
-          rx.cell(x[name])
-        when 'array'
-          rx.array(x[name])
-        when 'map'
-          rx.map(x[name])
-        else
-          x[name]
+      if not _.some(x[name] instanceof c for c in [ObsCell, ObsArray, ObsMap])
+        x[name] = switch spec.type
+          when 'cell'
+            rx.cell(x[name])
+          when 'array'
+            rx.array(x[name])
+          when 'map'
+            rx.map(x[name])
+          else
+            x[name]
     x
 
   rx.unlift = (x) ->

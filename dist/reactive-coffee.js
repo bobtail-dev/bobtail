@@ -1079,25 +1079,37 @@
       })());
     };
     rx.lift = function(x, fieldspec) {
-      var name, spec;
+      var c, name, spec;
 
       if (fieldspec == null) {
         fieldspec = rx.liftSpec(x);
       }
       for (name in fieldspec) {
         spec = fieldspec[name];
-        x[name] = (function() {
-          switch (spec.type) {
-            case 'cell':
-              return rx.cell(x[name]);
-            case 'array':
-              return rx.array(x[name]);
-            case 'map':
-              return rx.map(x[name]);
-            default:
-              return x[name];
+        if (!_.some((function() {
+          var _i, _len, _ref5, _results;
+
+          _ref5 = [ObsCell, ObsArray, ObsMap];
+          _results = [];
+          for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+            c = _ref5[_i];
+            _results.push(x[name] instanceof c);
           }
-        })();
+          return _results;
+        })())) {
+          x[name] = (function() {
+            switch (spec.type) {
+              case 'cell':
+                return rx.cell(x[name]);
+              case 'array':
+                return rx.array(x[name]);
+              case 'map':
+                return rx.map(x[name]);
+              default:
+                return x[name];
+            }
+          })();
+        }
       }
       return x;
     };

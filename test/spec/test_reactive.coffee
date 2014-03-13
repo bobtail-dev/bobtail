@@ -676,6 +676,14 @@ describe 'lift', ->
       z:x.z.get()
       n:x.n.get()
     ).toEqual({x:0, y:[], z:{}, n:null})
+  it 'should skip over already-observable members', ->
+    c = {x: bind(-> 0), y: rx.array(), z: rx.map()}
+    {x,y,z} = c
+    rx.lift(c)
+    # expect nothing to change
+    expect(c.x).toBe(x)
+    expect(c.y).toBe(y)
+    expect(c.z).toBe(z)
 
 describe 'transaction', ->
   it 'should buffer up events', ->
