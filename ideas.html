@@ -27,8 +27,8 @@
             <li><a href="https://github.com/yang/reactive-coffee">GitHub</a></li>
           </ul>
         </nav>
-        <section id="main-content"><h1>Ideas</h1>
-<h2><a name="object-observe">Object.observe</a></h2>
+        <section id="main-content"><h1 id="ideas">Ideas</h1>
+<h2 id="object-observe"><a name="object-observe">Object.observe</a></h2>
 <p>A platform feature looming on the horizon of ECMAScript is that of
 <a href="http://updates.html5rocks.com/2012/11/Respond-to-change-with-Object-observe"><code>Object.observe</code></a>, which allows for reacting to mutation events on objects
 without needing explicit syntax for it, e.g.:</p>
@@ -51,7 +51,7 @@ work to re-compute what has actually changed.  The [Polymer] framework
 pioneered support for <code>Object.observe</code>, but as of this writing it&#39;s not a
 widely supported feature (only available in Chrome Canary) and the framework
 has a more expensive fallback.</p>
-<h2><a name="dirty-tracking-re-rendering-analysis">Dirty-Tracking Re-Rendering Analysis</a></h2>
+<h2 id="dirty-tracking-re-rendering-analysis"><a name="dirty-tracking-re-rendering-analysis">Dirty-Tracking Re-Rendering Analysis</a></h2>
 <p>The fine-grained control over re-rendering and bindings is powerful, but for
 bindings that are non-performance-critical or don&#39;t need to scale, it&#39;s less
 effort to not have to selectively decide where those bindings exist.  Simply
@@ -79,7 +79,7 @@ change to the model via an API that mirrors <code>rxt</code> except for returnin
 lightweight DOM representations.  By computing the diff between DOM
 representations (rather than tracking dirtiness of bindings), the actual
 DOM operations can be determined.</p>
-<h2><a name="network-data-bindings">Network Data Bindings</a></h2>
+<h2 id="network-data-bindings"><a name="network-data-bindings">Network Data Bindings</a></h2>
 <p>This is flexible, but it would be convenient to have some implementations of
 Comet- or WebSocket-based push mechanisms that works well with various
 server-side frameworks.</p>
