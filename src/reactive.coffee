@@ -469,15 +469,16 @@ rxFactory = (_, _str, $) ->
 
   rx.lift = (x, fieldspec = rx.liftSpec(x)) ->
     for name, spec of fieldspec
-      x[name] = switch spec.type
-        when 'cell'
-          rx.cell(x[name])
-        when 'array'
-          rx.array(x[name])
-        when 'map'
-          rx.map(x[name])
-        else
-          x[name]
+      if not _.some(x[name] instanceof c for c in [ObsCell, ObsArray, ObsMap])
+        x[name] = switch spec.type
+          when 'cell'
+            rx.cell(x[name])
+          when 'array'
+            rx.array(x[name])
+          when 'map'
+            rx.map(x[name])
+          else
+            x[name]
     x
 
   rx.unlift = (x) ->
@@ -716,9 +717,11 @@ rxFactory = (_, _str, $) ->
 
     rxt.mkAtts = mkAtts = (attstr) ->
       do(atts = {}) ->
-        match = attstr.match /[#](\w+)/
-        atts.id = match[1] if match
-        atts.class = (cls.replace(/^\./, '') for cls in attstr.match(/\.\w+/g)).join(' ')
+        id = attstr.match /[#](\w+)/
+        atts.id = id[1] if id
+        classes = attstr.match(/\.\w+/g)
+        if classes
+          atts.class = (cls.replace(/^\./, '') for cls in classes).join(' ')
         atts
     
 

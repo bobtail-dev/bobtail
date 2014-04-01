@@ -74,7 +74,10 @@ describe 'tag', ->
       expect(elt.attr('click')).toBe(undefined)
 
   describe 'attribute id and class parsing', ->
-    it 'should be creatable with a shortcut syntax for attrs object', ->
+    it 'should be creatable with #id', ->
+      elt = div '#zip', 'text'
+      expect(elt.prop('id')).toBe('zip')
+    it 'should be creatable with #id.cls1.cls2', ->
       elt = div '#zip.zap.zop', 'text'
       expect(elt.prop('id')).toBe('zip')
       expect(elt.hasClass('zap')).toBe(true)
@@ -673,6 +676,14 @@ describe 'lift', ->
       z:x.z.get()
       n:x.n.get()
     ).toEqual({x:0, y:[], z:{}, n:null})
+  it 'should skip over already-observable members', ->
+    c = {x: bind(-> 0), y: rx.array(), z: rx.map()}
+    {x,y,z} = c
+    rx.lift(c)
+    # expect nothing to change
+    expect(c.x).toBe(x)
+    expect(c.y).toBe(y)
+    expect(c.z).toBe(z)
 
 describe 'transaction', ->
   it 'should buffer up events', ->
