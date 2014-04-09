@@ -836,28 +836,32 @@ rxFactory = (_, _str, $) ->
     # rxt utilities
     #
 
-    rxt.cast = (opts, types) ->
-      _.object(
-        for key, value of opts
-          newval = switch types[key]
-            when 'array'
-              if value instanceof rx.ObsArray
-                value
-              else if _.isArray(value)
-                new rx.DepArray(-> value)
-              else if value instanceof rx.ObsCell
-                new rx.DepArray(-> value.get())
-              else
-                throw new Error('Cannot cast to array: ' + value.constructor.name)
-            when 'cell'
-              if value instanceof rx.ObsCell
-                value
-              else
-                bind -> value
-            else
+    rxt.cast = (value, type = "cell") ->
+      if _.isString(type)
+        switch type
+          when 'array'
+            if value instanceof rx.ObsArray
               value
-          [key, newval]
-      )
+            else if _.isArray(value)
+              new rx.DepArray(-> value)
+            else if value instanceof rx.ObsCell
+              new rx.DepArray(-> value.get())
+            else
+              throw new Error('Cannot cast to array: ' + value.constructor.name)
+          when 'cell'
+            if value instanceof rx.ObsCell
+              value
+            else
+              bind -> value
+          else
+            value
+      else
+        opts  = value
+        types = type
+        _.object(
+          for key, value of opts
+            [key, if types[key] then rxt.cast(value, types[key]) else value]
+        )
 
     rxt.cssify = (map) ->
       (
