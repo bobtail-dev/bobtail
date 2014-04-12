@@ -9,6 +9,7 @@
     "name": "Yang Zhang",
     "url": "http://yz.mit.edu/"
   },
+  "main": "dist/reactive-coffee",
   "devDependencies": {
     "grunt": "~0.4.2",
     "grunt-contrib-coffee": "~0.6.7",
@@ -17,14 +18,13 @@
     "grunt-contrib-connect": "~0.2.0",
     "grunt-contrib-clean": "~0.4.1",
     "grunt-contrib-livereload": "~0.1.2",
-    "grunt-bower-requirejs": "~0.4.4",
     "grunt-regarde": "~0.1.1",
     "grunt-karma": "~0.3.0",
     "grunt-open": "~0.2.3",
     "matchdep": "~0.1.2",
     "grunt-google-cdn": "~0.1.4",
     "phantomjs": "~1.9.7-1",
-    "grunt-bower-task": "~0.2.3",
+    "bower": "~1.3.2",
     "underscore": "~1.6.0",
     "underscore.string": "~2.3.3"
   },
