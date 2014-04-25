@@ -27,10 +27,10 @@
             <li><a href="https://github.com/yang/reactive-coffee">GitHub</a></li>
           </ul>
         </nav>
-        <section id="main-content"><h1 id="infelicities">Infelicities</h1>
+        <section id="main-content"><h1>Infelicities</h1>
 <p>There are a number of areas for improvement, including but not
 limited to the following:</p>
-<h2 id="alternative-syntax-support"><a name="alternative-syntax-support">Alternative Syntax Support</a></h2>
+<h2><a name="alternative-syntax-support">Alternative Syntax Support</a></h2>
 <p>Although there should be a single encouraged syntax so as to facilitate
 communication among developers, we realize that the syntax has yet to learn
 from broader exposure to real-world use cases and user (developer)
@@ -38,12 +38,12 @@ feedback, and to that end we want to encourage some degree of
 exploration/experimentation.  We also want to provide the basic
 infrastructure to make writing alternative syntaxes easy (if we can&#39;t stop
 you, we might as well make it clean to &quot;fork&quot;).</p>
-<h2 id="structural-attribute-bindings"><a name="structural-attribute-bindings">Structural Attribute Bindings</a></h2>
+<h2><a name="structural-attribute-bindings">Structural Attribute Bindings</a></h2>
 <p>Currently, attributes are strings.  For most attributes this is fine, but for
 certain attributes such as <code>style</code>, we could have a simple convenience
 preprocessor that takes in an object map of the style names and renders the
 string.  This could be extended to lists for <code>class</code> and so on.</p>
-<h2 id="topologically-ordered-visits"><a name="topologically-ordered-visits">Topologically Ordered Visits</a></h2>
+<h2><a name="topologically-ordered-visits">Topologically Ordered Visits</a></h2>
 <p>If we consider the DAG of dependencies among observable nodes, when there&#39;s an
 event being propagated through the system, the notifications currently visit
 nodes in depth-first order.  However, the most efficient order in which to
@@ -62,7 +62,7 @@ D -&gt; E</code></pre>
 topologically sorted order:</p>
 <pre><code>A, B, C, D, E</code></pre>
 <p>This guarantees avoiding multiple visits to the same node.</p>
-<h2 id="lazy-event-notification"><a name="lazy-event-notification">Lazy Event Notification</a></h2>
+<h2><a name="lazy-event-notification">Lazy Event Notification</a></h2>
 <p>More flexible-but-still-efficient array (and other data structure) mutations.
 Currently arrays have built-in mechanisms for efficient propagation of events
 such as insertion, removal, splicing, etc.  However, for more involved
@@ -73,14 +73,14 @@ reorderings) for more efficient downstream handling.</p>
 <p>This can be extended to arbitrary object types/data structures beyond arrays
 and should be configurable, with the ability to substitute in various change
 detection or diffing algorithms.</p>
-<h2 id="transitions"><a name="transitions">Transitions</a></h2>
+<h2><a name="transitions">Transitions</a></h2>
 <p>Ability to apply animations and effects to things like entrances, exits, and
 reorderings.  See the <a href="https://github.com/mbostock/d3/wiki/Transitions">d3 transitions API</a> for something I&#39;m keen on borrowing
 from.</p>
-<h2 id="dag-debugger"><a name="dag-debugger">DAG Debugger</a></h2>
+<h2><a name="dag-debugger">DAG Debugger</a></h2>
 <p>A facility to visualize the DAG of dependencies would make code debugging
 and understanding easier.</p>
-<h2 id="tests"><a name="tests">Tests</a></h2>
+<h2><a name="tests">Tests</a></h2>
 <p>And examples.  Need more tests and examples.  &#39;Nuff said.</p>
 
         </section>

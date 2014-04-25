@@ -28,7 +28,7 @@
             <li><a href="changes.html">Change Log</a></li>
           </ul>
         </nav>
-        <section id="main-content"><h2 id="side-effects-and-resource-cleanup"><a name="side-effects-and-resource-cleanup">Side Effects and Resource Cleanup</a></h2>
+        <section id="main-content"><h2><a name="side-effects-and-resource-cleanup">Side Effects and Resource Cleanup</a></h2>
 <p>Sometimes you will have side effects associated with certain <code>bind</code>s or
 components, such as establishing a connection or setting an interval timer:</p>
 <div class="highlight"><pre><span class="nv">blinkingBox = </span><span class="nf">(opts) -&gt;</span>
@@ -52,7 +52,7 @@ the interval timer.  For these situations, you can use
   <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="k">if</span> <span class="nx">active</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="s">&#39;red-box&#39;</span> <span class="k">else</span> <span class="s">&#39;black-box&#39;</span><span class="p">}</span>
 </pre></div>
 
-<h2 id="garbage-collection"><a name="garbage-collection">Garbage Collection</a></h2>
+<h2><a name="garbage-collection">Garbage Collection</a></h2>
 <p>Dependencies hold references to their dependents in order to know who to
 propagate updates to.  We do currently unsubscribe a dependent observable
 from its dependencies whenever that dependent is refreshed, but if the
@@ -117,7 +117,7 @@ using their <code>disconnect</code> method:</p>
 <span class="p">}</span>
 </pre></div>
 
-<h2 id="mutations-inside-binds"><a name="mutations-inside-binds">Mutations Inside Binds</a></h2>
+<h2><a name="mutations-inside-binds">Mutations Inside Binds</a></h2>
 <p>Say you had some dependent cell:</p>
 <div class="highlight"><pre><span class="nv">plusOne = </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">src</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
 </pre></div>
@@ -165,7 +165,7 @@ for you:</p>
 <div class="highlight"><pre><span class="nx">rx</span><span class="p">.</span><span class="nx">autoSub</span> <span class="nx">src</span><span class="p">.</span><span class="nx">onSet</span><span class="p">,</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">skipFirst</span> <span class="nf">([old, val]) -&gt;</span> <span class="nx">dst</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">val</span><span class="p">)</span>
 </pre></div>
 
-<h2 id="asynchronous-binds"><a name="asynchronous-binds">Asynchronous Binds</a></h2>
+<h2><a name="asynchronous-binds">Asynchronous Binds</a></h2>
 <p>So far we&#39;ve seen <em>synchronous</em> binds.  However, let&#39;s say you want to have
 introduce a delay between when a bind&#39;s dependencies are updated and when
 that bind is evaluated.  This can be useful, for instance, if you have an
