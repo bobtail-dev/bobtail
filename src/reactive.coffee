@@ -754,19 +754,20 @@ rxFactory = (_, _str, $) ->
         if contents?
           toNodes = (contents) ->
             for child in contents
-              if _.isString(child) or _.isNumber(child)
-                document.createTextNode(child)
-              else if child instanceof Element
-                child
-              else if child instanceof RawHtml
-                parsed = $(child.html)
-                throw new Error('RawHtml must wrap a single element') if parsed.length != 1
-                parsed[0]
-              else if child instanceof $
-                throw new Error('jQuery object must wrap a single element') if child.length != 1
-                child[0]
-              else
-                throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, number, Element, RawHtml, or jQuery objects)")
+              if child?
+                if _.isString(child) or _.isNumber(child)
+                  document.createTextNode(child)
+                else if child instanceof Element
+                  child
+                else if child instanceof RawHtml
+                  parsed = $(child.html)
+                  throw new Error('RawHtml must wrap a single element') if parsed.length != 1
+                  parsed[0]
+                else if child instanceof $
+                  throw new Error('jQuery object must wrap a single element') if child.length != 1
+                  child[0]
+                else
+                  throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, number, Element, RawHtml, or jQuery objects)")
           updateContents = (contents) ->
             elt.html('')
             if _.isArray(contents)
