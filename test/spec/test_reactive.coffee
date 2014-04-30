@@ -561,9 +561,11 @@ describe 'RawHtml', ->
     ).toThrow()
 
 describe 'rxt', ->
-  it 'should take as contents (arrays of) strings, elements, RawHtml, or $', ->
+  it 'should take as contents (arrays of) numbers, strings, elements, RawHtml, $ or null', ->
     for useArray in [false, true]
       maybeArray = (x) -> if useArray then [x] else x
+      expect(outerHtml(div(maybeArray(2)))).toBe('<div>2</div>')
+      expect(outerHtml(div(maybeArray(null)))).toBe('<div></div>')
       expect(outerHtml(div(maybeArray('hi')))).toBe('<div>hi</div>')
       expect(outerHtml(div(maybeArray($('<em>hi</em>'))))).toBe('<div><em>hi</em></div>')
       expect(outerHtml(div(maybeArray(rxt.rawHtml('<em>hi</em>'))))).toBe('<div><em>hi</em></div>')
