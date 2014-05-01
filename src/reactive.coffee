@@ -723,7 +723,7 @@ rxFactory = (_, _str, $) ->
         if classes
           atts.class = (cls.replace(/^\./, '') for cls in classes).join(' ')
         atts
-    
+
 
     rxt.mktag = mktag = (tag) ->
       (arg1, arg2) ->
@@ -733,7 +733,7 @@ rxFactory = (_, _str, $) ->
         #   (contents: Contents)
         #   (attrs: Object, contents: Contents)
         # where Contents is:
-        #   string | Element | RawHtml | $ | Array | ObsCell | ObsArray      
+        #   string | number | Element | RawHtml | $ | Array | ObsCell | ObsArray
         [attrs, contents] =
           if not arg1? and not arg2?
             [{}, null]
@@ -741,7 +741,7 @@ rxFactory = (_, _str, $) ->
             [arg1, arg2]
           else if _.isString(arg1) and arg2?
             [mkAtts(arg1), arg2]
-          else if not arg2? and _.isString(arg1) or arg1 instanceof Element or  
+          else if not arg2? and _.isString(arg1) or _.isNumber(arg1) or arg1 instanceof Element or
               arg1 instanceof RawHtml or arg1 instanceof $ or _.isArray(arg1) or
               arg1 instanceof ObsCell or arg1 instanceof ObsArray
             [{}, arg1]
@@ -754,19 +754,20 @@ rxFactory = (_, _str, $) ->
         if contents?
           toNodes = (contents) ->
             for child in contents
-              if _.isString(child)
-                document.createTextNode(child)
-              else if child instanceof Element
-                child
-              else if child instanceof RawHtml
-                parsed = $(child.html)
-                throw new Error('RawHtml must wrap a single element') if parsed.length != 1
-                parsed[0]
-              else if child instanceof $
-                throw new Error('jQuery object must wrap a single element') if child.length != 1
-                child[0]
-              else
-                throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, Element, RawHtml, or jQuery objects)")
+              if child?
+                if _.isString(child) or _.isNumber(child)
+                  document.createTextNode(child)
+                else if child instanceof Element
+                  child
+                else if child instanceof RawHtml
+                  parsed = $(child.html)
+                  throw new Error('RawHtml must wrap a single element') if parsed.length != 1
+                  parsed[0]
+                else if child instanceof $
+                  throw new Error('jQuery object must wrap a single element') if child.length != 1
+                  child[0]
+                else
+                  throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, number, Element, RawHtml, or jQuery objects)")
           updateContents = (contents) ->
             elt.html('')
             if _.isArray(contents)
@@ -782,11 +783,11 @@ rxFactory = (_, _str, $) ->
                     .addClass('updated-element').offset({top,left})
                     .width($(node).width()).height($(node).height())
                 setTimeout (-> $(cover).remove() for cover in covers), 2000
-            else if _.isString(contents) or contents instanceof Element or
+            else if _.isString(contents) or _.isNumber(contents) or contents instanceof Element or
                 contents instanceof RawHtml or contents instanceof $
               updateContents([contents])
             else
-              throw new Error("Unknown type for element contents: #{contents.constructor.name} (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)")
+              throw new Error("Unknown type for element contents: #{contents.constructor.name} (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)")
           if contents instanceof ObsArray
             rx.autoSub contents.onChange, ([index, removed, added]) ->
               elt.contents().slice(index, index + removed.length).remove()
@@ -894,5 +895,5 @@ do(root = this, factory = rxFactory, deps = ['underscore','underscore.string','j
     module.exports = rx
   else if root._? and root.$?
     root.rx = factory(root._, undefined, root.$)
-  else 
+  else
     throw "Dependencies are not met for reactive: _ and $ not found"
