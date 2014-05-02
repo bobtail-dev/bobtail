@@ -1418,7 +1418,7 @@
       rxt.mktag = mktag = function(tag) {
         return function(arg1, arg2) {
           var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref5, _ref6;
-          _ref5 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg1 instanceof Object && (arg2 != null) ? [arg1, arg2] : _.isString(arg1) && (arg2 != null) ? [mkAtts(arg1), arg2] : (arg2 == null) && _.isString(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref5[0], contents = _ref5[1];
+          _ref5 = (arg1 == null) && (arg2 == null) ? [{}, null] : arg1 instanceof Object && (arg2 != null) ? [arg1, arg2] : _.isString(arg1) && (arg2 != null) ? [mkAtts(arg1), arg2] : (arg2 == null) && _.isString(arg1) || _.isNumber(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref5[0], contents = _ref5[1];
           elt = $("<" + tag + "/>");
           _ref6 = _.omit(attrs, _.keys(specialAttrs));
           for (name in _ref6) {
@@ -1431,23 +1431,27 @@
               _results = [];
               for (_j = 0, _len1 = contents.length; _j < _len1; _j++) {
                 child = contents[_j];
-                if (_.isString(child)) {
-                  _results.push(document.createTextNode(child));
-                } else if (child instanceof Element) {
-                  _results.push(child);
-                } else if (child instanceof RawHtml) {
-                  parsed = $(child.html);
-                  if (parsed.length !== 1) {
-                    throw new Error('RawHtml must wrap a single element');
+                if (child != null) {
+                  if (_.isString(child) || _.isNumber(child)) {
+                    _results.push(document.createTextNode(child));
+                  } else if (child instanceof Element) {
+                    _results.push(child);
+                  } else if (child instanceof RawHtml) {
+                    parsed = $(child.html);
+                    if (parsed.length !== 1) {
+                      throw new Error('RawHtml must wrap a single element');
+                    }
+                    _results.push(parsed[0]);
+                  } else if (child instanceof $) {
+                    if (child.length !== 1) {
+                      throw new Error('jQuery object must wrap a single element');
+                    }
+                    _results.push(child[0]);
+                  } else {
+                    throw new Error("Unknown element type in array: " + child.constructor.name + " (must be string, number, Element, RawHtml, or jQuery objects)");
                   }
-                  _results.push(parsed[0]);
-                } else if (child instanceof $) {
-                  if (child.length !== 1) {
-                    throw new Error('jQuery object must wrap a single element');
-                  }
-                  _results.push(child[0]);
                 } else {
-                  throw new Error("Unknown element type in array: " + child.constructor.name + " (must be string, Element, RawHtml, or jQuery objects)");
+                  _results.push(void 0);
                 }
               }
               return _results;
@@ -1495,10 +1499,10 @@
                     return _results;
                   }), 2000);
                 }
-              } else if (_.isString(contents) || contents instanceof Element || contents instanceof RawHtml || contents instanceof $) {
+              } else if (_.isString(contents) || _.isNumber(contents) || contents instanceof Element || contents instanceof RawHtml || contents instanceof $) {
                 return updateContents([contents]);
               } else {
-                throw new Error("Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, Element, RawHtml, jQuery object of single element, or array of the aforementioned)");
+                throw new Error("Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)");
               }
             };
             if (contents instanceof ObsArray) {
