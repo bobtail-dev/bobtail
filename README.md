@@ -1,4 +1,4 @@
-reactive.coffee
+reactive.coffee [![Build Status](https://secure.travis-ci.org/chicagogrooves/reactive-coffee.png?branch=master)](https://travis-ci.org/chicagogrooves/reactive-coffee)
 ===============
 
 A lightweight CoffeeScript library/DSL for [reactive programming] and for
@@ -115,3 +115,4 @@ rationale][design].
 [tutorial]: http://yang.github.io/reactive-coffee/tutorial.html
 [design]: http://yang.github.io/reactive-coffee/design.html
 [related]: http://yang.github.io/reactive-coffee/related.html
+
