@@ -4,7 +4,7 @@
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  rxFactory = function(_, _str, $) {
+  rxFactory = function(_, $) {
     var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, _fn, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4,
       _this = this;
     rx = {};
@@ -1599,6 +1599,10 @@
           })());
         }
       };
+      rxt.trim = $.trim;
+      rxt.dasherize = function(str) {
+        return rxt.trim(str).replace(/([A-Z])/g, '-$1').replace(/[-_\s]+/g, '-').toLowerCase();
+      };
       rxt.cssify = function(map) {
         var k, v;
         return ((function() {
@@ -1607,7 +1611,7 @@
           for (k in map) {
             v = map[k];
             if (v != null) {
-              _results.push("" + (_.str.dasherize(k)) + ": " + (_.isNumber(v) ? v + 'px' : v) + ";");
+              _results.push("" + (rxt.dasherize(k)) + ": " + (_.isNumber(v) ? v + 'px' : v) + ";");
             }
           }
           return _results;
@@ -1640,19 +1644,23 @@
   };
 
   (function(root, factory, deps) {
-    var rx, _, _str;
+    var rx, _;
     if ((typeof define !== "undefined" && define !== null ? define.amd : void 0) != null) {
       return define(deps, factory);
     } else if ((typeof module !== "undefined" && module !== null ? module.exports : void 0) != null) {
       _ = require('underscore');
-      _str = require('underscore.string');
-      rx = factory(_, _str);
+      rx = factory(_);
       return module.exports = rx;
     } else if ((root._ != null) && (root.$ != null)) {
-      return root.rx = factory(root._, void 0, root.$);
+      return root.rx = factory(root._, root.$);
     } else {
       throw "Dependencies are not met for reactive: _ and $ not found";
     }
-  })(this, rxFactory, ['underscore', 'underscore.string', 'jquery']);
+  })(this, rxFactory, ['underscore', 'jquery']);
+
+}).call(this);
+
+(function() {
+
 
 }).call(this);

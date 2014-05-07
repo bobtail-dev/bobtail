@@ -1,4 +1,4 @@
-rxFactory = (_, _str, $) ->
+rxFactory = (_, $) ->
   rx = {}
   nextUid = 0
   mkuid = -> nextUid += 1
@@ -864,10 +864,16 @@ rxFactory = (_, _str, $) ->
             [key, if types[key] then rxt.cast(value, types[key]) else value]
         )
 
+    # a little underscore-string inlining
+    rxt.trim = $.trim
+
+    rxt.dasherize = (str)->
+      rxt.trim(str).replace(/([A-Z])/g, '-$1').replace(/[-_\s]+/g, '-').toLowerCase()
+
     rxt.cssify = (map) ->
       (
         for k,v of map when v?
-          "#{_.str.dasherize(k)}: #{if _.isNumber(v) then v+'px' else v};"
+          "#{rxt.dasherize(k)}: #{if _.isNumber(v) then v+'px' else v};"
       ).join(' ')
 
     specialAttrs.style = (elt, value) ->
@@ -885,15 +891,15 @@ rxFactory = (_, _str, $) ->
   rx
 # end rxFactory definition
 
-do(root = this, factory = rxFactory, deps = ['underscore','underscore.string','jquery']) ->
+do(root = this, factory = rxFactory, deps = ['underscore', 'jquery']) ->
   if define?.amd?
     define deps, factory
   else if module?.exports?
+    # no jQuery in node
     _    = require 'underscore'
-    _str = require 'underscore.string'
-    rx = factory _, _str
+    rx = factory(_)
     module.exports = rx
   else if root._? and root.$?
-    root.rx = factory(root._, undefined, root.$)
+    root.rx = factory(root._, root.$)
   else
     throw "Dependencies are not met for reactive: _ and $ not found"
