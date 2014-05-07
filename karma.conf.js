@@ -8,7 +8,6 @@ files = [
   JASMINE,
   JASMINE_ADAPTER,
   'bower_components/underscore/underscore.js',
-  'bower_components/underscore.string/lib/underscore.string.js',
   'bower_components/jquery/dist/jquery.js',
   'bower_components/es5-shim/es5-shim.js',
   'src/*.coffee',
