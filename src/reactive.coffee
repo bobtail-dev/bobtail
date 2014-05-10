@@ -399,7 +399,7 @@ rxFactory = (_, $) ->
 
   ObsMap = class rx.ObsMap
     constructor: (@x = {}) ->
-      @onAdd = new Ev(=> ([k,v] for k,v of x)) # [key, new]
+      @onAdd = new Ev(-> ([k,v] for k,v of x)) # [key, new]
       @onRemove = new Ev() # [key, old]
       @onChange = new Ev() # [key, old, new]
     get: (key) ->

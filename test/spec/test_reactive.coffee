@@ -692,7 +692,7 @@ describe 'transaction', ->
     x = rx.cell(5)
     y = rx.cell(0)
     z = bind -> x.get() + y.get()
-    rx.transaction =>
+    rx.transaction ->
       x.set(0)
       expect(z.get()).toBe(5)
       y.set(5)
