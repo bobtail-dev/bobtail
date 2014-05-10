@@ -1,3 +1,4 @@
+//@ sourceMappingURL=reactive.map
 (function() {
   var rxFactory,
     __slice = [].slice,
@@ -1657,10 +1658,5 @@
       throw "Dependencies are not met for reactive: _ and $ not found";
     }
   })(this, rxFactory, ['underscore', 'jquery']);
-
-}).call(this);
-
-(function() {
-
 
 }).call(this);
