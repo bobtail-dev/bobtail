@@ -846,17 +846,15 @@
     ObsMap = rx.ObsMap = (function() {
       function ObsMap(x) {
         this.x = x != null ? x : {};
-        this.onAdd = new Ev((function(_this) {
-          return function() {
-            var k, v, _results;
-            _results = [];
-            for (k in x) {
-              v = x[k];
-              _results.push([k, v]);
-            }
-            return _results;
-          };
-        })(this));
+        this.onAdd = new Ev(function() {
+          var k, v, _results;
+          _results = [];
+          for (k in x) {
+            v = x[k];
+            _results.push([k, v]);
+          }
+          return _results;
+        });
         this.onRemove = new Ev();
         this.onChange = new Ev();
       }
