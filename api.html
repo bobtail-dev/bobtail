@@ -28,8 +28,8 @@
             <li><a href="changes.html">Change Log</a></li>
           </ul>
         </nav>
-        <section id="main-content"><h1>API Reference</h1>
-<h2><a name="rx-namespace"><code>rx</code> Namespace</a></h2>
+        <section id="main-content"><h1 id="api-reference">API Reference</h1>
+<h2 id="-rx-namespace"><a name="rx-namespace"><code>rx</code> Namespace</a></h2>
 <p>This contains the core reactive programming primitives.  These are the core
 data structures:</p>
 <ul>
@@ -235,7 +235,7 @@ event is fired on this event node.</li>
 is what will be passed to all the subscribed listeners.</li>
 <li><code>unsub(subscriptionId)</code>: detaches a listener from this event.</li>
 </ul>
-<h2><a name="rxt-namespace"><code>rxt</code> Namespace</a></h2>
+<h2 id="-rxt-namespace"><a name="rxt-namespace"><code>rxt</code> Namespace</a></h2>
 <p>This contains the template DSL constructs.  Main thing here is the <em>tag
 function</em>, which is what constructs a DOM element.</p>
 <p><strong>Free functions</strong></p>
@@ -255,12 +255,17 @@ if given) with the tag symbols, so you don&#39;t need have <code>rxt</code> all 
 your templates.  Useful for quickly throwing something together.</li>
 <li><code>rawHtml(html)</code>: returns a <code>RawHtml</code> wrapper for strings that tags won&#39;t
 escape when rendering; example: <code>div {}, [rawHtml(&#39;&lt;span&gt;hello&lt;/span&gt;&#39;)]</code></li>
+<li><code>rxt.cast(...)</code>: two forms:<ul>
 <li><code>rxt.cast(opts, types)</code>: convenience utility for use in preparing
-arguments for a component.  <code>opts</code> is the arguments object mapping, and
-<code>types</code> is an object mapping fields of <code>opts</code> to either <code>cell</code> or
+arguments for a component.  <code>opts</code> is the arguments object mapping,
+and <code>types</code> is an object mapping fields of <code>opts</code> to either <code>cell</code> or
 <code>array</code>.  <code>cast</code> returns a copy of <code>opts</code> but with the fields casted
 based on the specified desired <code>types</code> (yielding observable cells and
 arrays).</li>
+<li><code>rxt.cast(data, type)</code>: lift the given datum to the given type; acts
+as identity function if data is already of the proper type</li>
+</ul>
+</li>
 <li><code>rxt.cssify(props)</code>: convenience utility for programmatically constructing
 strings suitable for use as a <code>style</code> attribute.  Takes an object mapping
 camelCase versions of style property names and values that are either
