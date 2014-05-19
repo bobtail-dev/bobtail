@@ -186,6 +186,15 @@ describe 'ObsMap', ->
     b.set(2)
     expect(aa.get()).toBe(1)
     expect(bb.get()).toBe(2)
+  it 'should support update()', ->
+    called = null
+    a.onSet.sub rx.skipFirst ([o,n]) -> called = [o,n]
+    x.update({a:0,b:1})
+    expect(called).toBe(null)
+    expect(x.all()).toEqual({a:0,b:1})
+    x.update({b:2,c:3})
+    expect(called).toEqual([0, undefined])
+    expect(x.all()).toEqual({b:2,c:3})
 
 describe 'nested bindings', ->
   x = a = b = elt = null

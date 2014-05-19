@@ -439,6 +439,10 @@ rxFactory = (_, $) ->
       recorder.mutating => @realRemove(key)
     cell: (key) ->
       new SrcMapEntryCell(@, key)
+    update: (x) ->
+      recorder.mutating =>
+        @realRemove(k) for k in _.difference(_.keys(@x), _.keys(x))
+        @realPut(k,v) for k,v of x when k not of @x or @x[k] != v
 
   DepMap = class rx.DepMap extends ObsMap
     constructor: (@f) ->
