@@ -218,6 +218,8 @@ event data is <code>[key, oldVal, newVal]</code>.</li>
 <ul>
 <li><code>put(k, v)</code>: associate value <code>v</code> with key <code>k</code> and return any prior value associated with <code>k</code></li>
 <li><code>remove(k)</code>: remove the entry associated at key <code>k</code></li>
+<li><code>update(map)</code>: update the current <code>SrcMap</code>&#39;s contents to those of the
+given JS object <code>map</code>, triggering any necessary <code>remove</code>s and <code>put</code>s</li>
 <li>inherits <code>ObsMap</code></li>
 </ul>
 <p><strong><code>DepMap</code> members</strong></p>
