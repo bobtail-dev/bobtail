@@ -1,6 +1,6 @@
 {
   "name": "reactive-coffee",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "main": [
     "dist/reactive-coffee.js",
     "dist/reactive-coffee.min.js"
