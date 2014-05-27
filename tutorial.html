@@ -55,9 +55,20 @@ production), you can get started quickly with client-side compilation:</p>
 <span class="nt">&lt;/script&gt;</span>
 </pre></div>
 
-<p>To start using the tags directly without having to prefix them with the <code>rxt</code>
-namespace, include this at the top of your CoffeeScript:</p>
-<div class="highlight"><pre><span class="nx">rxt</span><span class="p">.</span><span class="nx">importTags</span><span class="p">()</span>
+<p>To follow along with these examples and use reactive HTML element tags
+without having to use their fully qualified name in <code>rx.rxt.tags</code>, include
+this at the top of your CoffeeScript:</p>
+<div class="highlight"><pre><span class="nx">rx</span><span class="p">.</span><span class="nx">rxt</span><span class="p">.</span><span class="nx">importTags</span><span class="p">()</span>
+</pre></div>
+
+<p>This lets you write:</p>
+<div class="highlight"><pre><span class="nx">span</span> <span class="s">&#39;hello world&#39;</span>
+</pre></div>
+
+<p>Alternatively, to use without polluting the global namespace (recommended
+for larger-scale apps), just shorten the namespace prefix:</p>
+<div class="highlight"><pre><span class="nv">T = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">rxt</span><span class="p">.</span><span class="nx">tags</span>
+<span class="nx">T</span><span class="p">.</span><span class="nx">span</span> <span class="s">&#39;hello world&#39;</span>
 </pre></div>
 
 <p>The following examples also lift <code>rx.bind</code> out of its namespace:</p>
@@ -593,7 +604,7 @@ unwieldy set of parameters:</p>
     <span class="nv">initialTabIndex: </span><span class="mi">0</span>
     <span class="nv">activeClass: </span><span class="s">&#39;active-tab&#39;</span>
     <span class="nv">change: </span><span class="nf">-&gt;</span>
-  <span class="nv">opts = </span><span class="nx">rxt</span><span class="p">.</span><span class="nx">cast</span> <span class="nx">opts</span><span class="p">,</span>
+  <span class="nv">opts = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">rxt</span><span class="p">.</span><span class="nx">cast</span> <span class="nx">opts</span><span class="p">,</span>
     <span class="nv">tabs: </span><span class="s">&#39;array&#39;</span>
 
   <span class="nv">activeTabIndex = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">opts</span><span class="p">.</span><span class="nx">initialTabIndex</span><span class="p">)</span>
