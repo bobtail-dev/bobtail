@@ -158,7 +158,7 @@ more complex dependencies, and is more readable/declarative:</p>
 
 <p>The bindings are managed such that only the dependent cells that could possibly
 affect the result are effective dependencies.  In this example, at any moment,
-<code>fullName</code> depends either only on <code>showRealName</code> and <code>fulName</code> <em>or</em> only on
+<code>fullName</code> depends either only on <code>showRealName</code> and <code>fullName</code> <em>or</em> only on
 <code>showRealName</code> and <code>fakeName</code>.  If <code>showRealName</code> is false, changes to
 <code>firstName</code> and <code>lastName</code> will not trigger a re-render of the <code>.name</code>.</p>
 <p><code>firstName</code> and <code>lastName</code> are <em>source cells</em> that support setting of values.
