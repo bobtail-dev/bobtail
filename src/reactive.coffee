@@ -231,7 +231,7 @@ rxFactory = (_, $) ->
         # such a lagBind is more desirable (in the face of changing dependencies)
         # and whether on-completion is what's most generalizable.
         realDone = (@x) => @onSet.pub([old, @x])
-        recorded: false
+        recorded = false
         syncResult = null
         isSynchronous = false
         env =

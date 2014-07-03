@@ -358,7 +358,7 @@
       }
 
       DepCell.prototype.refresh = function() {
-        var env, isSynchronous, old, realDone, syncResult;
+        var env, isSynchronous, old, realDone, recorded, syncResult;
         if (!this.refreshing) {
           old = this.x;
           realDone = (function(_this) {
@@ -367,15 +367,13 @@
               return _this.onSet.pub([old, _this.x]);
             };
           })(this);
-          ({
-            recorded: false
-          });
+          recorded = false;
           syncResult = null;
           isSynchronous = false;
           env = {
             record: (function(_this) {
               return function(f) {
-                var recorded, res;
+                var res;
                 if (!_this.refreshing) {
                   _this.disconnect();
                   if (recorded) {
