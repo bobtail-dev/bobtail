@@ -231,7 +231,7 @@ rxFactory = (_, $) ->
         # such a lagBind is more desirable (in the face of changing dependencies)
         # and whether on-completion is what's most generalizable.
         realDone = (@x) => @onSet.pub([old, @x])
-        recorded: false
+        recorded = false
         syncResult = null
         isSynchronous = false
         env =
@@ -745,9 +745,15 @@ rxFactory = (_, $) ->
             [arg1, arg2]
           else if _.isString(arg1) and arg2?
             [mkAtts(arg1), arg2]
-          else if not arg2? and _.isString(arg1) or _.isNumber(arg1) or arg1 instanceof Element or
-              arg1 instanceof RawHtml or arg1 instanceof $ or _.isArray(arg1) or
-              arg1 instanceof ObsCell or arg1 instanceof ObsArray
+          else if not arg2? and
+              _.isString(arg1) or
+              _.isNumber(arg1) or
+              arg1 instanceof Element or
+              arg1 instanceof RawHtml or
+              arg1 instanceof $ or
+              _.isArray(arg1) or
+              arg1 instanceof ObsCell or
+              arg1 instanceof ObsArray
             [{}, arg1]
           else
             [arg1, null]
