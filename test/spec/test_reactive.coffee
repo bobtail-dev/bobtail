@@ -411,6 +411,30 @@ describe 'asyncBind', ->
       x.set(1)
       expect(y.get()).toBe('none')
     waitsFor (-> y.get() == 1), 'The async should have fired', 1
+  it 'should work asynchronously with recording at the end', ->
+    x = rx.cell(0)
+    y = rx.asyncBind 'none', ->
+      _.defer => @done(@record => x.get())
+    runs ->
+      expect(y.get()).toBe('none')
+      x.set(1)
+      expect(y.get()).toBe('none')
+    waitsFor (-> y.get() == 1), 'The async should have fired', 1
+  it 'should work asynchronously with recording at the beginning', ->
+    x = rx.cell(0)
+    y = rx.asyncBind 'none', ->
+      xx = @record => x.get()
+      _.defer => @done(xx)
+    runs ->
+      expect(y.get()).toBe('none')
+      x.set(1)
+      expect(y.get()).toBe('none')
+    waitsFor (-> y.get() == 1), 'The async should have fired', 1
+  it 'should enforce one-time record', ->
+    x = rx.cell(0)
+    y = rx.asyncBind 'none', ->
+      xx = @record => x.get()
+      _.defer => expect(=> @done(@record => x.get())).toThrow()
   it 'should not be a SrcCell', ->
     x = rx.cell(0)
     y = rx.asyncBind 'none', -> @done(x.get())
