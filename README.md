@@ -1,4 +1,4 @@
-reactive.coffee [![Build Status](https://secure.travis-ci.org/yang/reactive-coffee.png?branch=master)](https://travis-ci.org/yang/reactive-coffee)
+reactive.coffee [![Build Status](https://secure.travis-ci.org/yang/reactive-coffee.png?branch=master)](https://travis-ci.org/yang/reactive-coffee) [![Bower version](https://badge.fury.io/bo/reactive-coffee.svg)](http://badge.fury.io/bo/reactive-coffee)
 ===============
 
 A lightweight CoffeeScript library/DSL for [reactive programming] and for
