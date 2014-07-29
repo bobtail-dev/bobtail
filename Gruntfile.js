@@ -26,7 +26,7 @@ module.exports = function (grunt) {
         files: [
           '<%= yeoman.src %>/{,*/}*.html',
           '{.tmp,<%= yeoman.src %>}/styles/{,*/}*.css',
-          '{.tmp,<%= yeoman.src %>}/scripts/{,*/}*.js',
+          '{.tmp,<%= yeoman.src %>}/{,*/}*.js',
           '<%= yeoman.src %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
         ],
         tasks: ['livereload']
@@ -72,7 +72,7 @@ module.exports = function (grunt) {
           expand: true,
           cwd: '<%= yeoman.src %>',
           src: '{,*/}*.coffee',
-          dest: '.tmp/scripts',
+          dest: '.tmp',
           ext: '.js'
         }]
       }
@@ -106,8 +106,19 @@ module.exports = function (grunt) {
         }
       }
     },
+    copy: {
+      maps: {
+        src: '.tmp/reactive.js.map',
+        dest: 'dist/reactive.js.map'
+      }
+    },
     uglify: {
       dist: {
+        options: {
+          sourceMap: true,
+          sourceMapIn: 'dist/reactive.js.map',
+          sourceMapName: 'dist/reactive-coffee.min.js.map'
+        },
         files: {
           '<%= yeoman.dist %>/<%= yeoman.name %>.min.js': [
             '<%= yeoman.dist %>/<%= yeoman.name %>.js'
@@ -131,7 +142,8 @@ module.exports = function (grunt) {
     'clean:dist',
     'test',
     'concat',
-    'uglify',
+    'copy',
+    'uglify'
   ]);
 
   grunt.registerTask('default', ['build']);

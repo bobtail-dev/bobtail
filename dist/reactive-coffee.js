@@ -1728,10 +1728,3 @@
 }).call(this);
 
 //# sourceMappingURL=reactive.js.map
-
-(function() {
-
-
-}).call(this);
-
-//# sourceMappingURL=reactive2.js.map
