@@ -23,7 +23,7 @@
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
             <li><a href="tutorial.html">Tutorial</a></li>
-            <li><a href="advanced.html" class="current">Advanced Concepts</a><ul class="toc"><li><a href="#side-effects-and-resource-cleanup">Side Effects and Resource Cleanup</a></li><li><a href="#garbage-collection">Garbage Collection</a></li><li><a href="#mutations-inside-binds">Mutations Inside Binds</a></li><li><a href="#asynchronous-binds">Asynchronous Binds</a></li></ul></li>
+            <li><a href="advanced.html" class="current">Advanced Concepts</a><ul class="toc"><li><a href="#side-effects-and-resource-cleanup">Side Effects and Resource Cleanup</a></li><li><a href="#garbage-collection">Garbage Collection</a></li><li><a href="#mutations-inside-binds">Mutations Inside Binds</a></li><li><a href="#asynchronous-binds">Asynchronous Binds</a></li><li><a href="#es5-properties">ES5 Properties</a></li></ul></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
           </ul>
@@ -212,6 +212,73 @@ then feeds that to an AJAX call; upon completion, the result is passed into
 
 <p>Users interested in <code>asyncBind</code> are also encouraged to take a look at the
 (very short) implementations of <code>bind</code>, <code>lagBind</code>, and <code>postLagBind</code>.</p>
+<h2 id="es5-properties"><a name="es5-properties">ES5 Properties</a></h2>
+<p>So far, everything is built on observable data structures, which are just
+plain classes with explicit getter/setter calls.  To make working with
+observables more natural/less verbose as well as more similar to working
+with regular non-observable data structures, we can use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">ES5 object
+property getters/setters</a>, so that what used to be:</p>
+<div class="highlight"><pre><span class="nv">card = </span><span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span><span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span><span class="p">.</span><span class="nx">length</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="nx">card</span><span class="p">.</span><span class="nx">isFlipped</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="o">not</span> <span class="nx">card</span><span class="p">.</span><span class="nx">isFlipped</span><span class="p">.</span><span class="nx">get</span><span class="p">())</span>
+</pre></div>
+
+<p>becomes:</p>
+<div class="highlight"><pre><span class="nv">card = </span><span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span><span class="p">[</span><span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+<span class="nv">card.isFlipped = </span><span class="o">not</span> <span class="nx">card</span><span class="p">.</span><span class="nx">isFlipped</span>
+</pre></div>
+
+<p>Your class definitions are simpler as well.  You can rewrite this:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nx">Deck</span>
+  <span class="nv">constructor: </span><span class="nf">(player, cards) -&gt;</span>
+    <span class="vi">@player = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">player</span><span class="p">)</span>
+    <span class="vi">@cards = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">(</span><span class="nx">cards</span><span class="p">)</span>
+<span class="k">class</span> <span class="nx">Card</span>
+  <span class="nv">constructor: </span><span class="nf">(suit, rank, isFlipped) -&gt;</span>
+    <span class="vi">@suit = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">suit</span><span class="p">)</span>
+    <span class="vi">@rank = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">rank</span><span class="p">)</span>
+    <span class="vi">@isFlipped = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">isFlipped</span><span class="p">)</span>
+</pre></div>
+
+<p>as:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nx">Deck</span>
+  <span class="nv">constructor: </span><span class="nf">(@player, @cards) -&gt;</span>
+    <span class="nx">rx</span><span class="p">.</span><span class="nx">autoReactify</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
+<span class="k">class</span> <span class="nx">Card</span>
+  <span class="nv">constructor: </span><span class="nf">(@suit, @rank, @isFlipped) -&gt;</span>
+    <span class="nx">rx</span><span class="p">.</span><span class="nx">autoReactify</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
+</pre></div>
+
+<p>In short, you can construct &quot;plain&quot; objects, then <code>autoReactify</code> them, which
+replaces all fields with ES5 getters/setters (coupled with hidden backing
+observable cells/arrays).</p>
+<p>However, there are a few caveats and limitations, primarily around arrays.
+Arrays are implemented by actually replacing the methods on normal Arrays
+with wrappers that also call the appropriate method on the observable.
+However, there is no way to override the indexing/subscript operator <code>[]</code>
+in JS.  As a result, normal indexing operations may be less efficient (this
+will likely be fine for most arrays/binds in your application, however, unless
+they&#39;re really big):</p>
+<div class="highlight"><pre><span class="nx">deck</span><span class="p">.</span><span class="nx">player</span> <span class="c1"># translates into deck.player.get()</span>
+<span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span> <span class="c1"># translates into deck.cards.all()</span>
+<span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># translates into deck.cards.all()[0], not deck.cards.at(0)</span>
+<span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span><span class="p">.</span><span class="nx">length</span> <span class="c1"># translates into deck.cards.all().length</span>
+
+<span class="c1"># so, these won&#39;t work react to changes</span>
+<span class="nv">cards = </span><span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span>
+<span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">cards</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">cards</span><span class="p">.</span><span class="nx">length</span>
+
+<span class="c1"># instead, always access as a field:</span>
+<span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">deck</span><span class="p">.</span><span class="nx">cards</span><span class="p">.</span><span class="nx">length</span>
+</pre></div>
+
+<p>All things considered, we still recommend using normal observable arrays
+over these magical ES5 array proxies, given the limitations.  When you call
+<code>autoReactify</code> on an object, it will essentially ignore and leave intact
+any existing observables.</p>
+<p>Thanks to <a href="https://github.com/yang/reactive-coffee/issues/6">@m1sta</a> for
+bringing this idea to the table.</p>
 
         </section>
       </div>
