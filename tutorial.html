@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
-            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#transactions">Transactions</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#more-on-arrays-and-reactive-templates">More on Arrays and Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#lifting">Lifting</a></li><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
+            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#transactions">Transactions</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#more-on-arrays-and-reactive-templates">More on Arrays and Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#lifting">Lifting</a></li><li><a href="#anti-pattern--non-nesting">Anti-Pattern: Non-Nesting</a></li><li><a href="#es5-properties">ES5 Properties</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
             <li><a href="advanced.html">Advanced Concepts</a></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
@@ -211,12 +211,16 @@ transaction, events will not be propagated.  For instance:</p>
 
 <h2 id="arrays-and-maps"><a name="arrays-and-maps">Arrays and Maps</a></h2>
 <p>Cells are the most general type of observable container.  However, there are
-also observable containers with special support for arrays and objects.  This
-special support is for more efficient and fine-grained event types
-reflecting changes to particular sub-parts rather than an all-encompassing
-<code>onSet</code> event.  For instance, arrays commonly have elements inserted or removed
-from them, in which case we&#39;d like to avoid re-rendering entire dependent
-sections of the DOM or otherwise needing to figure out what parts have changed.</p>
+also observable containers with special support for arrays and maps
+(that is, Javascript objects, which are basically maps).  This specialized
+support is for more efficient and fine-grained event types reflecting
+changes to particular sub-parts rather than an all-encompassing <code>onSet</code>
+event whenever any part of the array or map changes.</p>
+<p>For instance, arrays commonly have elements inserted into or removed from
+them, in which case we&#39;d like to avoid re-rendering entire dependent
+sections of the DOM or otherwise needing to figure out what parts have
+changed (the relationship between these reactive data structures and DOM
+UI rendering will be explained in later sections).</p>
 <p>Arrays support an <code>onChange</code> event.  It fires
 with a triple <code>[index, removed, added]</code>, where <code>index</code> is the offset into the
 array where the change is happening, <code>removed</code> is the sub-array of elements
@@ -258,6 +262,44 @@ events):</p>
 <span class="c1"># replaced 0 element(s) at offset 3 with 1 new element(s)</span>
 </pre></div>
 
+<p><em>Objects</em> also exist, but are called <em>maps</em>.  They are pretty
+straightforward as regular containers:</p>
+<div class="highlight"><pre><span class="nv">months = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">map</span><span class="p">()</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s">&#39;Mar&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s">&#39;Aug&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s">&#39;Oct&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&#39;Mar&#39;</span><span class="p">)</span> <span class="c1"># 3</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s">&#39;Oct&#39;</span><span class="p">)</span> <span class="c1"># 10</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">all</span><span class="p">()</span> <span class="c1"># {&quot;Mar&quot;: 3, &quot;Aug&quot;: 8}</span>
+</pre></div>
+
+<p>With maps, there are three different event types:</p>
+<div class="highlight"><pre><span class="nv">months = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">map</span><span class="p">({</span><span class="s">&quot;Mar&quot;</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&quot;Aug&quot;</span><span class="o">:</span> <span class="mi">8</span><span class="p">})</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">onAdd</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([key, val]) -&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;set </span><span class="si">#{</span><span class="nx">key</span><span class="si">}</span><span class="s"> to </span><span class="si">#{</span><span class="nx">val</span><span class="si">}</span><span class="s">&quot;</span>
+<span class="c1"># set Mar to 3</span>
+<span class="c1"># set Aug to 8</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">onChange</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([key, oldVal, newVal]) -&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;updated </span><span class="si">#{</span><span class="nx">key</span><span class="si">}</span><span class="s"> (which had mapped to </span><span class="si">#{</span><span class="nx">oldVal</span><span class="si">}</span><span class="s">) to </span><span class="si">#{</span><span class="nx">newVal</span><span class="si">}</span><span class="s">&quot;</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">onRemove</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([key, val]) -&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;removed </span><span class="si">#{</span><span class="nx">key</span><span class="si">}</span><span class="s"> which had mapped to </span><span class="si">#{</span><span class="nx">val</span><span class="si">}</span><span class="s">&quot;</span>
+
+<span class="nx">months</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s">&#39;May&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="c1"># set May to 5</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s">&#39;Mar&#39;</span><span class="p">,</span> <span class="s">&#39;three&#39;</span><span class="p">)</span>
+<span class="c1"># updated Mar (which had mapped to 3) to three</span>
+<span class="nx">months</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s">&#39;Oct&#39;</span><span class="p">)</span>
+<span class="c1"># removed Aug which had mapped to 8</span>
+</pre></div>
+
+<p>The key to maps is that you can bind to changes to just certain keys.  For
+instance, if you had:</p>
+<div class="highlight"><pre><span class="nv">mar = </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">months</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&#39;Mar&#39;</span><span class="p">)</span>
+<span class="nv">dec = </span><span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">months</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&#39;Dec&#39;</span><span class="p">)</span>
+</pre></div>
+
+<p>Then <code>mar</code> will be re-evaluated only when the <code>&quot;Mar&quot;</code> key is
+changed/removed, and <code>dec</code> will only when the <code>&quot;Dec&quot;</code> key is inserted.</p>
 <h2 id="static-templates"><a name="static-templates">Static Templates</a></h2>
 <p>Now for a brief jump to something entirely different from reactive
 programming....</p>
@@ -544,8 +586,13 @@ anything changed, we could do so with:</p>
   <span class="nx">option</span> <span class="p">{</span><span class="nv">value: </span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">},</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
 </pre></div>
 
-<p>Nested <code>bind</code>/<code>map</code> calls are insulated from outer calls, re-rendering only
-what&#39;s necessary.  As an escape hatch, to insulate some code <code>fn</code> from the
+<div class="note">
+<strong>Key Lesson</strong>:
+Nested <code>bind</code>/<code>map</code> calls are insulated from outer calls,
+re-rendering only what&#39;s necessary.
+</div>
+
+<p>As an escape hatch, to insulate some code <code>fn</code> from the
 current bind context and <em>not</em> subscribe to any dependencies therein, you
 can use <code>rx.snap(fn)</code>.  This is evaluated only once:</p>
 <div class="highlight"><pre><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;editor&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="p">[</span>
@@ -719,6 +766,32 @@ non-observable fields to one with observable fields:</p>
 are turned into <code>rx.cell</code>.  You can control/refine how fields are lifted by
 passing in a spec (by default, uses <code>rx.liftSpec</code> to generate one).  See
 the <a href="api.html">API documentation</a> for more details.</p>
+<h2 id="anti-pattern-non-nesting"><a name="anti-pattern--non-nesting">Anti-Pattern: Non-Nesting</a></h2>
+<p>Do not construct UIs &quot;out-of-band&quot; from the <code>bind</code> hierarchy:</p>
+<div class="highlight"><pre><span class="nv">namedisp = </span><span class="nx">span</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;name&#39;</span><span class="p">},</span> <span class="nx">username</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+<span class="nv">popup = </span><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;modal&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">namedisp</span>
+</pre></div>
+
+<p>The above will either</p>
+<ul>
+<li>fail to ever update <code>namedisp</code>, assuming there is no outer bind
+running this code, or</li>
+<li>cause any outer bind running this code (not shown) to re-evaluate
+(likely unintended).</li>
+</ul>
+<p>This doesn&#39;t mean you always need to syntactically nest your code in the
+following way:</p>
+<div class="highlight"><pre><span class="nv">popup =</span>
+  <span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;modal&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span>
+    <span class="nx">span</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;name&#39;</span><span class="p">},</span> <span class="nx">username</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+</pre></div>
+
+<p>Instead, you can maintain the original structure of the code, but just
+defer running the code until you&#39;re inside the bind, using functions:</p>
+<div class="highlight"><pre><span class="nv">namedisp = </span><span class="nf">-&gt;</span> <span class="nx">span</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;name&#39;</span><span class="p">},</span> <span class="nx">username</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+<span class="nv">popup = </span><span class="nx">div</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;modal&#39;</span><span class="p">},</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">namedisp</span><span class="p">()</span>
+</pre></div>
+
 <h2 id="es5-properties"><a name="es5-properties">ES5 Properties</a></h2>
 <p>So far, everything is built on observable data structures, which are just
 plain classes with explicit getter/setter calls.  To make working with
