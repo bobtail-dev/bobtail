@@ -223,7 +223,7 @@ array where the change is happening, <code>removed</code> is the sub-array of el
 removed, and <code>added</code> is the sub-array of elements inserted.  Example:</p>
 <div class="highlight"><pre><span class="nv">xs = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
 <span class="nx">xs</span><span class="p">.</span><span class="nx">onChange</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([index, removed, added]) -&gt;</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;replaced </span><span class="si">#{</span><span class="nx">removed</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="s"> element(s) at offset </span><span class="si">#{</span><span class="nx">index</span><span class="si">}</span><span class="s"> with </span><span class="si">#{</span><span class="nx">removed</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="s"> new element(s)&quot;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;replaced </span><span class="si">#{</span><span class="nx">removed</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="s"> element(s) at offset </span><span class="si">#{</span><span class="nx">index</span><span class="si">}</span><span class="s"> with </span><span class="si">#{</span><span class="nx">added</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="s"> new element(s)&quot;</span>
 <span class="nx">xs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 <span class="c1"># replaced 0 element(s) at offset 3 with 1 new element(s)</span>
 </pre></div>
@@ -259,7 +259,8 @@ events):</p>
 </pre></div>
 
 <h2 id="static-templates"><a name="static-templates">Static Templates</a></h2>
-<p>Now for a brief jump to something entirely different....</p>
+<p>Now for a brief jump to something entirely different from reactive
+programming....</p>
 <p>The &quot;template&quot; system is implemented as an embedded domain-specific language
 (DSL) in CoffeeScript, which happens to have a syntax that <a href="https://github.com/jashkenas/coffee-script/wiki/%5Bextensibility%5D-writing-DSLs">lends itself
 well</a> to expressing the template structure.</p>
@@ -301,7 +302,7 @@ well</a> to expressing the template structure.</p>
 
 <span class="c1"># Or equivalently:</span>
 
-<span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;friends&#39;</span><span class="p">},</span> <span class="nx">names</span><span class="p">.</span><span class="nx">map</span><span class="nf">(name) -&gt;</span>
+<span class="nx">ul</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;friends&#39;</span><span class="p">},</span> <span class="nx">names</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(name) -&gt;</span>
   <span class="nx">li</span> <span class="p">{</span><span class="k">class</span><span class="o">:</span> <span class="s">&#39;friend&#39;</span><span class="p">},</span> <span class="p">[</span><span class="nx">name</span><span class="p">]</span>
 
 <span class="c1"># Conditionals:</span>
@@ -428,8 +429,9 @@ the <code>specialAttrs</code> global structure.</p>
 <h2 id="reactive-templates"><a name="reactive-templates">Reactive Templates</a></h2>
 <p>Reactive templates tie together the UI-building style from the previous section
 with the reactive programming primitives from earlier.</p>
-<p>You could just write explicit imperative code to transform the DOM in a way
-that consistently reflects the bindings you&#39;re interested in.  For instance:</p>
+<p>Now, you <em>could</em> just write explicit imperative code to transform the DOM
+in a way that consistently reflects the bindings you&#39;re interested in.
+For instance:</p>
 <div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span><span class="nx">input</span> <span class="p">{</span>
   <span class="k">class</span><span class="o">:</span> <span class="s">&#39;name passive&#39;</span>
   <span class="nv">type: </span><span class="s">&#39;text&#39;</span>
