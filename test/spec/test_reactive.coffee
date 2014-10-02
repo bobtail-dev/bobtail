@@ -363,10 +363,7 @@ describe 'rxv', ->
       expect(elt).not.toBeUndefined()
       expect(elt instanceof SVGRectElement).toBe(true)
     it 'should have the set attributes', ->
-      #expect(elt.prop('class')).toBe('my-class')
-      #expect(elt.prop('id')).toBe('my-elt')
-      #expect(elt.hasClass('my-class')).toBe(true)
-      #expect(elt.data('foo')).toBe('bar')
+      expect(elt.getAttribute('x')).toBe('10')
 
 describe 'nested mutations', ->
   it 'should not complain about directly nested mutations in dependent binds of dependent binds', ->
