@@ -849,6 +849,76 @@ rxFactory = (_, $) ->
 
     rxv = {}
 
+    # TODO: Remove duplicate mktag?
+    
+    rxv.mktag = mktag = (tag) -> 
+      (arg1, arg2) ->
+        # arguments are either (), (attrs: Object), (contents: non-Object), or
+        # (attrs: Object, contents: non-Object)
+        [attrs, contents] =
+          if not arg1? and not arg2?
+            [{}, null]
+          else if arg2?
+            [arg1, arg2]
+          else if _.isString(arg1) or arg1 instanceof SVGElement or _.isArray(arg1) or arg1 instanceof ObsCell or arg1 instanceof ObsArray
+              [{}, arg1]
+          else
+            [arg1, null]
+ 
+        elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
+        for name, value of _.omit(attrs, _.keys(specialAttrs))
+            if value instanceof ObsCell
+              do (name) -> 
+                value.onSet.sub ([old, val]) -> setProp(elt, name, val)
+            else
+              setProp(elt, name, value)
+ 
+        if contents?
+          toNodes = (contents) ->
+            for child in contents
+              if _.isString(child)
+                document.createTextNode(child)
+              else if child instanceof SVGElement
+                child
+              else
+                throw 'Unknown element type in array: ' + child.constructor.name
+ 
+          updateContents = (contents) ->
+            (elt.removeChild elt.firstChild) while elt.firstChild
+            if _.isArray(contents)
+              (elt.appendChild node) for node in toNodes(contents)
+            else if _.isString(contents)
+                updateContents([contents])
+              else
+                  throw 'Unknown type for contents: ' + contents.constructor.name
+ 
+          if contents instanceof ObsArray
+            contents.onChange.sub ([index, removed, added]) -> 
+              (elt.removeChild elt.childNodes[index]) for i in [0...removed.length]
+              toAdd = toNodes(added)
+              if index == elt.childNodes.length
+                (elt.appendChild node) for node in toAdd
+              else 
+                (elt.childNodes[index].insertBefore node) for node in toAdd
+          
+      
+          else if contents instanceof ObsCell
+            contents.onSet.sub(([old, val]) -> updateContents(val))
+      
+          else
+            updateContents(contents)
+ 
+        for key of attrs when key of specialAttrs
+          specialAttrs[key](elt, attrs[key], attrs, contents)
+        elt
+ 
+
+    # From <https://developer.mozilla.org/en-US/docs/Web/SVG/Element>
+ 
+    svg_tags =  ["a", "altglyph", "altglyphdef", "altglyphitem", "animate", "animatecolor", "animatemotion", "animatetransform", "circle", "clippath", "color-profile", "cursor", "defs", "desc", "ellipse", "feblend", "fecolormatrix", "fecomponenttransfer", "fecomposite", "feconvolvematrix", "fediffuselighting", "fedisplacementmap", "fedistantlight", "feflood", "fefunca", "fefuncb", "fefuncg", "fefuncr", "fegaussianblur", "feimage", "femerge", "femergenode", "femorphology", "feoffset", "fepointlight", "fespecularlighting", "fespotlight", "fetile", "feturbulence", "filter", "font", "font-face", "font-face-format", "font-face-name", "font-face-src", "font-face-uri", "foreignobject", "g", "glyph", "glyphref", "hkern", "image", "line", "lineargradient", "marker", "mask", "metadata", "missing-glyph", "mpath", "path", "pattern", "polygon", "polyline", "radialgradient", "rect", "script", "set", "stop", "style", "svg", "switch", "symbol", "text", "textpath", "title", "tref", "tspan", "use", "view", "vkern"]
+    rxv.tags = _.object([tag, rxv.mktag(tag)] for tag in svg_tags)
+    rxv.importTags = (x) => _(x ? this).extend(rxv.tags)
+
     rx.rxv = rxv
     
     #
