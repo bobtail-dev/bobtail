@@ -844,6 +844,14 @@ rxFactory = (_, $) ->
     rxt.importTags = (x) => _(x ? this).extend(rxt.tags)
 
     #
+    # reactive vector graphics DSL
+    #
+
+    rxv = {}
+
+    rx.rxv = rxv
+    
+    #
     # rxt utilities
     #
 
