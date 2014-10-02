@@ -356,14 +356,13 @@ describe 'Ev', ->
 
 describe 'rxv', ->
   describe 'object creation', ->
-    elem = null
+    elt = null
     beforeEach ->
-      elem = rxv.tags.rect {x:10, y:20, height:100, width:100, fill:"blue", stroke: "red"}
+      elt = rxv.tags.rect {x:10, y:20, height:100, width:100, fill:"blue", stroke: "red"}
     it 'should have the right tag', ->
-      expect(elem).not.toBeUndefined()
-      expect(elem instanceof SVGRectElement).toBe(true)
+      expect(elt).not.toBeUndefined()
+      expect(elt instanceof SVGRectElement).toBe(true)
     it 'should have the set attributes', ->
-      expect(true).toBe(true)
       #expect(elt.prop('class')).toBe('my-class')
       #expect(elt.prop('id')).toBe('my-elt')
       #expect(elt.hasClass('my-class')).toBe(true)
