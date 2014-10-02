@@ -358,12 +358,34 @@ describe 'rxv', ->
   describe 'object creation', ->
     elt = null
     beforeEach ->
-      elt = rxv.tags.rect {x:10, y:20, height:100, width:100, fill:"blue", stroke: "red"}
+      elt = rxv.tags.rect {
+        x:10
+        y:20
+        height:100
+        width:100
+        fill:"blue"
+        stroke: "red"
+      }, [
+       rxv.tags.animatetransform({
+        attributeName: "transform"
+        begin: "0s"
+        dur: "20s"
+        type: "rotate"
+        from: "0 60 60"
+        to: "360 60 60"
+        repeatCount: "indefinite" 
+       })
+     ]
     it 'should have the right tag', ->
-      expect(elt).not.toBeUndefined()
+      expect(elt).toBeDefined()
       expect(elt instanceof SVGRectElement).toBe(true)
     it 'should have the set attributes', ->
       expect(elt.getAttribute('x')).toBe('10')
+    it 'should have the given child contents', ->
+      expect(elt.contents).toBeDefined()
+      cont = elt.contents()
+      expect(cont.length).toBe(1)
+      expect(cont[0] instanceof SVGAnimatetransformElement).toBe(true)
 
 describe 'nested mutations', ->
   it 'should not complain about directly nested mutations in dependent binds of dependent binds', ->

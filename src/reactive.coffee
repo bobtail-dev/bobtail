@@ -874,7 +874,7 @@ rxFactory = (_, $) ->
         for name, value of _.omit(attrs, _.keys(specialAttrs))
             if value instanceof ObsCell
               do (name) -> 
-                value.onSet.sub ([old, val]) -> setProp(elt, name, val)
+                value.onSet.sub ([old, val]) -> setSVGProp(elt, name, val)
             else
               setSVGProp(elt, name, value)
  
