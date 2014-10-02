@@ -356,11 +356,11 @@ describe 'Ev', ->
 
 describe 'rxv', ->
   describe 'object creation', ->
-    elt = null
+    elem = null
     beforeEach ->
-      elt = rxv.tags.rect
+      elem = rxv.tags.rect {x:10, y:20, height:100, width:100, fill:"blue", stroke: "red"}
     it 'should have the right tag', ->
-      expect(true).toBe(true)
+      expect(elem).not.toBeUndefined();
       #expect(elt.is('rect')).toBe(true)
     it 'should have the set attributes', ->
       expect(true).toBe(true)

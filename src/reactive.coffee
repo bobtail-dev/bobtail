@@ -852,8 +852,10 @@ rxFactory = (_, $) ->
 
     rxv = {}
 
-    # TODO: Remove duplicate mktag?
+    setSVGProp = (elt, prop, val) ->
+      elt.setAttribute prop, val
     
+    # TODO: Remove duplicate mktag?
     rxv.mktag = mktag = (tag) -> 
       (arg1, arg2) ->
         # arguments are either (), (attrs: Object), (contents: non-Object), or
@@ -874,7 +876,7 @@ rxFactory = (_, $) ->
               do (name) -> 
                 value.onSet.sub ([old, val]) -> setProp(elt, name, val)
             else
-              setProp(elt, name, value)
+              setSVGProp(elt, name, value)
  
         if contents?
           toNodes = (contents) ->
