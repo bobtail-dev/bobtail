@@ -2,7 +2,7 @@
 var rx, rxt;
 try{
   console.log("Node test beginning.");
-  rx = require('../.tmp/scripts/reactive.js');
+  rx = require('../.tmp/reactive.js');
   var c = rx.cell(3.14);
   if(c.get()!=3.14)
     throw "rx.cell not working correctly";

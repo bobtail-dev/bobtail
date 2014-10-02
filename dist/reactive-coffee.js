@@ -5,7 +5,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, _fn, _i, _len;
+    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, toNodes, updateContents, _fn, _i, _len;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -1445,7 +1445,7 @@
           return setProp(elt, prop, xform(val));
         }
       };
-      rxt.mkAtts = mkAtts = function(attstr) {
+      mkAtts = function(attstr) {
         return (function(atts) {
           var classes, cls, id;
           id = attstr.match(/[#](\w+)/);
@@ -1467,10 +1467,102 @@
           return atts;
         })({});
       };
+      normalizeTagArgs = function(arg1, arg2) {
+        if ((arg1 == null) && (arg2 == null)) {
+          return [{}, null];
+        } else if (arg1 instanceof Object && (arg2 != null)) {
+          return [arg1, arg2];
+        } else if (_.isString(arg1) && (arg2 != null)) {
+          return [mkAtts(arg1), arg2];
+        } else if ((arg2 == null) && _.isString(arg1) || _.isNumber(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray) {
+          return [{}, arg1];
+        } else {
+          return [arg1, null];
+        }
+      };
+      toNodes = function(contents) {
+        var child, parsed, _j, _len1, _results;
+        _results = [];
+        for (_j = 0, _len1 = contents.length; _j < _len1; _j++) {
+          child = contents[_j];
+          if (child != null) {
+            if (_.isString(child) || _.isNumber(child)) {
+              _results.push(document.createTextNode(child));
+            } else if (child instanceof Element) {
+              _results.push(child);
+            } else if (child instanceof RawHtml) {
+              parsed = $(child.html);
+              if (parsed.length !== 1) {
+                throw new Error('RawHtml must wrap a single element');
+              }
+              _results.push(parsed[0]);
+            } else if (child instanceof $) {
+              if (child.length !== 1) {
+                throw new Error('jQuery object must wrap a single element');
+              }
+              _results.push(child[0]);
+            } else {
+              throw new Error("Unknown element type in array: " + child.constructor.name + " (must be string, number, Element, RawHtml, or jQuery objects)");
+            }
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
+      };
+      updateContents = function(elt, contents) {
+        var covers, hasWidth, left, node, nodes, top;
+        elt.html('');
+        if (_.isArray(contents)) {
+          nodes = toNodes(contents);
+          elt.append(nodes);
+          if (false) {
+            hasWidth = function(node) {
+              var e;
+              try {
+                return ($(node).width() != null) !== 0;
+              } catch (_error) {
+                e = _error;
+                return false;
+              }
+            };
+            covers = (function() {
+              var _j, _len1, _ref, _ref1, _results;
+              _ref = nodes != null ? nodes : [];
+              _results = [];
+              for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+                node = _ref[_j];
+                if (!(hasWidth(node))) {
+                  continue;
+                }
+                _ref1 = $(node).offset(), left = _ref1.left, top = _ref1.top;
+                _results.push($('<div/>').appendTo($('body').first()).addClass('updated-element').offset({
+                  top: top,
+                  left: left
+                }).width($(node).width()).height($(node).height()));
+              }
+              return _results;
+            })();
+            return setTimeout((function() {
+              var cover, _j, _len1, _results;
+              _results = [];
+              for (_j = 0, _len1 = covers.length; _j < _len1; _j++) {
+                cover = covers[_j];
+                _results.push($(cover).remove());
+              }
+              return _results;
+            }), 2000);
+          }
+        } else if (_.isString(contents) || _.isNumber(contents) || contents instanceof Element || contents instanceof RawHtml || contents instanceof $) {
+          return updateContents(elt, [contents]);
+        } else {
+          throw new Error("Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)");
+        }
+      };
       rxt.mktag = mktag = function(tag) {
         return function(arg1, arg2) {
-          var attrs, contents, elt, key, name, toNodes, updateContents, value, _ref, _ref1;
-          _ref = (arg1 == null) && (arg2 == null) ? [{}, null] : arg1 instanceof Object && (arg2 != null) ? [arg1, arg2] : _.isString(arg1) && (arg2 != null) ? [mkAtts(arg1), arg2] : (arg2 == null) && _.isString(arg1) || _.isNumber(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray ? [{}, arg1] : [arg1, null], attrs = _ref[0], contents = _ref[1];
+          var attrs, contents, elt, key, name, value, _ref, _ref1;
+          _ref = normalizeTagArgs(arg1, arg2), attrs = _ref[0], contents = _ref[1];
           elt = $("<" + tag + "/>");
           _ref1 = _.omit(attrs, _.keys(specialAttrs));
           for (name in _ref1) {
@@ -1478,85 +1570,6 @@
             setDynProp(elt, name, value);
           }
           if (contents != null) {
-            toNodes = function(contents) {
-              var child, parsed, _j, _len1, _results;
-              _results = [];
-              for (_j = 0, _len1 = contents.length; _j < _len1; _j++) {
-                child = contents[_j];
-                if (child != null) {
-                  if (_.isString(child) || _.isNumber(child)) {
-                    _results.push(document.createTextNode(child));
-                  } else if (child instanceof Element) {
-                    _results.push(child);
-                  } else if (child instanceof RawHtml) {
-                    parsed = $(child.html);
-                    if (parsed.length !== 1) {
-                      throw new Error('RawHtml must wrap a single element');
-                    }
-                    _results.push(parsed[0]);
-                  } else if (child instanceof $) {
-                    if (child.length !== 1) {
-                      throw new Error('jQuery object must wrap a single element');
-                    }
-                    _results.push(child[0]);
-                  } else {
-                    throw new Error("Unknown element type in array: " + child.constructor.name + " (must be string, number, Element, RawHtml, or jQuery objects)");
-                  }
-                } else {
-                  _results.push(void 0);
-                }
-              }
-              return _results;
-            };
-            updateContents = function(contents) {
-              var covers, hasWidth, left, node, nodes, top;
-              elt.html('');
-              if (_.isArray(contents)) {
-                nodes = toNodes(contents);
-                elt.append(nodes);
-                if (false) {
-                  hasWidth = function(node) {
-                    var e;
-                    try {
-                      return ($(node).width() != null) !== 0;
-                    } catch (_error) {
-                      e = _error;
-                      return false;
-                    }
-                  };
-                  covers = (function() {
-                    var _j, _len1, _ref2, _ref3, _results;
-                    _ref2 = nodes != null ? nodes : [];
-                    _results = [];
-                    for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-                      node = _ref2[_j];
-                      if (!(hasWidth(node))) {
-                        continue;
-                      }
-                      _ref3 = $(node).offset(), left = _ref3.left, top = _ref3.top;
-                      _results.push($('<div/>').appendTo($('body').first()).addClass('updated-element').offset({
-                        top: top,
-                        left: left
-                      }).width($(node).width()).height($(node).height()));
-                    }
-                    return _results;
-                  })();
-                  return setTimeout((function() {
-                    var cover, _j, _len1, _results;
-                    _results = [];
-                    for (_j = 0, _len1 = covers.length; _j < _len1; _j++) {
-                      cover = covers[_j];
-                      _results.push($(cover).remove());
-                    }
-                    return _results;
-                  }), 2000);
-                }
-              } else if (_.isString(contents) || _.isNumber(contents) || contents instanceof Element || contents instanceof RawHtml || contents instanceof $) {
-                return updateContents([contents]);
-              } else {
-                throw new Error("Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)");
-              }
-            };
             if (contents instanceof ObsArray) {
               rx.autoSub(contents.onChange, function(_arg) {
                 var added, index, removed, toAdd;
@@ -1573,10 +1586,10 @@
               rx.autoSub(contents.onSet, function(_arg) {
                 var old, val;
                 old = _arg[0], val = _arg[1];
-                return updateContents(val);
+                return updateContents(elt, val);
               });
             } else {
-              updateContents(contents);
+              updateContents(elt, contents);
             }
           }
           for (key in attrs) {

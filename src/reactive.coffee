@@ -719,7 +719,7 @@ rxFactory = (_, $) ->
       else
         setProp(elt, prop, xform(val))
 
-    rxt.mkAtts = mkAtts = (attstr) ->
+    mkAtts = (attstr) ->
       do(atts = {}) ->
         id = attstr.match /[#](\w+)/
         atts.id = id[1] if id
@@ -728,76 +728,79 @@ rxFactory = (_, $) ->
           atts.class = (cls.replace(/^\./, '') for cls in classes).join(' ')
         atts
 
+    # arguments to a tag may be:
+    #   ()
+    #   (attrs: Object)
+    #   (contents: Contents)
+    #   (attrs: Object, contents: Contents)
+    # where Contents is:
+    #   string | number | Element | RawHtml | $ | Array | ObsCell | ObsArray
+    normalizeTagArgs = (arg1, arg2) ->
+      if not arg1? and not arg2?
+        [{}, null]
+      else if arg1 instanceof Object and arg2?
+        [arg1, arg2]
+      else if _.isString(arg1) and arg2?
+        [mkAtts(arg1), arg2]
+      else if not arg2? and
+          _.isString(arg1) or
+          _.isNumber(arg1) or
+          arg1 instanceof Element or
+          arg1 instanceof RawHtml or
+          arg1 instanceof $ or
+          _.isArray(arg1) or
+          arg1 instanceof ObsCell or
+          arg1 instanceof ObsArray
+        [{}, arg1]
+      else
+        [arg1, null]
+
+    toNodes = (contents) ->
+      for child in contents
+        if child?
+          if _.isString(child) or _.isNumber(child)
+            document.createTextNode(child)
+          else if child instanceof Element
+            child
+          else if child instanceof RawHtml
+            parsed = $(child.html)
+            throw new Error('RawHtml must wrap a single element') if parsed.length != 1
+            parsed[0]
+          else if child instanceof $
+            throw new Error('jQuery object must wrap a single element') if child.length != 1
+            child[0]
+          else
+            throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, number, Element, RawHtml, or jQuery objects)")
+
+    updateContents = (elt, contents) ->
+      elt.html('')
+      if _.isArray(contents)
+        nodes = toNodes(contents)
+        elt.append(nodes)
+        if false # this is super slow
+          hasWidth = (node) ->
+            try $(node).width()? != 0
+            catch e then false
+          covers = for node in nodes ? [] when hasWidth(node)
+            {left, top} = $(node).offset()
+            $('<div/>').appendTo($('body').first())
+              .addClass('updated-element').offset({top,left})
+              .width($(node).width()).height($(node).height())
+          setTimeout (-> $(cover).remove() for cover in covers), 2000
+      else if _.isString(contents) or _.isNumber(contents) or contents instanceof Element or
+          contents instanceof RawHtml or contents instanceof $
+        updateContents(elt, [contents])
+      else
+        throw new Error("Unknown type for element contents: #{contents.constructor.name} (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)")
 
     rxt.mktag = mktag = (tag) ->
       (arg1, arg2) ->
-        # arguments may be:
-        #   ()
-        #   (attrs: Object)
-        #   (contents: Contents)
-        #   (attrs: Object, contents: Contents)
-        # where Contents is:
-        #   string | number | Element | RawHtml | $ | Array | ObsCell | ObsArray
-        [attrs, contents] =
-          if not arg1? and not arg2?
-            [{}, null]
-          else if arg1 instanceof Object and arg2?
-            [arg1, arg2]
-          else if _.isString(arg1) and arg2?
-            [mkAtts(arg1), arg2]
-          else if not arg2? and
-              _.isString(arg1) or
-              _.isNumber(arg1) or
-              arg1 instanceof Element or
-              arg1 instanceof RawHtml or
-              arg1 instanceof $ or
-              _.isArray(arg1) or
-              arg1 instanceof ObsCell or
-              arg1 instanceof ObsArray
-            [{}, arg1]
-          else
-            [arg1, null]
+        [attrs, contents] = normalizeTagArgs(arg1, arg2)
 
         elt = $("<#{tag}/>")
         for name, value of _.omit(attrs, _.keys(specialAttrs))
           setDynProp(elt, name, value)
         if contents?
-          toNodes = (contents) ->
-            for child in contents
-              if child?
-                if _.isString(child) or _.isNumber(child)
-                  document.createTextNode(child)
-                else if child instanceof Element
-                  child
-                else if child instanceof RawHtml
-                  parsed = $(child.html)
-                  throw new Error('RawHtml must wrap a single element') if parsed.length != 1
-                  parsed[0]
-                else if child instanceof $
-                  throw new Error('jQuery object must wrap a single element') if child.length != 1
-                  child[0]
-                else
-                  throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, number, Element, RawHtml, or jQuery objects)")
-          updateContents = (contents) ->
-            elt.html('')
-            if _.isArray(contents)
-              nodes = toNodes(contents)
-              elt.append(nodes)
-              if false # this is super slow
-                hasWidth = (node) ->
-                  try $(node).width()? != 0
-                  catch e then false
-                covers = for node in nodes ? [] when hasWidth(node)
-                  {left, top} = $(node).offset()
-                  $('<div/>').appendTo($('body').first())
-                    .addClass('updated-element').offset({top,left})
-                    .width($(node).width()).height($(node).height())
-                setTimeout (-> $(cover).remove() for cover in covers), 2000
-            else if _.isString(contents) or _.isNumber(contents) or contents instanceof Element or
-                contents instanceof RawHtml or contents instanceof $
-              updateContents([contents])
-            else
-              throw new Error("Unknown type for element contents: #{contents.constructor.name} (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)")
           if contents instanceof ObsArray
             rx.autoSub contents.onChange, ([index, removed, added]) ->
               elt.contents().slice(index, index + removed.length).remove()
@@ -810,9 +813,9 @@ rxFactory = (_, $) ->
             # TODO: make this more efficient by checking each element to see if it
             # changed (i.e. layer a MappedDepArray over this, and make DepArrays
             # propagate the minimal change set)
-            rx.autoSub contents.onSet, ([old, val]) -> updateContents(val)
+            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
           else
-            updateContents(contents)
+            updateContents(elt, contents)
         for key of attrs when key of specialAttrs
           specialAttrs[key](elt, attrs[key], attrs, contents)
         elt
