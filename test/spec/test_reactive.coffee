@@ -83,7 +83,7 @@ describe 'tag', ->
         x: 10
         y: 20
       }, bind -> [
-        rxt.tags.button ['click me']
+        rxt.tags.animatetransform ['click me']
       ] 
       
     it 'should have the right tag', ->
