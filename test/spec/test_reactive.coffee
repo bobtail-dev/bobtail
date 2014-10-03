@@ -65,8 +65,6 @@ describe 'tag', ->
     it 'should have the given child contents', ->
       cont = elt.contents()
       child = cont.last()
-      console.log(child)
-      console.log(child.is)
       expect(cont.length).toBe(2)
       expect(cont[0]).toEqual(jasmine.any(Text))
       expect(cont[0].textContent).toBe('hello world')
@@ -96,15 +94,12 @@ describe 'tag', ->
       
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
-      console.log(elt.is)
       expect(elt.is('rect')).toBe(true)
     it 'should have the set attributes', ->
       expect(elt.attr('x')).toBe('10')
     it 'should have the given child contents', ->
       cont = elt.contents()
       child = cont.last()
-      console.log(child)
-      console.log(child.is)
       expect(cont.length).toBe(1)
       expect(cont.last().is('animatetransform')).toBe(true)
 
