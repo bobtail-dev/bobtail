@@ -84,7 +84,7 @@ describe 'tag', ->
         fill:"blue"
         stroke: "red"
       }, [
-        rxt.tags.animateTransform({
+        rxt.tags.animatetransform({
           attributeName: "transform"
           begin: "0s"
           dur: "20s"
@@ -97,14 +97,13 @@ describe 'tag', ->
       
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
-      console.log(elt)
-      expect(elt instanceof SVGRectElement).toBe(true)
+      expect(elt.is('rect')).toBe(true)
     it 'should have the set attributes', ->
-      expect(elt.getAttribute('x')).toBe('10')
+      expect(elt.attr('x')).toBe(10)
     it 'should have the given child contents', ->
       cont = elt.contents()
       expect(cont.length).toBe(1)
-      expect(cont[0].textContents).toBe("child")
+      expect(cont[0].is('animatetransform')).toBe(true)
 
   describe 'attribute id and class parsing', ->
     it 'should be creatable with #id', ->
