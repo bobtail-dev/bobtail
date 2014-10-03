@@ -81,17 +81,17 @@ describe 'tag', ->
         y: 20
         height: 100
         width: 100
-        fill: "blue"
-        stroke: "red"
+        fill: 'blue'
+        stroke: 'red'
       }, [
         rxt.tags.animatetransform({
-          attributeName: "transform"
-          begin: "0s"
-          dur: "20s"
-          type: "rotate"
-          from: "0 60 60"
-          to: "360 60 60"
-          repeatCount: "indefinite" 
+          attributeName: 'transform'
+          begin: '0s'
+          dur: '20s'
+          type: 'rotate'
+          from: '0 60 60'
+          to: '360 60 60'
+          repeatCount: 'indefinite' 
         })
       ] 
       
