@@ -77,11 +77,11 @@ describe 'tag', ->
     elt = null
     beforeEach ->
       elt = rxt.tags.rect {
-        x:10
-        y:20
-        height:100
-        width:100
-        fill:"blue"
+        x: 10
+        y: 20
+        height: 100
+        width: 100
+        fill: "blue"
         stroke: "red"
       }, [
         rxt.tags.animatetransform({
@@ -99,7 +99,7 @@ describe 'tag', ->
       expect(elt).toBeDefined()
       expect(elt.is('rect')).toBe(true)
     it 'should have the set attributes', ->
-      expect(elt.attr('x')).toBe(10)
+      expect(elt.attr('x')).toBe('10')
     it 'should have the given child contents', ->
       cont = elt.contents()
       expect(cont.length).toBe(1)
