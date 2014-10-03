@@ -83,7 +83,15 @@ describe 'tag', ->
         x: 10
         y: 20
       }, bind -> [
-        rxt.tags.animatetransform ['click me']
+        rxt.tags.animatetransform {
+          attributeName: 'transform'
+          begin: '0s'
+          dur: '20s'
+          type: 'rotate'
+          from: '0 60 60'
+          to: '360 60 60'
+          repeatCount: 'indefinite' 
+        }
       ] 
       
     it 'should have the right tag', ->
@@ -99,7 +107,6 @@ describe 'tag', ->
       console.log(child.is)
       expect(cont.length).toBe(1)
       expect(cont.last().is('animatetransform')).toBe(true)
-      expect(cont.last().text()).toBe('click me')
 
   describe 'attribute id and class parsing', ->
     it 'should be creatable with #id', ->
