@@ -98,7 +98,7 @@ describe 'tag', ->
       console.log(child)
       console.log(child.is)
       expect(cont.length).toBe(1)
-      expect(cont.last().is('button')).toBe(true)
+      expect(cont.last().is('animatetransform')).toBe(true)
       expect(cont.last().text()).toBe('click me')
 
   describe 'attribute id and class parsing', ->
