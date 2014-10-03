@@ -844,9 +844,23 @@ rxFactory = (_, $) ->
       'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button',
       'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea',
       'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details',
-      'menuitem', 'menu',
-      "a", "altglyph", "altglyphdef", "altglyphitem", "animate", "animatecolor", "animatemotion", "animatetransform", "circle", "clippath", "color-profile", "cursor", "defs", "desc", "ellipse", "feblend", "fecolormatrix", "fecomponenttransfer", "fecomposite", "feconvolvematrix", "fediffuselighting", "fedisplacementmap", "fedistantlight", "feflood", "fefunca", "fefuncb", "fefuncg", "fefuncr", "fegaussianblur", "feimage", "femerge", "femergenode", "femorphology", "feoffset", "fepointlight", "fespecularlighting", "fespotlight", "fetile", "feturbulence", "filter", "font", "font-face", "font-face-format", "font-face-name", "font-face-src", "font-face-uri", "foreignobject", "g", "glyph", "glyphref", "hkern", "image", "line", "lineargradient", "marker", "mask", "metadata", "missing-glyph", "mpath", "path", "pattern", "polygon", "polyline", "radialgradient", "rect", "script", "set", "stop", "style", "svg", "switch", "symbol", "text", "textpath", "title", "tref", "tspan", "use", "view", "vkern"]
+      'menuitem', 'menu']
+
     # From <https://developer.mozilla.org/en-US/docs/Web/SVG/Element>
+    svg_tags = ['a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animate', 
+      'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 
+      'color-profile', 'cursor', 'defs', 'desc', 'ellipse', 'feblend', 
+      'fecolormatrix', 'fecomponenttransfer', 'fecomposite', 'feconvolvematrix', 
+      'fediffuselighting', 'fedisplacementmap', 'fedistantlight', 'feflood', 
+      'fefunca', 'fefuncb', 'fefuncg', 'fefuncr', 'fegaussianblur', 'feimage', 
+      'femerge', 'femergenode', 'femorphology', 'feoffset', 'fepointlight', 
+      'fespecularlighting', 'fespotlight', 'fetile', 'feturbulence', 'filter', 
+      'font', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 
+      'font-face-uri', 'foreignobject', 'g', 'glyph', 'glyphref', 'hkern', 'image', 
+      'line', 'lineargradient', 'marker', 'mask', 'metadata', 'missing-glyph', 
+      'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 
+      'script', 'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text', 
+      'textpath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern']
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
     rxt.rawHtml = (html) -> new RawHtml(html)
