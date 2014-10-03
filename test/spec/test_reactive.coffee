@@ -64,6 +64,9 @@ describe 'tag', ->
       expect(elt.css('font-size')).toBe('9px')
     it 'should have the given child contents', ->
       cont = elt.contents()
+      child = cont.last()
+      console.log(child)
+      console.log(child.is)
       expect(cont.length).toBe(2)
       expect(cont[0]).toEqual(jasmine.any(Text))
       expect(cont[0].textContent).toBe('hello world')
@@ -79,20 +82,8 @@ describe 'tag', ->
       elt = rxt.tags.rect {
         x: 10
         y: 20
-        height: 100
-        width: 100
-        fill: 'blue'
-        stroke: 'red'
-      }, [
-        rxt.tags.animatetransform({
-          attributeName: 'transform'
-          begin: '0s'
-          dur: '20s'
-          type: 'rotate'
-          from: '0 60 60'
-          to: '360 60 60'
-          repeatCount: 'indefinite' 
-        })
+      }, bind -> [
+        rxt.tags.button ['click me']
       ] 
       
     it 'should have the right tag', ->
@@ -103,11 +94,12 @@ describe 'tag', ->
       expect(elt.attr('x')).toBe('10')
     it 'should have the given child contents', ->
       cont = elt.contents()
-      expect(cont.length).toBe(1)
-      child = cont[0]
+      child = cont.last()
       console.log(child)
       console.log(child.is)
-      expect(child.is('animatetransform')).toBe(true)
+      expect(cont.length).toBe(1)
+      expect(cont.last().is('button')).toBe(true)
+      expect(cont.last().text()).toBe('click me')
 
   describe 'attribute id and class parsing', ->
     it 'should be creatable with #id', ->
