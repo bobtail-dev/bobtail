@@ -73,6 +73,39 @@ describe 'tag', ->
       expect(elt.attr('init')).toBe(undefined)
       expect(elt.attr('click')).toBe(undefined)
 
+  describe 'SVG object creation', ->
+    elt = null
+    beforeEach ->
+      elt = rxt.tags.rect {
+        x:10
+        y:20
+        height:100
+        width:100
+        fill:"blue"
+        stroke: "red"
+      }, [
+        rxt.tags.animateTransform({
+          attributeName: "transform"
+          begin: "0s"
+          dur: "20s"
+          type: "rotate"
+          from: "0 60 60"
+          to: "360 60 60"
+          repeatCount: "indefinite" 
+        })
+      ] 
+      
+    it 'should have the right tag', ->
+      expect(elt).toBeDefined()
+      console.log(elt)
+      expect(elt instanceof SVGRectElement).toBe(true)
+    it 'should have the set attributes', ->
+      expect(elt.getAttribute('x')).toBe('10')
+    it 'should have the given child contents', ->
+      cont = elt.contents()
+      expect(cont.length).toBe(1)
+      expect(cont[0].textContents).toBe("child")
+
   describe 'attribute id and class parsing', ->
     it 'should be creatable with #id', ->
       elt = div '#zip', 'text'
@@ -353,30 +386,6 @@ describe 'Ev', ->
       ev.pub(n += 1)
     ev.pub(n += 1)
     expect(hits).toBe(2)
-
-describe 'rxv', ->
-  describe 'object creation', ->
-    elt = null
-    beforeEach ->
-      elt = rxv.tags.rect {
-        x:10
-        y:20
-        height:100
-        width:100
-        fill:"blue"
-        stroke: "red"
-      }
-    it 'should have the right tag', ->
-      expect(elt).toBeDefined()
-      expect(elt instanceof SVGRectElement).toBe(true)
-    it 'should have the set attributes', ->
-      expect(elt.getAttribute('x')).toBe('10')
-    it 'should have the given child contents', ->
-      parent = rxv.tags.rect({},["child"])
-      expect(parent.contents).toBeDefined()
-      cont = parent.contents()
-      expect(cont.length).toBe(1)
-      expect(cont[0].textContents).toBe("child")
 
 describe 'nested mutations', ->
   it 'should not complain about directly nested mutations in dependent binds of dependent binds', ->
