@@ -861,6 +861,8 @@ rxFactory = (_, $) ->
       'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 
       'script', 'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text', 
       'textpath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern']
+      
+    tags = tags.concat(svg_tags)
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
     rxt.rawHtml = (html) -> new RawHtml(html)
