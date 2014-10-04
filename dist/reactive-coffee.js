@@ -440,18 +440,37 @@
 
     })(ObsCell);
     ObsArray = rx.ObsArray = (function() {
-      function ObsArray(xs, diff) {
-        this.xs = xs != null ? xs : [];
+      function ObsArray(cells, diff) {
+        this.cells = cells != null ? cells : [];
         this.diff = diff != null ? diff : rx.basicDiff();
         this.onChange = new Ev((function(_this) {
           return function() {
-            return [[0, [], _this.xs]];
+            return [
+              [
+                0, [], rx.snap(function() {
+                  var x0, _i, _len, _ref, _results;
+                  _ref = _this.cells;
+                  _results = [];
+                  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                    x0 = _ref[_i];
+                    _results.push(x0.get());
+                  }
+                  return _results;
+                })
+              ]
+            ];
+          };
+        })(this));
+        this.onChangeCells = new Ev((function(_this) {
+          return function() {
+            return [[0, [], _this.cells]];
           };
         })(this));
         this.indexed_ = null;
       }
 
       ObsArray.prototype.all = function() {
+        var x1, _i, _len, _ref, _results;
         recorder.sub((function(_this) {
           return function(target) {
             return rx.autoSub(_this.onChange, function() {
@@ -459,18 +478,21 @@
             });
           };
         })(this));
-        return _.clone(this.xs);
+        _ref = this.cells;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          x1 = _ref[_i];
+          _results.push(x1.get());
+        }
+        return _results;
       };
 
       ObsArray.prototype.raw = function() {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChange, function() {
-              return target.refresh();
-            });
-          };
-        })(this));
-        return this.xs;
+        return this.all();
+      };
+
+      ObsArray.prototype.rawCells = function() {
+        return this.cells;
       };
 
       ObsArray.prototype.at = function(i) {
@@ -485,13 +507,13 @@
             });
           };
         })(this));
-        return this.xs[i];
+        return this.cells[i].get();
       };
 
       ObsArray.prototype.length = function() {
         recorder.sub((function(_this) {
           return function(target) {
-            return rx.autoSub(_this.onChange, function(_arg) {
+            return rx.autoSub(_this.onChangeCells, function(_arg) {
               var added, index, removed;
               index = _arg[0], removed = _arg[1], added = _arg[2];
               if (removed.length !== added.length) {
@@ -500,17 +522,29 @@
             });
           };
         })(this));
-        return this.xs.length;
+        return this.cells.length;
       };
 
       ObsArray.prototype.map = function(f) {
         var ys;
         ys = new MappedDepArray();
-        rx.autoSub(this.onChange, function(_arg) {
-          var added, index, removed;
-          index = _arg[0], removed = _arg[1], added = _arg[2];
-          return ys.realSplice(index, removed.length, added.map(f));
-        });
+        rx.autoSub(this.onChangeCells, (function(_this) {
+          return function(_arg) {
+            var added, cell, index, newCells, removed, _i, _len, _ref;
+            index = _arg[0], removed = _arg[1], added = _arg[2];
+            _ref = ys.cells.slice(index, index + removed.length);
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              cell = _ref[_i];
+              cell.disconnect();
+            }
+            newCells = added.map(function(item) {
+              return cell = bind(function() {
+                return f(item.get());
+              });
+            });
+            return ys.realSpliceCells(index, removed.length, newCells);
+          };
+        })(this));
         return ys;
       };
 
@@ -532,10 +566,33 @@
         return rx.concat(this, that);
       };
 
+      ObsArray.prototype.realSpliceCells = function(index, count, additions) {
+        var addedElems, removed, removedElems;
+        removed = this.cells.splice.apply(this.cells, [index, count].concat(additions));
+        removedElems = rx.snap(function() {
+          var x2, _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = removed.length; _i < _len; _i++) {
+            x2 = removed[_i];
+            _results.push(x2.get());
+          }
+          return _results;
+        });
+        addedElems = rx.snap(function() {
+          var x3, _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = additions.length; _i < _len; _i++) {
+            x3 = additions[_i];
+            _results.push(x3.get());
+          }
+          return _results;
+        });
+        this.onChangeCells.pub([index, removed, additions]);
+        return this.onChange.pub([index, removedElems, addedElems]);
+      };
+
       ObsArray.prototype.realSplice = function(index, count, additions) {
-        var removed;
-        removed = this.xs.splice.apply(this.xs, [index, count].concat(additions));
-        return this.onChange.pub([index, removed, additions]);
+        return this.realSpliceCells(index, count, additions.map(rx.cell));
       };
 
       ObsArray.prototype._update = function(val, diff) {
@@ -543,7 +600,18 @@
         if (diff == null) {
           diff = this.diff;
         }
-        old = this.xs;
+        old = rx.snap((function(_this) {
+          return function() {
+            var x, _i, _len, _ref, _results;
+            _ref = _this.cells;
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              x = _ref[_i];
+              _results.push(x.get());
+            }
+            return _results;
+          };
+        })(this));
         fullSplice = [0, old.length, val];
         x = null;
         splices = diff != null ? (_ref = permToSplices(old.length, val, diff(old, val))) != null ? _ref : [fullSplice] : [fullSplice];
@@ -640,7 +708,7 @@
         IndexedDepArray.__super__.constructor.call(this, xs, diff);
         this.is = (function() {
           var _i, _len, _ref, _results;
-          _ref = this.xs;
+          _ref = this.cells;
           _results = [];
           for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
             x = _ref[i];
@@ -648,50 +716,90 @@
           }
           return _results;
         }).call(this);
+        this.onChangeCells = new Ev((function(_this) {
+          return function() {
+            return [[0, [], _.zip(_this.cells, _this.is)]];
+          };
+        })(this));
         this.onChange = new Ev((function(_this) {
           return function() {
-            return [[0, [], _.zip(_this.xs, _this.is)]];
+            return [
+              [
+                0, [], _.zip(rx.snap(function() {
+                  return this.all();
+                }), _this.is)
+              ]
+            ];
           };
         })(this));
       }
 
       IndexedDepArray.prototype.map = function(f) {
         var ys;
-        ys = new IndexedMappedDepArray();
-        rx.autoSub(this.onChange, function(_arg) {
-          var a, added, i, index, removed;
-          index = _arg[0], removed = _arg[1], added = _arg[2];
-          return ys.realSplice(index, removed.length, (function() {
-            var _i, _len, _ref, _results;
-            _results = [];
-            for (_i = 0, _len = added.length; _i < _len; _i++) {
-              _ref = added[_i], a = _ref[0], i = _ref[1];
-              _results.push(f(a, i));
+        ys = new MappedDepArray();
+        rx.autoSub(this.onChangeCells, (function(_this) {
+          return function(_arg) {
+            var added, cell, icell, index, item, newCells, removed, _i, _len, _ref;
+            index = _arg[0], removed = _arg[1], added = _arg[2];
+            _ref = ys.cells.slice(index, index + removed.length);
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              cell = _ref[_i];
+              cell.disconnect();
             }
-            return _results;
-          })());
-        });
+            newCells = (function() {
+              var _j, _len1, _ref1, _results;
+              _results = [];
+              for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
+                _ref1 = added[_j], item = _ref1[0], icell = _ref1[1];
+                _results.push(cell = bind(function() {
+                  return f(item.get(), icell);
+                }));
+              }
+              return _results;
+            })();
+            return ys.realSpliceCells(index, removed.length, newCells);
+          };
+        })(this));
         return ys;
       };
 
-      IndexedDepArray.prototype.realSplice = function(index, count, additions) {
-        var i, newIs, offset, removed, _i, _len, _ref, _ref1, _ref2;
-        removed = (_ref = this.xs).splice.apply(_ref, [index, count].concat(__slice.call(additions)));
-        _ref1 = this.is.slice(index + count);
-        for (offset = _i = 0, _len = _ref1.length; _i < _len; offset = ++_i) {
-          i = _ref1[offset];
+      IndexedDepArray.prototype.realSpliceCells = function(index, count, additions) {
+        var addedElems, i, newIs, offset, removed, removedElems, _i, _len, _ref, _ref1;
+        removed = this.cells.splice.apply(this.cells, [index, count].concat(additions));
+        removedElems = rx.snap(function() {
+          var x2, _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = removed.length; _i < _len; _i++) {
+            x2 = removed[_i];
+            _results.push(x2.get());
+          }
+          return _results;
+        });
+        _ref = this.is.slice(index + count);
+        for (offset = _i = 0, _len = _ref.length; _i < _len; offset = ++_i) {
+          i = _ref[offset];
           i.set(index + additions.length + offset);
         }
         newIs = (function() {
-          var _j, _ref2, _results;
+          var _j, _ref1, _results;
           _results = [];
-          for (i = _j = 0, _ref2 = additions.length; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; i = 0 <= _ref2 ? ++_j : --_j) {
+          for (i = _j = 0, _ref1 = additions.length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
             _results.push(rx.cell(index + i));
           }
           return _results;
         })();
-        (_ref2 = this.is).splice.apply(_ref2, [index, count].concat(__slice.call(newIs)));
-        return this.onChange.pub([index, removed, _.zip(additions, newIs)]);
+        (_ref1 = this.is).splice.apply(_ref1, [index, count].concat(__slice.call(newIs)));
+        addedElems = rx.snap(function() {
+          var x3, _j, _len1, _results;
+          _results = [];
+          for (_j = 0, _len1 = additions.length; _j < _len1; _j++) {
+            x3 = additions[_j];
+            _results.push(x3.get());
+          }
+          return _results;
+        });
+        this.onChangeCells.pub([index, removed, _.zip(additions, newIs)]);
+        return this.onChange.pub([index, removedElems, _.zip(addedElems, newIs)]);
       };
 
       return IndexedDepArray;
@@ -1209,7 +1317,7 @@
         return new SrcCell(x);
       },
       array: function(xs, diff) {
-        return new SrcArray(xs, diff);
+        return new SrcArray((xs != null ? xs : []).map(rx.cell), diff);
       },
       map: function(x) {
         return new SrcMap(x);
@@ -1571,16 +1679,38 @@
           }
           if (contents != null) {
             if (contents instanceof ObsArray) {
-              rx.autoSub(contents.onChange, function(_arg) {
-                var added, index, removed, toAdd;
+              rx.autoSub(contents.indexed().onChangeCells, function(_arg) {
+                var added, cell, icell, index, removed, toAdd, _j, _len1, _ref2, _results;
                 index = _arg[0], removed = _arg[1], added = _arg[2];
                 elt.contents().slice(index, index + removed.length).remove();
-                toAdd = toNodes(added);
+                toAdd = toNodes(added.map(function(_arg1) {
+                  var cell, icell;
+                  cell = _arg1[0], icell = _arg1[1];
+                  return rx.snap(function() {
+                    return cell.get();
+                  });
+                }));
                 if (index === elt.contents().length) {
-                  return elt.append(toAdd);
+                  elt.append(toAdd);
                 } else {
-                  return elt.contents().eq(index).before(toAdd);
+                  elt.contents().eq(index).before(toAdd);
                 }
+                _results = [];
+                for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
+                  _ref2 = added[_j], cell = _ref2[0], icell = _ref2[1];
+                  _results.push((function(cell, icell) {
+                    return rx.autoSub(cell.onSet, rx.skipFirst(function(_arg1) {
+                      var ival, old, val;
+                      old = _arg1[0], val = _arg1[1];
+                      ival = snap(function() {
+                        return icell.get();
+                      });
+                      toAdd = toNodes([val]);
+                      return elt.contents().eq(ival).replaceWith(toAdd);
+                    }));
+                  })(cell, icell));
+                }
+                return _results;
               });
             } else if (contents instanceof ObsCell) {
               rx.autoSub(contents.onSet, function(_arg) {

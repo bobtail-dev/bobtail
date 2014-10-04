@@ -2,6 +2,8 @@
 div = rxt.tags.div
 outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
+jasmine.CATCH_EXCEPTIONS = false
+
 describe 'source cell', ->
   src = null
   beforeEach -> src = rx.cell()
@@ -132,6 +134,45 @@ describe 'DepArray', ->
     x.set([2,3,4])
     expect(xs.all()).toEqual([2,3,4])
     expect(ys.all()).toEqual([4,6,8])
+  it 'should capture, react, and cleanup like a regular bind', ->
+    nums = rx.array([0,1])
+    expect(nums.all()).toEqual([0,1])
+
+    mapEvalCount = 0
+    cleanupCount = 0
+    bump = rx.cell(5)
+    bumped = nums.map (num) ->
+      mapEvalCount += 1
+      rx.onDispose -> cleanupCount += 1
+      num + bump.get()
+    expect(bumped.all()).toEqual([5,6])
+    bump.set(3)
+    expect(bumped.all()).toEqual([3,4])
+
+    noCapture = bind ->
+      bumpDup = bind -> bump.get()
+      bumped = nums.map (num) -> num + bump.get()
+      0
+    rx.autoSub noCapture.onSet, rx.skipFirst -> throw new Error()
+    bump.set(2)
+    nums.push(2)
+    expect(noCapture.get()).toBe(0)
+
+    startCleanupCount = cleanupCount
+    nums.removeAt(2)
+    expect(cleanupCount).toBe(startCleanupCount + 1)
+
+    startMapEvalCount = mapEvalCount
+    nums.push(2)
+    expect(mapEvalCount).toBe(startMapEvalCount + 1)
+
+    startMapEvalCount = mapEvalCount
+    nums.put(2,4)
+    expect(mapEvalCount).toBe(startMapEvalCount + 1)
+
+    startMapEvalCount = mapEvalCount
+    bump.set(0)
+    expect(mapEvalCount).toBe(startMapEvalCount + 3)
 
 describe 'ObsMap', ->
   x = cb = a = b = all = null

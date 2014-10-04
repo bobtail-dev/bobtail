@@ -275,27 +275,33 @@ rxFactory = (_, $) ->
       @cleanups.push(cleanup)
 
   ObsArray = class rx.ObsArray
-    constructor: (@xs = [], @diff = rx.basicDiff()) ->
-      @onChange = new Ev(=> [[0, [], @xs]]) # [index, removed, added]
+    constructor: (@cells = [], @diff = rx.basicDiff()) ->
+      @onChange = new Ev(=> [[0, [], rx.snap => (x0.get() for x0 in @cells)]]) # [index, removed, added]
+      @onChangeCells = new Ev(=> [[0, [], @cells]]) # [index, removed, added]
       @indexed_ = null
     all: ->
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
-      _.clone(@xs)
-    raw: ->
-      recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
-      @xs
+      (x1.get() for x1 in @cells)
+    raw: -> @all()
+    rawCells: -> @cells
     at: (i) ->
       recorder.sub (target) => rx.autoSub @onChange, ([index, removed, added]) ->
+        # XXX FIXME
         target.refresh() if index == i
-      @xs[i]
+      @cells[i].get()
     length: ->
-      recorder.sub (target) => rx.autoSub @onChange, ([index, removed, added]) ->
+      recorder.sub (target) => rx.autoSub @onChangeCells, ([index, removed, added]) ->
         target.refresh() if removed.length != added.length
-      @xs.length
+      @cells.length
     map: (f) ->
       ys = new MappedDepArray()
-      rx.autoSub @onChange, ([index, removed, added]) ->
-        ys.realSplice(index, removed.length, added.map(f))
+      rx.autoSub @onChangeCells, ([index, removed, added]) =>
+        for cell in ys.cells[index...index + removed.length]
+          cell.disconnect()
+        newCells =
+          added.map (item) ->
+            cell = bind -> f(item.get())
+        ys.realSpliceCells(index, removed.length, newCells)
       ys
     indexed: ->
       if not @indexed_?
@@ -304,11 +310,16 @@ rxFactory = (_, $) ->
           @indexed_.realSplice(index, removed.length, added)
       @indexed_
     concat: (that) -> rx.concat(this, that)
+    realSpliceCells: (index, count, additions) ->
+      removed = @cells.splice.apply(@cells, [index, count].concat(additions))
+      removedElems = rx.snap -> (x2.get() for x2 in removed)
+      addedElems = rx.snap -> (x3.get() for x3 in additions)
+      @onChangeCells.pub([index, removed, additions])
+      @onChange.pub([index, removedElems, addedElems])
     realSplice: (index, count, additions) ->
-      removed = @xs.splice.apply(@xs, [index, count].concat(additions))
-      @onChange.pub([index, removed, additions])
+      @realSpliceCells(index, count, additions.map(rx.cell))
     _update: (val, diff = @diff) ->
-      old = @xs
+      old = rx.snap => (x.get() for x in @cells)
       fullSplice = [0, old.length, val]
       x = null
       splices =
@@ -339,21 +350,32 @@ rxFactory = (_, $) ->
   IndexedDepArray = class rx.IndexedDepArray extends ObsArray
     constructor: (xs = [], diff) ->
       super(xs, diff)
-      @is = (rx.cell(i) for x,i in @xs)
-      @onChange = new Ev(=> [[0, [], _.zip(@xs, @is)]]) # [index, removed, added]
+      @is = (rx.cell(i) for x,i in @cells)
+      @onChangeCells = new Ev(=> [[0, [], _.zip(@cells, @is)]]) # [index, removed, added]
+      @onChange = new Ev(=> [[0, [], _.zip((rx.snap -> @all()), @is)]])
+    # TODO duplicate code with ObsArray
     map: (f) ->
-      ys = new IndexedMappedDepArray()
-      rx.autoSub @onChange, ([index, removed, added]) ->
-        ys.realSplice(index, removed.length, (f(a,i) for [a,i] in added))
+      ys = new MappedDepArray()
+      rx.autoSub @onChangeCells, ([index, removed, added]) =>
+        for cell in ys.cells[index...index + removed.length]
+          cell.disconnect()
+        newCells =
+          for [item, icell] in added
+            cell = bind -> f(item.get(), icell)
+        ys.realSpliceCells(index, removed.length, newCells)
       ys
-    realSplice: (index, count, additions) ->
-      # rx.transaction =>
-      removed = @xs.splice(index, count, additions...)
+    realSpliceCells: (index, count, additions) ->
+      removed = @cells.splice.apply(@cells, [index, count].concat(additions))
+      removedElems = rx.snap -> (x2.get() for x2 in removed)
+
       for i, offset in @is[index + count...]
         i.set(index + additions.length + offset)
       newIs = (rx.cell(index + i) for i in [0...additions.length])
       @is.splice(index, count, newIs...)
-      @onChange.pub([index, removed, _.zip(additions, newIs)])
+
+      addedElems = rx.snap -> (x3.get() for x3 in additions)
+      @onChangeCells.pub([index, removed, _.zip(additions, newIs)])
+      @onChange.pub([index, removedElems, _.zip(addedElems, newIs)])
   IndexedMappedDepArray = class rx.IndexedMappedDepArray extends IndexedDepArray
 
   DepArray = class rx.DepArray extends ObsArray
@@ -564,7 +586,7 @@ rxFactory = (_, $) ->
 
   _.extend(rx, {
     cell: (x) -> new SrcCell(x)
-    array: (xs, diff) -> new SrcArray(xs, diff)
+    array: (xs, diff) -> new SrcArray((xs ? []).map(rx.cell), diff)
     map: (x) -> new SrcMap(x)
   })
 
@@ -802,13 +824,19 @@ rxFactory = (_, $) ->
           setDynProp(elt, name, value)
         if contents?
           if contents instanceof ObsArray
-            rx.autoSub contents.onChange, ([index, removed, added]) ->
+            rx.autoSub contents.indexed().onChangeCells, ([index, removed, added]) ->
               elt.contents().slice(index, index + removed.length).remove()
-              toAdd = toNodes(added)
+              toAdd = toNodes(added.map ([cell, icell]) -> rx.snap -> cell.get())
               if index == elt.contents().length
                 elt.append(toAdd)
               else
                 elt.contents().eq(index).before(toAdd)
+              for [cell, icell] in added
+                do (cell, icell) ->
+                  rx.autoSub cell.onSet, rx.skipFirst ([old, val]) ->
+                    ival = snap -> icell.get()
+                    toAdd = toNodes([val])
+                    elt.contents().eq(ival).replaceWith(toAdd)
           else if contents instanceof ObsCell
             # TODO: make this more efficient by checking each element to see if it
             # changed (i.e. layer a MappedDepArray over this, and make DepArrays
