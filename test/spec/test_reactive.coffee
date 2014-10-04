@@ -51,6 +51,7 @@ describe 'tag', ->
       ]
     it 'should have the right tag', ->
       expect(elt.is('header')).toBe(true)
+      expect(elt[0] instanceof Element).toBe(true)
     it 'should have the set attributes', ->
       expect(elt.prop('class')).toBe('my-class')
       expect(elt.attr('style')).toBe('font-size: 10px')
@@ -95,6 +96,7 @@ describe 'tag', ->
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
       expect(elt.is('rect')).toBe(true)
+      expect(elt[0] instanceof SVGElement).toBe(true)
     it 'should have the set attributes', ->
       expect(elt.attr('x')).toBe('10')
     it 'should have the given child contents', ->
