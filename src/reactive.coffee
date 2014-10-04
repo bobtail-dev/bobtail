@@ -802,27 +802,6 @@ rxFactory = (_, $) ->
           elt.append(toAdd)
         else
           elt.contents().eq(index).before(toAdd)
-      
-    rxt.mktag = mktag = (tag) ->
-      (arg1, arg2) ->
-        [attrs, contents] = normalizeTagArgs(arg1, arg2)
-
-        elt = $("<#{tag}/>")
-        for name, value of _.omit(attrs, _.keys(specialAttrs))
-          setDynProp(elt, name, value)
-        if contents?
-          if contents instanceof ObsArray
-            autoSubContents(elt, contents)
-          else if contents instanceof ObsCell
-            # TODO: make this more efficient by checking each element to see if it
-            # changed (i.e. layer a MappedDepArray over this, and make DepArrays
-            # propagate the minimal change set)
-            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
-          else
-            updateContents(elt, contents)
-        for key of attrs when key of specialAttrs
-          specialAttrs[key](elt, attrs[key], attrs, contents)
-        elt
 
     # From <https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list>
     #
@@ -863,6 +842,29 @@ rxFactory = (_, $) ->
       'textpath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern']
       
     tags = tags.concat(svg_tags)
+      
+    rxt.mktag = mktag = (tag) ->
+      (arg1, arg2) ->
+        [attrs, contents] = normalizeTagArgs(arg1, arg2)
+
+        #elt = if tag in svg_tags then document.createElementNS('http://www.w3.org/2000/svg', tag) else $("<#{tag}/>")
+        elt = $("<#{tag}/>")
+        for name, value of _.omit(attrs, _.keys(specialAttrs))
+          setDynProp(elt, name, value)
+        if contents?
+          if contents instanceof ObsArray
+            autoSubContents(elt, contents)
+          else if contents instanceof ObsCell
+            # TODO: make this more efficient by checking each element to see if it
+            # changed (i.e. layer a MappedDepArray over this, and make DepArrays
+            # propagate the minimal change set)
+            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
+          else
+            updateContents(elt, contents)
+        for key of attrs when key of specialAttrs
+          specialAttrs[key](elt, attrs[key], attrs, contents)
+        elt
+
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
     rxt.rawHtml = (html) -> new RawHtml(html)
