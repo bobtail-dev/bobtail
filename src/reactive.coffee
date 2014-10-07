@@ -825,6 +825,27 @@ rxFactory = (_, $) ->
       'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details',
       'menuitem', 'menu']
 
+    rxt.mktag = mktag = (tag) ->
+      (arg1, arg2) ->
+        [attrs, contents] = normalizeTagArgs(arg1, arg2)
+        elt = $("<#{tag}/>")
+        for name, value of _.omit(attrs, _.keys(specialAttrs))
+          setDynProp(elt, name, value)
+        if contents?
+          if contents instanceof ObsArray
+            autoSubContents(elt, contents)
+          else if contents instanceof ObsCell
+            # TODO: make this more efficient by checking each element to see if it
+            # changed (i.e. layer a MappedDepArray over this, and make DepArrays
+            # propagate the minimal change set)
+            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
+          else
+            updateContents(elt, contents)
+        for key of attrs when key of specialAttrs
+          specialAttrs[key](elt, attrs[key], attrs, contents)
+        console.log(">mktag #{elt}")
+        elt
+
     # From <https://developer.mozilla.org/en-US/docs/Web/SVG/Element>
     svg_tags = ['a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animate', 
       'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 
@@ -841,16 +862,20 @@ rxFactory = (_, $) ->
       'script', 'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text', 
       'textpath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern']
       
-    tags = tags.concat(svg_tags)
-      
-    rxt.mktag = mktag = (tag) ->
+    setSVGProp = (elt, name, value) ->
+    	if value instanceof ObsCell
+    		do (name) -> 
+    			value.onSet.sub ([old, val]) -> setProp(elt, name, val)
+    	else
+    		setProp(elt, name, value)
+            
+    rxt.svg_mktag = mktag = (tag) ->
       (arg1, arg2) ->
         [attrs, contents] = normalizeTagArgs(arg1, arg2)
 
-        #elt = if tag in svg_tags then document.createElementNS('http://www.w3.org/2000/svg', tag) else $("<#{tag}/>")
-        elt = $("<#{tag}/>")
+        elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
         for name, value of _.omit(attrs, _.keys(specialAttrs))
-          setDynProp(elt, name, value)
+          setSVGProp(elt, name, value)
         if contents?
           if contents instanceof ObsArray
             autoSubContents(elt, contents)
@@ -863,10 +888,12 @@ rxFactory = (_, $) ->
             updateContents(elt, contents)
         for key of attrs when key of specialAttrs
           specialAttrs[key](elt, attrs[key], attrs, contents)
+        console.log(">mktag_svg #{elt}")
         elt
 
-
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
+    rxt.svg_tags = _.object([tag, rxt.svg_mktag(tag)] for tag in svg_tags)
+    
     rxt.rawHtml = (html) -> new RawHtml(html)
     rxt.importTags = (x) => _(x ? this).extend(rxt.tags)
     

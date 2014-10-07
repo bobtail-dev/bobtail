@@ -78,11 +78,11 @@ describe 'tag', ->
   describe 'SVG object creation', ->
     elt = null
     beforeEach ->
-      elt = rxt.tags.rect {
+      elt = rxt.svg_tags.rect {
         x: 10
         y: 20
       }, bind -> [
-        rxt.tags.animatetransform {
+        rxt.svg_tags.animatetransform {
           attributeName: 'transform'
           begin: '0s'
           dur: '20s'
@@ -96,7 +96,8 @@ describe 'tag', ->
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
       expect(elt.is('rect')).toBe(true)
-      expect(elt[0] instanceof SVGElement).toBe(true)
+      console.log(elt)
+      expect(elt instanceof SVGElement).toBe(true)
     it 'should have the set attributes', ->
       expect(elt.attr('x')).toBe('10')
     it 'should have the given child contents', ->
