@@ -864,9 +864,9 @@ rxFactory = (_, $) ->
     setSVGProp = (elt, name, value) ->
     	if value instanceof ObsCell
     		do (name) -> 
-    			value.onSet.sub ([old, val]) -> elt.setAttribute name, val)
+    			value.onSet.sub ([old, val]) -> elt.setAttribute name, value
     	else
-    		elt.setAttribute name, val)
+    		elt.setAttribute name, value
             
     rxt.svg_mktag = mktag = (tag) ->
       (arg1, arg2) ->
