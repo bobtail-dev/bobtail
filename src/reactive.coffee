@@ -864,14 +864,15 @@ rxFactory = (_, $) ->
     setSVGProp = (elt, name, value) ->
     	if value instanceof ObsCell
     		do (name) -> 
-    			value.onSet.sub ([old, val]) -> setProp(elt, name, val)
+    			value.onSet.sub ([old, val]) -> elt.setAttribute name, val)
     	else
-    		setProp(elt, name, value)
+    		elt.setAttribute name, val)
             
     rxt.svg_mktag = mktag = (tag) ->
       (arg1, arg2) ->
         [attrs, contents] = normalizeTagArgs(arg1, arg2)
 
+        console.log("svg_mktag #{tag} with #{attrs.toString()}")
         elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
         console.log("svg_mktag createElementNS #{elt}")
         for name, value of _.omit(attrs, _.keys(specialAttrs))
