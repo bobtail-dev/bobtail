@@ -99,10 +99,11 @@ describe 'tag', ->
     it 'should have the set attributes', ->
       expect(elt.getAttribute('x')).toBe('10')
     it 'should have the given child contents', ->
-      kids = elt.childNodes()
-      console.log(kids )
+      console.log("!!!elt: #{elt}")
+      kids = elt.children
+      console.log("!!!elt.children: #{elt.children}")
       expect(kids.length).toBe(1)
-      expect(kids[0].is('animatetransform')).toBe(true)
+      expect(kids[0] instanceof SVGElement).toBe(true)
 
   describe 'attribute id and class parsing', ->
     it 'should be creatable with #id', ->

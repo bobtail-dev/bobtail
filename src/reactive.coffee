@@ -871,7 +871,9 @@ rxFactory = (_, $) ->
     updateSVGContents = (elt, contents) ->
       (elt.removeChild elt.firstChild) while elt.firstChild
       if _.isArray(contents)
-        (elt.appendChild node) for node in toNodes(contents)
+        toAdd = toNodes(contents)
+        (elt.appendChild node) for node in toAdd 
+        console.log("    -updateSVGContents firstChild #{elt.firstChild}")
       else if _.isString(contents)
         updateSVGContents(elt, [contents])
       else
@@ -885,22 +887,30 @@ rxFactory = (_, $) ->
         for name, value of _.omit(attrs, _.keys(specialAttrs))
           setSVGProp(elt, name, value)
           
-        console.log("mktag contents #{contents} ")
+        #console.log("mktag contents #{contents} ")
         if contents?
+          #console.log("+mktag contents #{contents} ")
           if contents instanceof ObsArray
+            #console.log("+mktag contents ObsArray #{contents} ")
             contents.onChange.sub ([index, removed, added]) -> 
               (elt.removeChild elt.childNodes[index]) for i in [0...removed.length]
               toAdd = toNodes(added)
+              #console.log("-mktag toAdd  #{toAdd} ")
               if index == elt.childNodes.length
                 (elt.appendChild node) for node in toAdd
               else 
                 (elt.childNodes[index].insertBefore node) for node in toAdd
           else if contents instanceof ObsCell
+            #console.log("+mktag contents ObsCell #{contents} ")
             contents.onSet.sub(([old, val]) -> updateSVGContents(elt, val))      
+            #console.log("-mktag contents ObsCell #{elt} ")
+            #console.log("-mktag contents children #{elt.children} ")
           else
+            #console.log("+mktag contents updateSVGContents #{contents} ")
             updateSVGContents(elt, contents)          
+          #console.log("-mktag contents #{contents} ")
         
-        console.log("mktag specialAttrs #{specialAttrs} ")
+        #console.log("mktag specialAttrs #{specialAttrs} ")
         for key of attrs when key of specialAttrs
             specialAttrs[key](elt, attrs[key], attrs, contents)
         elt
