@@ -99,7 +99,6 @@ describe 'tag', ->
     it 'should have the set attributes', ->
       expect(elt.getAttribute('x')).toBe('10')
     it 'should have the given child contents', ->
-      console.log("!!!elt: #{elt}")
       kids = elt.childNodes
       expect(kids.length).toBe(1)
       expect(kids[0] instanceof SVGElement).toBe(true)
