@@ -100,8 +100,8 @@ describe 'tag', ->
     it 'should have the set attributes', ->
       expect(elt.getAttribute('x')).toBe('10')
     it 'should have the given child contents', ->
-      cont = elt.contents()
-      child = cont.last()
+      cont = elt.childNodes()
+      child = cont[0]
       expect(cont.length).toBe(1)
       expect(cont.last().is('animatetransform')).toBe(true)
 
