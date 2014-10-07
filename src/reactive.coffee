@@ -874,9 +874,12 @@ rxFactory = (_, $) ->
         [attrs, contents] = normalizeTagArgs(arg1, arg2)
 
         elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
+        console.log("svg_mktag createElementNS #{elt}")
         for name, value of _.omit(attrs, _.keys(specialAttrs))
           setSVGProp(elt, name, value)
+        console.log("svg_mktag setSVGProp #{elt}")
         if contents?
+        console.log("svg_mktag contents #{elt}")
           if contents instanceof ObsArray
             autoSubContents(elt, contents)
           else if contents instanceof ObsCell
