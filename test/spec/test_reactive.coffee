@@ -81,8 +81,7 @@ describe 'tag', ->
       elt = rxt.svg_tags.rect {
         x: 10
         y: 20
-      }
-      ###, bind -> [
+      }, bind -> [
         rxt.svg_tags.animatetransform {
           attributeName: 'transform'
           begin: '0s'
@@ -92,7 +91,7 @@ describe 'tag', ->
           to: '360 60 60'
           repeatCount: 'indefinite' 
         }
-      ] ###
+      ]
       
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
@@ -100,10 +99,10 @@ describe 'tag', ->
     it 'should have the set attributes', ->
       expect(elt.getAttribute('x')).toBe('10')
     it 'should have the given child contents', ->
-      cont = elt.childNodes()
-      child = cont[0]
-      expect(cont.length).toBe(1)
-      expect(cont.last().is('animatetransform')).toBe(true)
+      kids = elt.childNodes()
+      console.log(kids )
+      expect(kids.length).toBe(1)
+      expect(kids[0].is('animatetransform')).toBe(true)
 
   describe 'attribute id and class parsing', ->
     it 'should be creatable with #id', ->
