@@ -843,7 +843,6 @@ rxFactory = (_, $) ->
             updateContents(elt, contents)
         for key of attrs when key of specialAttrs
           specialAttrs[key](elt, attrs[key], attrs, contents)
-        console.log(">mktag #{elt}")
         elt
 
     # From <https://developer.mozilla.org/en-US/docs/Web/SVG/Element>
@@ -879,7 +878,7 @@ rxFactory = (_, $) ->
           setSVGProp(elt, name, value)
         console.log("svg_mktag setSVGProp #{elt}")
         if contents?
-        console.log("svg_mktag contents #{elt}")
+          console.log("svg_mktag contents #{elt}")
           if contents instanceof ObsArray
             autoSubContents(elt, contents)
           else if contents instanceof ObsCell
