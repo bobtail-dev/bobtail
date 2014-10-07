@@ -868,12 +868,12 @@ rxFactory = (_, $) ->
       else
         elt.setAttribute name, value
 
-    updateSVGContents = (contents) ->
+    updateSVGContents = (elt, contents) ->
       (elt.removeChild elt.firstChild) while elt.firstChild
       if _.isArray(contents)
         (elt.appendChild node) for node in toNodes(contents)
       else if _.isString(contents)
-        updateSVGContents([contents])
+        updateSVGContents(elt, [contents])
       else
         throw 'Unknown type for contents: ' + contents.constructor.name
             
@@ -896,9 +896,9 @@ rxFactory = (_, $) ->
               else 
                 (elt.childNodes[index].insertBefore node) for node in toAdd
           else if contents instanceof ObsCell
-            contents.onSet.sub(([old, val]) -> updateSVGContents(val))      
+            contents.onSet.sub(([old, val]) -> updateSVGContents(elt, val))      
           else
-            updateSVGContents(contents)          
+            updateSVGContents(elt, contents)          
         
         console.log("mktag specialAttrs #{specialAttrs} ")
         for key of attrs when key of specialAttrs
