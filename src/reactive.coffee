@@ -874,6 +874,8 @@ rxFactory = (_, $) ->
         toAdd = toNodes(contents)
         (elt.appendChild node) for node in toAdd 
         console.log("    -updateSVGContents firstChild #{elt.firstChild}")
+        console.log("    -updateSVGContents childNodes #{elt.childNodes}")
+        console.log("    -updateSVGContents childNodes[0] #{elt.childNodes[0]}")
       else if _.isString(contents)
         updateSVGContents(elt, [contents])
       else
