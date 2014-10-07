@@ -81,7 +81,8 @@ describe 'tag', ->
       elt = rxt.svg_tags.rect {
         x: 10
         y: 20
-      }, bind -> [
+      } 
+      ###, bind -> [
         rxt.svg_tags.animatetransform {
           attributeName: 'transform'
           begin: '0s'
@@ -91,7 +92,7 @@ describe 'tag', ->
           to: '360 60 60'
           repeatCount: 'indefinite' 
         }
-      ]
+      ]###
       
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
