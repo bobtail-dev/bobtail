@@ -867,6 +867,15 @@ rxFactory = (_, $) ->
     			value.onSet.sub ([old, val]) -> elt.setAttribute name, value
     	else
     		elt.setAttribute name, value
+
+		updateSVGContents = (contents) ->
+    	(elt.removeChild elt.firstChild) while elt.firstChild
+    	if _.isArray(contents)
+    	  (elt.appendChild node) for node in toNodes(contents)
+    	else if _.isString(contents)
+    	  updateContents([contents])
+    	else
+    	  throw 'Unknown type for contents: ' + contents.constructor.name
             
     rxt.svg_mktag = mktag = (tag) ->
       (arg1, arg2) ->
