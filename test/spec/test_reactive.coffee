@@ -96,9 +96,8 @@ describe 'tag', ->
       
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
-      expect(elt.is('rect')).toBe(true)
       console.log(elt)
-      expect(elt instanceof SVGElement).toBe(true)
+      expect(elt instanceof SVGRectElement).toBe(true)
     it 'should have the set attributes', ->
       expect(elt.attr('x')).toBe('10')
     it 'should have the given child contents', ->
