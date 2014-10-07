@@ -875,8 +875,9 @@ rxFactory = (_, $) ->
         elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
         console.log("svg_mktag createElementNS #{elt}")
         for name, value of _.omit(attrs, _.keys(specialAttrs))
+          console.log('svg_mktag +setSVGProp')
           setSVGProp(elt, name, value)
-        console.log("svg_mktag setSVGProp #{elt}")
+        console.log("svg_mktag -setSVGProp #{elt}")
         if contents?
           console.log("svg_mktag contents #{elt}")
           if contents instanceof ObsArray
