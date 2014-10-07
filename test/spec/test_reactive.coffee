@@ -96,10 +96,9 @@ describe 'tag', ->
       
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
-      console.log(elt)
       expect(elt instanceof SVGRectElement).toBe(true)
     it 'should have the set attributes', ->
-      expect(elt.attr('x')).toBe('10')
+      expect(elt.getAttribute('x')).toBe('10')
     it 'should have the given child contents', ->
       cont = elt.contents()
       child = cont.last()
