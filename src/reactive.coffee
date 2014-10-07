@@ -873,7 +873,7 @@ rxFactory = (_, $) ->
     	if _.isArray(contents)
     	  (elt.appendChild node) for node in toNodes(contents)
     	else if _.isString(contents)
-    	  updateContents([contents])
+    	  updateSVGContents([contents])
     	else
     	  throw 'Unknown type for contents: ' + contents.constructor.name
             
@@ -884,20 +884,22 @@ rxFactory = (_, $) ->
         elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
         for name, value of _.omit(attrs, _.keys(specialAttrs))
           setSVGProp(elt, name, value)
-        if contents?
-          console.log("svg_mktag contents #{elt}")
-          if contents instanceof ObsArray
-            autoSubContents(elt, contents)
-          else if contents instanceof ObsCell
-            # TODO: make this more efficient by checking each element to see if it
-            # changed (i.e. layer a MappedDepArray over this, and make DepArrays
-            # propagate the minimal change set)
-            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
-          else
-            updateContents(elt, contents)
-        for key of attrs when key of specialAttrs
-          specialAttrs[key](elt, attrs[key], attrs, contents)
-        console.log(">mktag_svg #{elt}")
+          
+      	if contents instanceof ObsArray
+      	  contents.onChange.sub ([index, removed, added]) -> 
+      	    (elt.removeChild elt.childNodes[index]) for i in [0...removed.length]
+      	    toAdd = toNodes(added)
+      	    if index == elt.childNodes.length
+      	      (elt.appendChild node) for node in toAdd
+      	    else 
+      	      (elt.childNodes[index].insertBefore node) for node in toAdd
+      	else if contents instanceof ObsCell
+      	  contents.onSet.sub(([old, val]) -> updateSVGContents(val))			
+      	else
+      	  updateSVGContents(contents)          
+        
+      	for key of attrs when key of specialAttrs
+            specialAttrs[key](elt, attrs[key], attrs, contents)
         elt
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
