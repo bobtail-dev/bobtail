@@ -666,7 +666,9 @@ rxFactory = (_, $) ->
 
   rx.transaction = (f) -> depMgr.transaction(f)
 
+  console.log(" ???JQuery")
   if $?
+    console.log(" !!!JQuery")
     #
     # jQuery extension
     #
@@ -990,6 +992,9 @@ rxFactory = (_, $) ->
       setDynProp elt, 'class', value, (val) ->
         if _.isString(val) then val else rxt.smushClasses(val)
 
+  console.log(" !!!rx")
+  console.log(rx)
+  console.log(rxt)
   rx.rxt = rxt
   rx
 # end rxFactory definition
@@ -998,9 +1003,10 @@ do(root = this, factory = rxFactory, deps = ['underscore', 'jquery']) ->
   if define?.amd?
     define deps, factory
   else if module?.exports?
-    # no jQuery in node
+    console.log(" !!!node+jquery")
+    $    = require '../node_modules/jquery'
     _    = require 'underscore'
-    rx = factory(_)
+    rx = factory(_, $)
     module.exports = rx
   else if root._? and root.$?
     root.rx = factory(root._, root.$)
