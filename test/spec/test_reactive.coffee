@@ -81,6 +81,7 @@ describe 'tag', ->
     elt = null
     beforeEach ->
       elt = rxt.svg_tags.rect {
+        class: "shape"
         x: 10
         y: 20
       }, bind -> [
