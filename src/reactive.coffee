@@ -890,13 +890,6 @@ rxFactory = (_, $) ->
       'script', 'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text', 
       'textpath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern']
       
-    setSVGProp = (elt, name, value) ->
-      if value instanceof ObsCell
-        do (name) -> 
-          value.onSet.sub ([old, val]) -> elt.setAttribute name, value
-      else
-        elt.setAttribute name, value
-
     updateSVGContents = (elt, contents) ->
       (elt.removeChild elt.firstChild) while elt.firstChild
       if _.isArray(contents)
@@ -913,7 +906,7 @@ rxFactory = (_, $) ->
 
         elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
         for name, value of _.omit(attrs, _.keys(specialAttrs))
-          setSVGProp(elt, name, value)
+          setDynProp(elt, name, value)
           
         if contents?
           if contents instanceof ObsArray
