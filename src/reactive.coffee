@@ -996,7 +996,8 @@ do(root = this, factory = rxFactory, deps = ['underscore', 'jquery']) ->
   else if module?.exports?
     $    = require 'jquery'
     _    = require 'underscore'
-    rx = factory(_, $)
+#    rx = factory(_, $) TODO: Figure out why this makes npm test fail
+    rx = factory(_)
     module.exports = rx
   else if root._? and root.$?
     root.rx = factory(root._, root.$)
