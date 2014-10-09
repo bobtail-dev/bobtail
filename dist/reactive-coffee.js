@@ -1531,7 +1531,9 @@
         return _results;
       })());
       setProp = function(elt, prop, val) {
-        if (prop === 'value') {
+        if (elt instanceof SVGElement) {
+          return elt.setAttribute(prop, val);
+        } else if (prop === 'value') {
           return elt.val(val);
         } else if (prop in propSet) {
           return elt.prop(prop, val);
@@ -1938,12 +1940,13 @@
   };
 
   (function(root, factory, deps) {
-    var rx, _;
+    var $, rx, _;
     if ((typeof define !== "undefined" && define !== null ? define.amd : void 0) != null) {
       return define(deps, factory);
     } else if ((typeof module !== "undefined" && module !== null ? module.exports : void 0) != null) {
+      $ = require('jquery');
       _ = require('underscore');
-      rx = factory(_);
+      rx = factory(_, $);
       return module.exports = rx;
     } else if ((root._ != null) && (root.$ != null)) {
       return root.rx = factory(root._, root.$);

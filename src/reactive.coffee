@@ -729,7 +729,9 @@ rxFactory = (_, $) ->
     propSet = _.object([prop, null] for prop in props)
 
     setProp = (elt, prop, val) ->
-      if prop == 'value'
+      if elt instanceof SVGElement
+        elt.setAttribute prop, val
+      else if prop == 'value'
         elt.val(val)
       else if prop of propSet
         elt.prop(prop, val)
