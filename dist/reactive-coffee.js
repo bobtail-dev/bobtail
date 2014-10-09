@@ -1757,7 +1757,7 @@
       };
       rxt.svg_mktag = mktag = function(tag) {
         return function(arg1, arg2) {
-          var attrs, contents, elt, key, name, value, _ref, _ref1;
+          var attrs, contents, elt, first, key, name, value, _ref, _ref1;
           _ref = normalizeTagArgs(arg1, arg2), attrs = _ref[0], contents = _ref[1];
           elt = document.createElementNS('http://www.w3.org/2000/svg', tag);
           _ref1 = _.omit(attrs, _.keys(specialAttrs));
@@ -1791,6 +1791,11 @@
                 }
               });
             } else if (contents instanceof ObsCell) {
+              console.log('!! rxt.svg_mktag ObsCell');
+              console.log("" + elt);
+              first = contents.x[0];
+              console.log(first instanceof SVGElement);
+              console.log(contents.x[0].toString());
               contents.onSet.sub(function(_arg) {
                 var old, val;
                 old = _arg[0], val = _arg[1];
