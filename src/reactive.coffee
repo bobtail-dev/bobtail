@@ -918,11 +918,11 @@ rxFactory = (_, $) ->
               else 
                 (elt.childNodes[index].insertBefore node) for node in toAdd
           else if contents instanceof ObsCell
-            console.log('!! rxt.svg_mktag ObsCell')
-            console.log("#{elt}")
+            #console.log('!! rxt.svg_mktag ObsCell')
+            #console.log("#{elt}")
             first = contents.x[0]
-            console.log(first instanceof SVGElement)
-            console.log(contents.x[0].toString())
+            #console.log(first instanceof SVGElement)
+            #console.log(contents.x[0].toString())
 #            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
             contents.onSet.sub(([old, val]) -> updateSVGContents(elt, val))      
           else
