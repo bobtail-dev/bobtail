@@ -929,7 +929,7 @@ rxFactory = (_, $) ->
             updateSVGContents(elt, contents)          
         
         for key of attrs when key of specialAttrs
-            specialAttrs[key](elt, attrs[key], attrs, contents)
+            specialAttrs[key](elt, attrs[key], attrs, contents) if _.isFunction attrs[key]
         elt
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
