@@ -717,7 +717,11 @@ rxFactory = (_, $) ->
 
     for ev in events
       do (ev) ->
-        specialAttrs[ev] = (elt, fn) -> elt[ev]((e) -> fn.call(elt, e))
+        specialAttrs[ev] = (elt, fn) ->
+          if elt instanceof SVGElement
+            elt.addEventListener ev, fn
+          else 
+            elt[ev]((e) -> fn.call(elt, e))
 
     # attr vs prop:
     # http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
