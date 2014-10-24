@@ -82,6 +82,7 @@ describe 'tag', ->
     beforeEach ->
       elt = rxt.svg_tags.rect {
         class: "shape"
+        click: -> {}
         x: 10
         y: 20
       }, bind -> [
@@ -101,6 +102,7 @@ describe 'tag', ->
       expect(elt instanceof SVGRectElement).toBe(true)
     it 'should have the set attributes', ->
       expect(elt.getAttribute('x')).toBe('10')
+      expect(elt.getAttribute('class')).toBe('shape')
     it 'should have the given child contents', ->
       kids = elt.childNodes
       expect(kids.length).toBe(1)
