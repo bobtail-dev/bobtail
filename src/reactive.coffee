@@ -710,6 +710,8 @@ rxFactory = (_, $) ->
       "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown",
       "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup",
       "ready", "resize", "scroll", "select", "submit", "toggle", "unload"]
+      
+    svg_events = ["click"]
 
     specialAttrs = rxt.specialAttrs = {
       init: (elt, fn) -> fn.call(elt)
@@ -718,7 +720,7 @@ rxFactory = (_, $) ->
     for ev in events
       do (ev) ->
         specialAttrs[ev] = (elt, fn) ->
-          if elt instanceof SVGElement
+          if elt instanceof SVGElement and ev in svg_events
             elt.addEventListener ev, fn
           else 
             elt[ev]((e) -> fn.call(elt, e))
@@ -910,7 +912,9 @@ rxFactory = (_, $) ->
 
         elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
         for name, value of _.omit(attrs, _.keys(specialAttrs))
+          console.log "Creating non-specialAttrs #{name} #{value}"
           setDynProp(elt, name, value)
+          console.log elt.getAttribute(name)
           
         if contents?
           if contents instanceof ObsArray
@@ -933,7 +937,9 @@ rxFactory = (_, $) ->
             updateSVGContents(elt, contents)          
         
         for key of attrs when key of specialAttrs
-            specialAttrs[key](elt, attrs[key], attrs, contents) if _.isFunction attrs[key]
+          console.log "Creating specialAttrs #{key} #{attrs[key]}"
+          specialAttrs[key](elt, attrs[key], attrs, contents)# if _.isFunction attrs[key] or key == "class"
+          console.log elt.getAttribute(key)
         elt
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
