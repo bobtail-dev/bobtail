@@ -2,10 +2,11 @@
   var rxFactory,
     __slice = [].slice,
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
+    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -1504,6 +1505,7 @@
 
       })();
       events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "ready", "resize", "scroll", "select", "submit", "toggle", "unload"];
+      svg_events = ["click"];
       specialAttrs = rxt.specialAttrs = {
         init: function(elt, fn) {
           return fn.call(elt);
@@ -1511,9 +1513,13 @@
       };
       _fn = function(ev) {
         return specialAttrs[ev] = function(elt, fn) {
-          return elt[ev](function(e) {
-            return fn.call(elt, e);
-          });
+          if (elt instanceof SVGElement && __indexOf.call(svg_events, ev) >= 0) {
+            return elt.addEventListener(ev, fn);
+          } else {
+            return elt[ev](function(e) {
+              return fn.call(elt, e);
+            });
+          }
         };
       };
       for (_i = 0, _len = events.length; _i < _len; _i++) {
@@ -1791,11 +1797,7 @@
                 }
               });
             } else if (contents instanceof ObsCell) {
-              console.log('!! rxt.svg_mktag ObsCell');
-              console.log("" + elt);
               first = contents.x[0];
-              console.log(first instanceof SVGElement);
-              console.log(contents.x[0].toString());
               contents.onSet.sub(function(_arg) {
                 var old, val;
                 old = _arg[0], val = _arg[1];

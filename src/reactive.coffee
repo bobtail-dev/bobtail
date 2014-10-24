@@ -912,9 +912,7 @@ rxFactory = (_, $) ->
 
         elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
         for name, value of _.omit(attrs, _.keys(specialAttrs))
-          console.log "Creating non-specialAttrs #{name} #{value}"
           setDynProp(elt, name, value)
-          console.log elt.getAttribute(name)
           
         if contents?
           if contents instanceof ObsArray
@@ -926,20 +924,14 @@ rxFactory = (_, $) ->
               else 
                 (elt.childNodes[index].insertBefore node) for node in toAdd
           else if contents instanceof ObsCell
-            #console.log('!! rxt.svg_mktag ObsCell')
-            #console.log("#{elt}")
             first = contents.x[0]
-            #console.log(first instanceof SVGElement)
-            #console.log(contents.x[0].toString())
 #            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
             contents.onSet.sub(([old, val]) -> updateSVGContents(elt, val))      
           else
             updateSVGContents(elt, contents)          
         
         for key of attrs when key of specialAttrs
-          console.log "Creating specialAttrs #{key} #{attrs[key]}"
-          specialAttrs[key](elt, attrs[key], attrs, contents)# if _.isFunction attrs[key] or key == "class"
-          console.log elt.getAttribute(key)
+          specialAttrs[key](elt, attrs[key], attrs, contents)
         elt
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
