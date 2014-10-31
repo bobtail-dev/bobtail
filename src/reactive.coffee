@@ -710,6 +710,8 @@ rxFactory = (_, $) ->
       "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown",
       "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup",
       "ready", "resize", "scroll", "select", "submit", "toggle", "unload"]
+      
+    svg_events = ["click"]
 
     specialAttrs = rxt.specialAttrs = {
       init: (elt, fn) -> fn.call(elt)
@@ -717,7 +719,11 @@ rxFactory = (_, $) ->
 
     for ev in events
       do (ev) ->
-        specialAttrs[ev] = (elt, fn) -> elt[ev]((e) -> fn.call(elt, e))
+        specialAttrs[ev] = (elt, fn) ->
+          if elt instanceof SVGElement and ev in svg_events
+            elt.addEventListener ev, fn
+          else 
+            elt[ev]((e) -> fn.call(elt, e))
 
     # attr vs prop:
     # http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
@@ -918,12 +924,14 @@ rxFactory = (_, $) ->
               else 
                 (elt.childNodes[index].insertBefore node) for node in toAdd
           else if contents instanceof ObsCell
+            first = contents.x[0]
+#            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
             contents.onSet.sub(([old, val]) -> updateSVGContents(elt, val))      
           else
             updateSVGContents(elt, contents)          
         
         for key of attrs when key of specialAttrs
-            specialAttrs[key](elt, attrs[key], attrs, contents)
+          specialAttrs[key](elt, attrs[key], attrs, contents)
         elt
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
