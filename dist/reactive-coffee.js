@@ -1950,5 +1950,3 @@
   })(this, rxFactory, ['underscore', 'jquery']);
 
 }).call(this);
-
-//# sourceMappingURL=reactive.js.map
