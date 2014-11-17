@@ -1755,7 +1755,7 @@
             _results.push(elt.appendChild(node));
           }
           return _results;
-        } else if (_.isString(contents)) {
+        } else if (_.isString(contents) || contents instanceof SVGElement) {
           return updateSVGContents(elt, [contents]);
         } else {
           throw 'Unknown type for contents: ' + contents.constructor.name;
@@ -1950,5 +1950,3 @@
   })(this, rxFactory, ['underscore', 'jquery']);
 
 }).call(this);
-
-//# sourceMappingURL=reactive.js.map
