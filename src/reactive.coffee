@@ -902,7 +902,7 @@ rxFactory = (_, $) ->
       if _.isArray(contents)
         toAdd = toNodes(contents)
         (elt.appendChild node) for node in toAdd 
-      else if _.isString(contents)
+      else if _.isString(contents) or contents instanceof SVGElement
         updateSVGContents(elt, [contents])
       else
         console.error 'updateSVGContents', elt, contents
@@ -1006,8 +1006,8 @@ do(root = this, factory = rxFactory, deps = ['underscore', 'jquery']) ->
   else if module?.exports?
     $    = require 'jquery'
     _    = require 'underscore'
-    rx = factory(_, $)
-    module.exports = rx
+    rx = factory(_, $) # TODO: Figure out why this makes npm test fail
+    module.exports = rx 
   else if root._? and root.$?
     root.rx = factory(root._, root.$)
   else
