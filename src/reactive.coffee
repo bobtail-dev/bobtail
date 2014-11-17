@@ -904,7 +904,8 @@ rxFactory = (_, $) ->
       else if _.isString(contents)
         updateSVGContents(elt, [contents])
       else
-        throw 'Unknown type for contents: ' + contents.constructor.name
+        console.log 'ERROR: updateSVGContents', elt, contents
+        throw "Must wrap contents #{contents} as array or string"
             
     rxt.svg_mktag = mktag = (tag) ->
       (arg1, arg2) ->

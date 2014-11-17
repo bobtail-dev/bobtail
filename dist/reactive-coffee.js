@@ -1758,7 +1758,7 @@
         } else if (_.isString(contents)) {
           return updateSVGContents(elt, [contents]);
         } else {
-          throw 'Unknown type for contents: ' + contents.constructor.name;
+          return console.log('updateSVGContents', elt, contents);
         }
       };
       rxt.svg_mktag = mktag = function(tag) {
