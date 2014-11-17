@@ -144,7 +144,7 @@ rxFactory = (_, $) ->
     # disconnects)
     mutating: (f) ->
       if @stack.length > 0
-        console.warn('Mutation to observable detected during a bind context')
+        console.warn 'Mutating observable inside bind context', @stack, f
         @onMutationWarning.pub(null)
       wasMutating = @isMutating
       @isMutating = true
