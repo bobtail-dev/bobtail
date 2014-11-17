@@ -113,6 +113,7 @@ rxFactory = (_, $) ->
     # dependency
     record: (dep, f) ->
       _(@stack).last().addNestedBind(dep) if @stack.length > 0 and not @isMutating
+      console.log "No dependency #{dep} to record", @stack, f unless dep
       @stack.push(dep)
       # reset isMutating
       wasMutating = @isMutating
