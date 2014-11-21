@@ -1006,6 +1006,10 @@
         return this.x[key];
       };
 
+      ObsMap.prototype.has = function(key) {
+        return this.x[key] != null;
+      };
+
       ObsMap.prototype.all = function() {
         recorder.sub((function(_this) {
           return function(target) {

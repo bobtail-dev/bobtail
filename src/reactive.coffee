@@ -433,6 +433,8 @@ rxFactory = (_, $) ->
       recorder.sub (target) => rx.autoSub @onRemove, ([subkey, old]) ->
         target.refresh() if key == subkey
       @x[key]
+    has: (key) ->
+      @x[key]?
     all: ->
       recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
