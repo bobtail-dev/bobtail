@@ -22,7 +22,7 @@
         <nav class="side-nav">
           <ul>
             <li><a href="quickstart.html">Quickstart Examples</a></li>
-            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#transactions">Transactions</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#more-on-arrays-and-reactive-templates">More on Arrays and Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#lifting">Lifting</a></li><li><a href="#anti-pattern--non-nesting">Anti-Pattern: Non-Nesting</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
+            <li><a href="tutorial.html" class="current">Tutorial</a><ul class="toc"><li><a href="#getting-started">Getting Started</a></li><li><a href="#cells">Cells</a></li><li><a href="#events">Events</a></li><li><a href="#dependent-cells">Dependent Cells</a></li><li><a href="#transactions">Transactions</a></li><li><a href="#arrays-and-maps">Arrays and Maps</a></li><li><a href="#object-oriented-programming--a-pattern-for-public-and-private-cells-">Object-Oriented Programming: A Pattern for Public and Private cells.</a></li><li><a href="#static-templates">Static Templates</a></li><li><a href="#reactive-templates">Reactive Templates</a></li><li><a href="#more-on-arrays-and-reactive-templates">More on Arrays and Reactive Templates</a></li><li><a href="#components">Components</a></li><li><a href="#binding-to-dom-element-attributes">Binding To DOM Element Attributes</a></li><li><a href="#lifting">Lifting</a></li><li><a href="#anti-pattern--non-nesting">Anti-Pattern: Non-Nesting</a></li><li><a href="#next-steps">Next Steps</a></li></ul></li>
             <li><a href="advanced.html">Advanced Concepts</a></li>
             <li><a href="api.html">API Reference</a></li>
             <li><a href="changes.html">Change Log</a></li>
@@ -300,6 +300,35 @@ instance, if you had:</p>
 
 <p>Then <code>mar</code> will be re-evaluated only when the <code>&quot;Mar&quot;</code> key is
 changed/removed, and <code>dec</code> will only when the <code>&quot;Dec&quot;</code> key is inserted.</p>
+<h2 id="object-oriented-programming-a-pattern-for-public-and-private-cells-"><a name="object-oriented-programming--a-pattern-for-public-and-private-cells-">Object-Oriented Programming: A Pattern for Public and Private cells.</a></h2>
+<p>Often, when using an object-oriented approach, one wants to expose values to the user without permitting them 
+to change those values directly. When using reactive, we would also want the user to be able to subscribe 
+listeners. to these private cells. In addition, we still need to be able to set the value of the cell internally. 
+To achieve this,  we can make use of <code>rx.bind</code>, which returns a <code>DepCell</code> object. These objects do not have a 
+set method, and thus cannot be directly mutated by the user:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nx">Incrementer</span>
+  <span class="nv">constructor: </span><span class="nf">-&gt;</span>
+    <span class="nv">_value = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># private field which can be freely changed within this constructor&#39;s scope.</span>
+    <span class="vi">@value = </span><span class="nx">bind</span> <span class="o">=&gt;</span> <span class="nx">_value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="c1"># public field; its value mirrors that of _value, but cannot be directly changed by the user.</span>
+    <span class="vi">@increment = </span><span class="o">=&gt;</span> <span class="nx">_value</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="nv">inc = </span><span class="k">new</span> <span class="nx">Incrementer</span><span class="p">()</span>
+<span class="nx">inc</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([oldVal, newVal]) -&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newVal</span><span class="p">)</span>
+<span class="nx">inc</span><span class="p">.</span><span class="nx">increment</span><span class="p">()</span> <span class="c1"># prints 1</span>
+<span class="nx">inc</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span> <span class="c1"># error, not allowed.</span>
+</pre></div>
+
+<p>The usefulness of this pattern is not limited to object oriented programming. We can use this any time we wish to return
+a read-only cell:</p>
+<div class="highlight"><pre><span class="nv">autoIncrementedCell = </span><span class="nf">(start) -&gt;</span> 
+  <span class="nv">value = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">(</span><span class="nx">start</span><span class="p">)</span>
+  <span class="nx">setInterval</span><span class="p">(</span><span class="nx">value</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1000</span><span class="p">)</span>
+  <span class="k">return</span> <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">value</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+
+<span class="nv">c = </span><span class="nx">autoIncrementedCell</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="nx">c</span><span class="p">.</span><span class="nx">onSet</span><span class="p">.</span><span class="nx">sub</span> <span class="nf">([oldVal, newVal]) -&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newVal</span><span class="p">)</span>
+</pre></div>
+
 <h2 id="static-templates"><a name="static-templates">Static Templates</a></h2>
 <p>Now for a brief jump to something entirely different from reactive
 programming....</p>
