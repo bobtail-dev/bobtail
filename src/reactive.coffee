@@ -113,7 +113,6 @@ rxFactory = (_, $) ->
     # dependency
     record: (dep, f) ->
       _(@stack).last().addNestedBind(dep) if @stack.length > 0 and not @isMutating
-      console.log "No dependency #{dep} to record", @stack, f unless dep
       @stack.push(dep)
       # reset isMutating
       wasMutating = @isMutating
@@ -145,7 +144,7 @@ rxFactory = (_, $) ->
     # disconnects)
     mutating: (f) ->
       if @stack.length > 0
-        console.warn 'Mutating observable inside bind context', @stack, f
+        console.warn('Mutation to observable detected during a bind context')
         @onMutationWarning.pub(null)
       wasMutating = @isMutating
       @isMutating = true
@@ -670,7 +669,6 @@ rxFactory = (_, $) ->
   rx.transaction = (f) -> depMgr.transaction(f)
 
   if $?
-
     #
     # jQuery extension
     #
@@ -940,10 +938,9 @@ rxFactory = (_, $) ->
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
     rxt.svg_tags = _.object([tag, rxt.svg_mktag(tag)] for tag in svg_tags)
-    
+
     rxt.rawHtml = (html) -> new RawHtml(html)
     rxt.importTags = (x) => _(x ? this).extend(rxt.tags)
-    
     #
     # rxt utilities
     #

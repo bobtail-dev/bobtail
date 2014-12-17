@@ -184,9 +184,6 @@
         if (this.stack.length > 0 && !this.isMutating) {
           _(this.stack).last().addNestedBind(dep);
         }
-        if (!dep) {
-          console.log("No dependency " + dep + " to record", this.stack, f);
-        }
         this.stack.push(dep);
         wasMutating = this.isMutating;
         this.isMutating = false;
@@ -218,7 +215,7 @@
       Recorder.prototype.mutating = function(f) {
         var wasMutating;
         if (this.stack.length > 0) {
-          console.warn('Mutating observable inside bind context', this.stack, f);
+          console.warn('Mutation to observable detected during a bind context');
           this.onMutationWarning.pub(null);
         }
         wasMutating = this.isMutating;
@@ -1962,3 +1959,5 @@
   })(this, rxFactory);
 
 }).call(this);
+
+//# sourceMappingURL=reactive.js.map

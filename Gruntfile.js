@@ -65,6 +65,9 @@ module.exports = function (grunt) {
     },
     coffee: {
       dist: {
+        options: {
+          sourceMap: true
+        },
         files: [{
           expand: true,
           cwd: '<%= yeoman.src %>',
@@ -111,6 +114,11 @@ module.exports = function (grunt) {
     },
     uglify: {
       dist: {
+        options: {
+          sourceMap: true,
+          sourceMapIn: 'dist/reactive.js.map',
+          sourceMapName: 'dist/reactive-coffee.min.js.map'
+        },
         files: {
           '<%= yeoman.dist %>/<%= yeoman.name %>.min.js': [
             '<%= yeoman.dist %>/<%= yeoman.name %>.js'
