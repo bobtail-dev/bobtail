@@ -1941,12 +1941,16 @@
     return rx;
   };
 
-  (function(root, factory, deps) {
-    var $, rx, _;
+  (function(root, factory) {
+    var $, deps, is_browser, rx, _;
+    deps = ['underscore'];
+    if (is_browser = typeof window !== 'undefined') {
+      deps.push('jquery');
+    }
     if ((typeof define !== "undefined" && define !== null ? define.amd : void 0) != null) {
       return define(deps, factory);
     } else if ((typeof module !== "undefined" && module !== null ? module.exports : void 0) != null) {
-      $ = require('jquery');
+      $ = is_browser ? require('jquery') : void 0;
       _ = require('underscore');
       rx = factory(_, $);
       return module.exports = rx;
@@ -1955,6 +1959,6 @@
     } else {
       throw "Dependencies are not met for reactive: _ and $ not found";
     }
-  })(this, rxFactory, ['underscore', 'jquery']);
+  })(this, rxFactory);
 
 }).call(this);

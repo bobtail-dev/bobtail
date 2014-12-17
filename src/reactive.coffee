@@ -1002,14 +1002,18 @@ rxFactory = (_, $) ->
   rx
 # end rxFactory definition
 
-do(root = this, factory = rxFactory, deps = ['underscore', 'jquery']) ->
+do(root = this, factory = rxFactory) ->
+  deps = ['underscore']
+  if is_browser = typeof(window) != 'undefined'
+    deps.push 'jquery'
+
   if define?.amd?
     define deps, factory
   else if module?.exports?
-    $    = require 'jquery'
-    _    = require 'underscore'
-    rx = factory(_, $) # TODO: Figure out why this makes npm test fail
-    module.exports = rx 
+    $ = if is_browser then require('jquery')
+    _ = require 'underscore'
+    rx = factory(_, $)
+    module.exports = rx
   else if root._? and root.$?
     root.rx = factory(root._, root.$)
   else
