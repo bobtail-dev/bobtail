@@ -165,6 +165,9 @@ rxFactory = (_, $) ->
     dep.refresh()
     dep
 
+  rx.promiseBind = promiseBind = (init, f) ->
+    asyncBind init, -> @record(f).done (res) => @done(res)
+
   rx.bind = bind = (f) ->
     asyncBind null, -> @done(@record(f))
 

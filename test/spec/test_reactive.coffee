@@ -494,6 +494,22 @@ describe 'asyncBind', ->
     runs -> x.set(5)
     waitsFor (-> w.get() == 6), 'The async should have fired', 1
 
+describe 'promiseBind', ->
+  it 'should work', ->
+    sleep = (wait) ->
+      deferred = $.Deferred()
+      setTimeout(
+        -> deferred.resolve(42 + wait)
+        wait
+      )
+      deferred.promise()
+    waitTime = rx.cell(10)
+    secretToLife = rx.promiseBind null, -> sleep(waitTime.get())
+    runs -> expect(secretToLife.get()).toBe(null)
+    waitsFor (-> secretToLife.get() == 52), 'promiseBind should have fired', 11
+    runs -> waitTime.set(5)
+    waitsFor (-> secretToLife.get() == 47), 'promiseBind should have fired', 6
+
 describe 'lagBind', ->
   x = y = evaled = null
   beforeEach ->
