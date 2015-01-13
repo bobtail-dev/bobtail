@@ -435,6 +435,8 @@ rxFactory = (_, $) ->
       recorder.sub (target) => rx.autoSub @onRemove, ([subkey, old]) ->
         target.refresh() if key == subkey
       @x[key]
+    has: (key) ->
+      @x[key]?
     all: ->
       recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
@@ -712,6 +714,8 @@ rxFactory = (_, $) ->
       "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown",
       "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup",
       "ready", "resize", "scroll", "select", "submit", "toggle", "unload"]
+      
+    svg_events = ["click"]
 
     specialAttrs = rxt.specialAttrs = {
       init: (elt, fn) -> fn.call(elt)
@@ -719,7 +723,11 @@ rxFactory = (_, $) ->
 
     for ev in events
       do (ev) ->
-        specialAttrs[ev] = (elt, fn) -> elt[ev]((e) -> fn.call(elt, e))
+        specialAttrs[ev] = (elt, fn) ->
+          if elt instanceof SVGElement and ev in svg_events
+            elt.addEventListener ev, fn
+          else 
+            elt[ev]((e) -> fn.call(elt, e))
 
     # attr vs prop:
     # http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
@@ -731,7 +739,9 @@ rxFactory = (_, $) ->
     propSet = _.object([prop, null] for prop in props)
 
     setProp = (elt, prop, val) ->
-      if prop == 'value'
+      if elt instanceof SVGElement
+        elt.setAttribute prop, val
+      else if prop == 'value'
         elt.val(val)
       else if prop of propSet
         elt.prop(prop, val)
@@ -771,6 +781,7 @@ rxFactory = (_, $) ->
           _.isString(arg1) or
           _.isNumber(arg1) or
           arg1 instanceof Element or
+          arg1 instanceof SVGElement or
           arg1 instanceof RawHtml or
           arg1 instanceof $ or
           _.isArray(arg1) or
@@ -785,7 +796,7 @@ rxFactory = (_, $) ->
         if child?
           if _.isString(child) or _.isNumber(child)
             document.createTextNode(child)
-          else if child instanceof Element
+          else if child instanceof Element or child instanceof SVGElement
             child
           else if child instanceof RawHtml
             parsed = $(child.html)
@@ -798,7 +809,7 @@ rxFactory = (_, $) ->
             throw new Error("Unknown element type in array: #{child.constructor.name} (must be string, number, Element, RawHtml, or jQuery objects)")
 
     updateContents = (elt, contents) ->
-      elt.html('')
+      elt.html('') if elt.html
       if _.isArray(contents)
         nodes = toNodes(contents)
         elt.append(nodes)
@@ -813,7 +824,7 @@ rxFactory = (_, $) ->
               .width($(node).width()).height($(node).height())
           setTimeout (-> $(cover).remove() for cover in covers), 2000
       else if _.isString(contents) or _.isNumber(contents) or contents instanceof Element or
-          contents instanceof RawHtml or contents instanceof $
+          contents instanceof SVGElement or contents instanceof RawHtml or contents instanceof $
         updateContents(elt, [contents])
       else
         throw new Error("Unknown type for element contents: #{contents.constructor.name} (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)")
@@ -873,10 +884,66 @@ rxFactory = (_, $) ->
       'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details',
       'menuitem', 'menu']
 
+    # From <https://developer.mozilla.org/en-US/docs/Web/SVG/Element>
+    svg_tags = ['a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animate', 
+      'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 
+      'color-profile', 'cursor', 'defs', 'desc', 'ellipse', 'feblend', 
+      'fecolormatrix', 'fecomponenttransfer', 'fecomposite', 'feconvolvematrix', 
+      'fediffuselighting', 'fedisplacementmap', 'fedistantlight', 'feflood', 
+      'fefunca', 'fefuncb', 'fefuncg', 'fefuncr', 'fegaussianblur', 'feimage', 
+      'femerge', 'femergenode', 'femorphology', 'feoffset', 'fepointlight', 
+      'fespecularlighting', 'fespotlight', 'fetile', 'feturbulence', 'filter', 
+      'font', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 
+      'font-face-uri', 'foreignobject', 'g', 'glyph', 'glyphref', 'hkern', 'image', 
+      'line', 'lineargradient', 'marker', 'mask', 'metadata', 'missing-glyph', 
+      'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 
+      'script', 'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text', 
+      'textpath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern']
+      
+    updateSVGContents = (elt, contents) ->
+      (elt.removeChild elt.firstChild) while elt.firstChild
+      if _.isArray(contents)
+        toAdd = toNodes(contents)
+        (elt.appendChild node) for node in toAdd 
+      else if _.isString(contents) or contents instanceof SVGElement
+        updateSVGContents(elt, [contents])
+      else
+        console.error 'updateSVGContents', elt, contents
+        throw "Must wrap contents #{contents} as array or string"
+            
+    rxt.svg_mktag = mktag = (tag) ->
+      (arg1, arg2) ->
+        [attrs, contents] = normalizeTagArgs(arg1, arg2)
+
+        elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
+        for name, value of _.omit(attrs, _.keys(specialAttrs))
+          setDynProp(elt, name, value)
+          
+        if contents?
+          if contents instanceof ObsArray
+            contents.onChange.sub ([index, removed, added]) -> 
+              (elt.removeChild elt.childNodes[index]) for i in [0...removed.length]
+              toAdd = toNodes(added)
+              if index == elt.childNodes.length
+                (elt.appendChild node) for node in toAdd
+              else 
+                (elt.childNodes[index].insertBefore node) for node in toAdd
+          else if contents instanceof ObsCell
+            first = contents.x[0]
+#            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
+            contents.onSet.sub(([old, val]) -> updateSVGContents(elt, val))      
+          else
+            updateSVGContents(elt, contents)          
+        
+        for key of attrs when key of specialAttrs
+          specialAttrs[key](elt, attrs[key], attrs, contents)
+        elt
+
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
+    rxt.svg_tags = _.object([tag, rxt.svg_mktag(tag)] for tag in svg_tags)
+
     rxt.rawHtml = (html) -> new RawHtml(html)
     rxt.importTags = (x) => _(x ? this).extend(rxt.tags)
-
     #
     # rxt utilities
     #
@@ -935,13 +1002,17 @@ rxFactory = (_, $) ->
   rx
 # end rxFactory definition
 
-do(root = this, factory = rxFactory, deps = ['underscore', 'jquery']) ->
+do(root = this, factory = rxFactory) ->
+  deps = ['underscore']
+  if is_browser = typeof(window) != 'undefined'
+    deps.push 'jquery'
+
   if define?.amd?
     define deps, factory
   else if module?.exports?
-    # no jQuery in node
-    _    = require 'underscore'
-    rx = factory(_)
+    $ = if is_browser then require('jquery')
+    _ = require 'underscore'
+    rx = factory(_, $)
     module.exports = rx
   else if root._? and root.$?
     root.rx = factory(root._, root.$)

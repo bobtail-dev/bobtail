@@ -1,4 +1,4 @@
-{bind, Ev, rxt} = rx
+{bind, Ev, rxt, rxv} = rx
 div = rxt.tags.div
 outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
@@ -53,6 +53,7 @@ describe 'tag', ->
       ]
     it 'should have the right tag', ->
       expect(elt.is('header')).toBe(true)
+      expect(elt[0] instanceof Element).toBe(true)
     it 'should have the set attributes', ->
       expect(elt.prop('class')).toBe('my-class')
       expect(elt.attr('style')).toBe('font-size: 10px')
@@ -66,6 +67,7 @@ describe 'tag', ->
       expect(elt.css('font-size')).toBe('9px')
     it 'should have the given child contents', ->
       cont = elt.contents()
+      child = cont.last()
       expect(cont.length).toBe(2)
       expect(cont[0]).toEqual(jasmine.any(Text))
       expect(cont[0].textContent).toBe('hello world')
@@ -74,6 +76,37 @@ describe 'tag', ->
     it 'should not have special attrs set', ->
       expect(elt.attr('init')).toBe(undefined)
       expect(elt.attr('click')).toBe(undefined)
+
+  describe 'SVG object creation', ->
+    elt = null
+    beforeEach ->
+      elt = rxt.svg_tags.rect {
+        class: "shape"
+        click: -> {}
+        x: 10
+        y: 20
+      }, bind -> [
+        rxt.svg_tags.animatetransform {
+          attributeName: 'transform'
+          begin: '0s'
+          dur: '20s'
+          type: 'rotate'
+          from: '0 60 60'
+          to: '360 60 60'
+          repeatCount: 'indefinite' 
+        }
+      ]
+      
+    it 'should have the right tag', ->
+      expect(elt).toBeDefined()
+      expect(elt instanceof SVGRectElement).toBe(true)
+    it 'should have the set attributes', ->
+      expect(elt.getAttribute('x')).toBe('10')
+      expect(elt.getAttribute('class')).toBe('shape')
+    it 'should have the given child contents', ->
+      kids = elt.childNodes
+      expect(kids.length).toBe(1)
+      expect(kids[0] instanceof SVGElement).toBe(true)
 
   describe 'attribute id and class parsing', ->
     it 'should be creatable with #id', ->
