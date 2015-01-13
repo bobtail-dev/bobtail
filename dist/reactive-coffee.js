@@ -2,10 +2,11 @@
   var rxFactory,
     __slice = [].slice,
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, tag, tags, toNodes, updateContents, _fn, _i, _len;
+    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -1011,6 +1012,10 @@
         return this.x[key];
       };
 
+      ObsMap.prototype.has = function(key) {
+        return this.x[key] != null;
+      };
+
       ObsMap.prototype.all = function() {
         recorder.sub((function(_this) {
           return function(target) {
@@ -1513,6 +1518,7 @@
 
       })();
       events = ["blur", "change", "click", "dblclick", "error", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "ready", "resize", "scroll", "select", "submit", "toggle", "unload"];
+      svg_events = ["click"];
       specialAttrs = rxt.specialAttrs = {
         init: function(elt, fn) {
           return fn.call(elt);
@@ -1520,9 +1526,13 @@
       };
       _fn = function(ev) {
         return specialAttrs[ev] = function(elt, fn) {
-          return elt[ev](function(e) {
-            return fn.call(elt, e);
-          });
+          if (elt instanceof SVGElement && __indexOf.call(svg_events, ev) >= 0) {
+            return elt.addEventListener(ev, fn);
+          } else {
+            return elt[ev](function(e) {
+              return fn.call(elt, e);
+            });
+          }
         };
       };
       for (_i = 0, _len = events.length; _i < _len; _i++) {
@@ -1540,7 +1550,9 @@
         return _results;
       })());
       setProp = function(elt, prop, val) {
-        if (prop === 'value') {
+        if (elt instanceof SVGElement) {
+          return elt.setAttribute(prop, val);
+        } else if (prop === 'value') {
           return elt.val(val);
         } else if (prop in propSet) {
           return elt.prop(prop, val);
@@ -1591,7 +1603,7 @@
           return [arg1, arg2];
         } else if (_.isString(arg1) && (arg2 != null)) {
           return [mkAtts(arg1), arg2];
-        } else if ((arg2 == null) && _.isString(arg1) || _.isNumber(arg1) || arg1 instanceof Element || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray) {
+        } else if ((arg2 == null) && _.isString(arg1) || _.isNumber(arg1) || arg1 instanceof Element || arg1 instanceof SVGElement || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray) {
           return [{}, arg1];
         } else {
           return [arg1, null];
@@ -1605,7 +1617,7 @@
           if (child != null) {
             if (_.isString(child) || _.isNumber(child)) {
               _results.push(document.createTextNode(child));
-            } else if (child instanceof Element) {
+            } else if (child instanceof Element || child instanceof SVGElement) {
               _results.push(child);
             } else if (child instanceof RawHtml) {
               parsed = $(child.html);
@@ -1629,7 +1641,9 @@
       };
       updateContents = function(elt, contents) {
         var covers, hasWidth, left, node, nodes, top;
-        elt.html('');
+        if (elt.html) {
+          elt.html('');
+        }
         if (_.isArray(contents)) {
           nodes = toNodes(contents);
           elt.append(nodes);
@@ -1670,7 +1684,7 @@
               return _results;
             }), 2000);
           }
-        } else if (_.isString(contents) || _.isNumber(contents) || contents instanceof Element || contents instanceof RawHtml || contents instanceof $) {
+        } else if (_.isString(contents) || _.isNumber(contents) || contents instanceof Element || contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof $) {
           return updateContents(elt, [contents]);
         } else {
           throw new Error("Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)");
@@ -1740,12 +1754,96 @@
         };
       };
       tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script', 'noscript', 'body', 'body', 'section', 'nav', 'article', 'aside', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h1', 'h6', 'header', 'footer', 'address', 'main', 'main', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'dd', 'figure', 'figcaption', 'div', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'object', 'param', 'object', 'video', 'audio', 'source', 'video', 'audio', 'track', 'video', 'audio', 'canvas', 'map', 'area', 'area', 'map', 'svg', 'math', 'table', 'caption', 'colgroup', 'col', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details', 'menuitem', 'menu'];
+      svg_tags = ['a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animate', 'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 'color-profile', 'cursor', 'defs', 'desc', 'ellipse', 'feblend', 'fecolormatrix', 'fecomponenttransfer', 'fecomposite', 'feconvolvematrix', 'fediffuselighting', 'fedisplacementmap', 'fedistantlight', 'feflood', 'fefunca', 'fefuncb', 'fefuncg', 'fefuncr', 'fegaussianblur', 'feimage', 'femerge', 'femergenode', 'femorphology', 'feoffset', 'fepointlight', 'fespecularlighting', 'fespotlight', 'fetile', 'feturbulence', 'filter', 'font', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri', 'foreignobject', 'g', 'glyph', 'glyphref', 'hkern', 'image', 'line', 'lineargradient', 'marker', 'mask', 'metadata', 'missing-glyph', 'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 'script', 'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text', 'textpath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern'];
+      updateSVGContents = function(elt, contents) {
+        var node, toAdd, _j, _len1, _results;
+        while (elt.firstChild) {
+          elt.removeChild(elt.firstChild);
+        }
+        if (_.isArray(contents)) {
+          toAdd = toNodes(contents);
+          _results = [];
+          for (_j = 0, _len1 = toAdd.length; _j < _len1; _j++) {
+            node = toAdd[_j];
+            _results.push(elt.appendChild(node));
+          }
+          return _results;
+        } else if (_.isString(contents) || contents instanceof SVGElement) {
+          return updateSVGContents(elt, [contents]);
+        } else {
+          console.error('updateSVGContents', elt, contents);
+          throw "Must wrap contents " + contents + " as array or string";
+        }
+      };
+      rxt.svg_mktag = mktag = function(tag) {
+        return function(arg1, arg2) {
+          var attrs, contents, elt, first, key, name, value, _ref, _ref1;
+          _ref = normalizeTagArgs(arg1, arg2), attrs = _ref[0], contents = _ref[1];
+          elt = document.createElementNS('http://www.w3.org/2000/svg', tag);
+          _ref1 = _.omit(attrs, _.keys(specialAttrs));
+          for (name in _ref1) {
+            value = _ref1[name];
+            setDynProp(elt, name, value);
+          }
+          if (contents != null) {
+            if (contents instanceof ObsArray) {
+              contents.onChange.sub(function(_arg) {
+                var added, i, index, node, removed, toAdd, _j, _k, _l, _len1, _len2, _ref2, _results, _results1;
+                index = _arg[0], removed = _arg[1], added = _arg[2];
+                for (i = _j = 0, _ref2 = removed.length; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; i = 0 <= _ref2 ? ++_j : --_j) {
+                  elt.removeChild(elt.childNodes[index]);
+                }
+                toAdd = toNodes(added);
+                if (index === elt.childNodes.length) {
+                  _results = [];
+                  for (_k = 0, _len1 = toAdd.length; _k < _len1; _k++) {
+                    node = toAdd[_k];
+                    _results.push(elt.appendChild(node));
+                  }
+                  return _results;
+                } else {
+                  _results1 = [];
+                  for (_l = 0, _len2 = toAdd.length; _l < _len2; _l++) {
+                    node = toAdd[_l];
+                    _results1.push(elt.childNodes[index].insertBefore(node));
+                  }
+                  return _results1;
+                }
+              });
+            } else if (contents instanceof ObsCell) {
+              first = contents.x[0];
+              contents.onSet.sub(function(_arg) {
+                var old, val;
+                old = _arg[0], val = _arg[1];
+                return updateSVGContents(elt, val);
+              });
+            } else {
+              updateSVGContents(elt, contents);
+            }
+          }
+          for (key in attrs) {
+            if (key in specialAttrs) {
+              specialAttrs[key](elt, attrs[key], attrs, contents);
+            }
+          }
+          return elt;
+        };
+      };
       rxt.tags = _.object((function() {
         var _j, _len1, _results;
         _results = [];
         for (_j = 0, _len1 = tags.length; _j < _len1; _j++) {
           tag = tags[_j];
           _results.push([tag, rxt.mktag(tag)]);
+        }
+        return _results;
+      })());
+      rxt.svg_tags = _.object((function() {
+        var _j, _len1, _results;
+        _results = [];
+        for (_j = 0, _len1 = svg_tags.length; _j < _len1; _j++) {
+          tag = svg_tags[_j];
+          _results.push([tag, rxt.svg_mktag(tag)]);
         }
         return _results;
       })());
@@ -1849,20 +1947,25 @@
     return rx;
   };
 
-  (function(root, factory, deps) {
-    var rx, _;
+  (function(root, factory) {
+    var $, deps, is_browser, rx, _;
+    deps = ['underscore'];
+    if (is_browser = typeof window !== 'undefined') {
+      deps.push('jquery');
+    }
     if ((typeof define !== "undefined" && define !== null ? define.amd : void 0) != null) {
       return define(deps, factory);
     } else if ((typeof module !== "undefined" && module !== null ? module.exports : void 0) != null) {
+      $ = is_browser ? require('jquery') : void 0;
       _ = require('underscore');
-      rx = factory(_);
+      rx = factory(_, $);
       return module.exports = rx;
     } else if ((root._ != null) && (root.$ != null)) {
       return root.rx = factory(root._, root.$);
     } else {
       throw "Dependencies are not met for reactive: _ and $ not found";
     }
-  })(this, rxFactory, ['underscore', 'jquery']);
+  })(this, rxFactory);
 
 }).call(this);
 
