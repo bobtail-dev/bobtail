@@ -638,7 +638,7 @@ For these situations, there&#39;s a handy <code>rx.flatten</code> utility functi
 <div class="highlight"><pre><span class="nx">div</span> <span class="p">{},</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">flatten</span> <span class="p">[</span>
   <span class="nx">h1</span> <span class="p">{},</span> <span class="s">&#39;Header&#39;</span>
   <span class="nx">headerItems</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(item) -&gt;</span> <span class="p">...</span>
-  <span class="nx">separator</span> <span class="k">if</span> <span class="nx">showSeparator</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
+  <span class="nx">bind</span> <span class="nf">-&gt;</span> <span class="nx">separator</span> <span class="k">if</span> <span class="nx">showSeparator</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
   <span class="nx">h1</span> <span class="p">{},</span> <span class="s">&#39;Footer&#39;</span>
   <span class="nx">footerItems</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(item) -&gt;</span> <span class="p">...</span>
 <span class="p">]</span>
@@ -843,7 +843,7 @@ line</a> if you do and would like to share your work on the website.</p>
       ga('send', 'pageview');
     </script>
     <footer>
-      <div class="inner"><p>Copyright 2014 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+      <div class="inner"><p>Copyright 2015 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
 
       </div>
     </footer>

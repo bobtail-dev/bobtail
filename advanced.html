@@ -184,17 +184,18 @@ instead only update the UI once the user stops typing for some time.</p>
 a second before evaluating the expensive function of <code>x</code>.</p>
 <p>There&#39;s also a similar function, <code>postLagBind</code>, contributed by
 <a href="https://github.com/eizenberg">@eizenberg</a>, which instead introduces a lag but <em>after</em> the function
-evaluation (which is immediate upon).  This allows you to specify a dynamic
-delay as part of the result.  In this example, the tootip appears
-instantly, but disappears only after a delay:</p>
+evaluation/re-capture (which is immediate upon any changes to
+dependencies).  This allows you to specify a dynamic delay as part of the
+result, where the delay duration comes from observables.  In this example,
+the tootip appears instantly, but disappears only after a delay:</p>
 <div class="highlight"><pre><span class="nv">showTooltip = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">postLagBind</span> <span class="kc">false</span><span class="p">,</span> <span class="nf">-&gt;</span>
   <span class="k">if</span> <span class="nx">focused</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="o">and</span> <span class="nx">showTooltips</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span> <span class="k">then</span> <span class="nv">val: </span><span class="kc">true</span><span class="p">,</span> <span class="nv">ms: </span><span class="mi">0</span>
   <span class="k">else</span> <span class="nv">val: </span><span class="kc">false</span><span class="p">,</span> <span class="nv">ms: </span><span class="mi">300</span>
 </pre></div>
 
-<p>More generally, you can implement your own asynchronous binds (which
-<code>bind</code>, <code>lagBind</code>, and <code>postLagBind</code>) are all expressed in terms of
-<code>asyncBind</code>.  You supply a function that runs the asynchronous
+<p>More generally, you can implement your own asynchronous binds.  <code>bind</code>,
+<code>lagBind</code>, and <code>postLagBind</code> are all expressed in terms of <code>asyncBind</code>.
+You supply a function that runs the asynchronous
 lifecycle.  At a single point in the lifecycle, you can call
 <code>this.record(f)</code>, passing it a function which will record and subscribe to
 dependencies.  This can be called only once; otherwise things like disposal
@@ -294,7 +295,7 @@ bringing this idea to the table.</p>
       ga('send', 'pageview');
     </script>
     <footer>
-      <div class="inner"><p>Copyright 2014 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+      <div class="inner"><p>Copyright 2015 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
 
       </div>
     </footer>
