@@ -268,11 +268,14 @@ arrays).</li>
 as identity function if data is already of the proper type</li>
 </ul>
 </li>
-<li><code>rxt.cssify(props)</code>: convenience utility for programmatically constructing
-strings suitable for use as a <code>style</code> attribute.  Takes an object mapping
-camelCase versions of style property names and values that are either
-strings (which are put in verbatim), numbers (which are written as pixels),
-or <code>null</code>/<code>undefined</code> (which omits that property altogether).</li>
+<li><code>rxt.cssify(props)</code>: <strong>(deprecated: set the <code>style</code> property directly to
+a JSON object instead of using this so as to use <code>jQuery.css</code>, which is
+smarter about interpreting the given values)</strong> convenience utility for
+programmatically constructing strings suitable for use as a <code>style</code>
+attribute.  Takes an object mapping camelCase versions of style property
+names and values that are either strings (which are put in verbatim),
+numbers (which are written as pixels), or <code>null</code>/<code>undefined</code> (which
+omits that property altogether).</li>
 <li><code>rxt.smushClasses(classes)</code>: convenience utility for programmatically
 constructing strings suitable for use as a <code>class</code> attribute.  Takes an
 array of strings or <code>undefined</code>s (useful for conditionally including a
