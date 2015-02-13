@@ -982,14 +982,18 @@ rxFactory = (_, $) ->
       rxt.trim(str).replace(/([A-Z])/g, '-$1').replace(/[-_\s]+/g, '-').toLowerCase()
 
     rxt.cssify = (map) ->
+      console.warn 'cssify is deprecated; set the `style` property directly to a JSON object.'
       (
         for k,v of map when v?
           "#{rxt.dasherize(k)}: #{if _.isNumber(v) then v+'px' else v};"
       ).join(' ')
 
     specialAttrs.style = (elt, value) ->
-      setDynProp elt, 'style', value, (val) ->
-        if _.isString(val) then val else rxt.cssify(val)
+      rx.autoSub rxt.cast(value).onSet, ([o,n]) ->
+        if not n? or _.isString(n)
+          setProp(elt, 'style', n)
+        else
+          elt.removeAttr('style').css(n)
 
     rxt.smushClasses = (xs) ->
       _(xs).chain().flatten().compact().value().join(' ').replace(/\s+/, ' ').trim()

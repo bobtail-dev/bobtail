@@ -1909,6 +1909,7 @@
       };
       rxt.cssify = function(map) {
         var k, v;
+        console.warn('cssify is deprecated; set the `style` property directly to a JSON object.');
         return ((function() {
           var _results;
           _results = [];
@@ -1922,11 +1923,13 @@
         })()).join(' ');
       };
       specialAttrs.style = function(elt, value) {
-        return setDynProp(elt, 'style', value, function(val) {
-          if (_.isString(val)) {
-            return val;
+        return rx.autoSub(rxt.cast(value).onSet, function(_arg) {
+          var n, o;
+          o = _arg[0], n = _arg[1];
+          if ((n == null) || _.isString(n)) {
+            return setProp(elt, 'style', n);
           } else {
-            return rxt.cssify(val);
+            return elt.removeAttr('style').css(n);
           }
         });
       };
