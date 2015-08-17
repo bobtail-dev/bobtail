@@ -838,6 +838,8 @@ rxFactory = (_, $) ->
           setDynProp(elt, name, value)
         if contents?
           if contents instanceof ObsArray
+            if not (contents instanceof IndexedArray) then indexedContents = contents.indexed()
+            else indexedContents = contents
             rx.autoSub contents.indexed().onChangeCells, ([index, removed, added]) ->
               elt.contents().slice(index, index + removed.length).remove()
               toAdd = toNodes(added.map ([cell, icell]) -> rx.snap -> cell.get())
