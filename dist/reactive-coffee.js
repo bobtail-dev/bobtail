@@ -1692,7 +1692,7 @@
       };
       rxt.mktag = mktag = function(tag) {
         return function(arg1, arg2) {
-          var attrs, contents, elt, key, name, value, _ref, _ref1;
+          var attrs, contents, elt, indexedContents, key, name, value, _ref, _ref1;
           _ref = normalizeTagArgs(arg1, arg2), attrs = _ref[0], contents = _ref[1];
           elt = $("<" + tag + "/>");
           _ref1 = _.omit(attrs, _.keys(specialAttrs));
@@ -1702,6 +1702,11 @@
           }
           if (contents != null) {
             if (contents instanceof ObsArray) {
+              if (!(contents instanceof IndexedArray)) {
+                indexedContents = contents.indexed();
+              } else {
+                indexedContents = contents;
+              }
               rx.autoSub(contents.indexed().onChangeCells, function(_arg) {
                 var added, cell, icell, index, removed, toAdd, _j, _len1, _ref2, _results;
                 index = _arg[0], removed = _arg[1], added = _arg[2];
