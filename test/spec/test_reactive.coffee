@@ -746,6 +746,13 @@ describe 'IndexedArray', ->
     expect(readYs()).toEqual(['a 0','c 1'])
     xs.insert('B', 1)
     expect(readYs()).toEqual(['a 0','B 1','c 2'])
+  it 'should work in tag elements', ->
+    xs = rx.array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30])
+    isPrime = (i) -> i in [23, 29]
+    theDiv = div {class: 'container'}, [
+      div xs.indexed().map (x,i) ->
+        div {class: bind -> if isPrime(i.get()) then 'prime' else ''}, x
+    ]
 
 describe 'smushClasses', ->
   it 'should remove undefined', ->
