@@ -617,6 +617,9 @@ rxFactory = (_, $) ->
   rx.cellToArray = (cell, diff) ->
     new DepArray((-> cell.get()), diff)
 
+  rx.cellToMap = (cell) ->
+    new rx.DepMap -> @done @record -> cell.get()
+
   # O(n) using hash key
   rx.basicDiff = (key = rx.smartUidify) -> (oldXs, newXs) ->
     oldKeys = mkMap([key(x), i] for x,i in oldXs)
