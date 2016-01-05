@@ -458,6 +458,9 @@ rxFactory = (_, $) ->
       val
     cell: (key) ->
       new ObsMapEntryCell(@, key)
+    _update: (x) ->
+      @realRemove(k) for k in _.difference(_.keys(@x), _.keys(x))
+      @realPut(k,v) for k,v of x when k not of @x or @x[k] != v
 
   SrcMap = class rx.SrcMap extends ObsMap
     put: (key, val) ->
@@ -466,10 +469,7 @@ rxFactory = (_, $) ->
       recorder.mutating => @realRemove(key)
     cell: (key) ->
       new SrcMapEntryCell(@, key)
-    update: (x) ->
-      recorder.mutating =>
-        @realRemove(k) for k in _.difference(_.keys(@x), _.keys(x))
-        @realPut(k,v) for k,v of x when k not of @x or @x[k] != v
+    update: (x) -> recorder.mutating => @_update(x)
 
   DepMap = class rx.DepMap extends ObsMap
     constructor: (@f) ->
@@ -738,6 +738,7 @@ rxFactory = (_, $) ->
     # attr vs prop:
     # http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
     # http://api.jquery.com/prop/
+
 
     props = ['async', 'autofocus', 'checked', 'location', 'multiple', 'readOnly',
       'selected', 'selectedIndex', 'tagName', 'nodeName', 'nodeType',
