@@ -1128,28 +1128,18 @@
       __extends(DepMap, _super);
 
       function DepMap(f) {
+        var c;
         this.f = f;
         DepMap.__super__.constructor.call(this);
-        rx.autoSub(new DepCell(this.f).onSet, function(_arg) {
-          var k, old, v, val, _results;
-          old = _arg[0], val = _arg[1];
-          for (k in old) {
-            v = old[k];
-            if (!(k in val)) {
-              this.realRemove(k);
-            }
-          }
-          _results = [];
-          for (k in val) {
-            v = val[k];
-            if (this.x[k] !== v) {
-              _results.push(this.realPut(k, v));
-            } else {
-              _results.push(void 0);
-            }
-          }
-          return _results;
-        });
+        c = new DepCell(this.f);
+        c.refresh();
+        rx.autoSub(c.onSet, (function(_this) {
+          return function(_arg) {
+            var old, val;
+            old = _arg[0], val = _arg[1];
+            return _this._update(val);
+          };
+        })(this));
       }
 
       return DepMap;
