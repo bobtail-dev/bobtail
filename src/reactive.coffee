@@ -474,13 +474,9 @@ rxFactory = (_, $) ->
   DepMap = class rx.DepMap extends ObsMap
     constructor: (@f) ->
       super()
-      rx.autoSub new DepCell(@f).onSet, ([old, val]) ->
-        for k,v of old
-          if k not of val
-            @realRemove(k)
-        for k,v of val
-          if @x[k] != v
-            @realPut(k,v)
+      c = new DepCell(@f)
+      c.refresh()
+      rx.autoSub c.onSet, ([old, val]) => @_update val
 
   #
   # Converting POJO attributes to reactive ones.
@@ -732,7 +728,6 @@ rxFactory = (_, $) ->
     # attr vs prop:
     # http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
     # http://api.jquery.com/prop/
-
 
     props = ['async', 'autofocus', 'checked', 'location', 'multiple', 'readOnly',
       'selected', 'selectedIndex', 'tagName', 'nodeName', 'nodeType',
