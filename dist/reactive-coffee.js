@@ -1365,6 +1365,13 @@
         return cell.get();
       }), diff);
     };
+    rx.cellToMap = function(cell) {
+      return new rx.DepMap(function() {
+        return this.done(this.record(function() {
+          return cell.get();
+        }));
+      });
+    };
     rx.basicDiff = function(key) {
       if (key == null) {
         key = rx.smartUidify;

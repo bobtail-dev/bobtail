@@ -677,6 +677,18 @@ describe 'rxt', ->
       expect(outerHtml(div(maybeArray(rxt.rawHtml('<em>hi</em>'))))).toBe('<div><em>hi</em></div>')
       expect(outerHtml(div(maybeArray($('<em>hi</em>')[0])))).toBe('<div><em>hi</em></div>')
 
+describe 'cellToMap', ->
+  it 'should correctly track changes', ->
+    x = rx.map {a: 42}
+    y = rx.cellToMap bind -> x.all()
+    expect(rx.snap -> y.all()).toEqual {a: 42}
+    x.put 'b', 17
+    expect(rx.snap -> y.all()).toEqual {a: 42, b: 17}
+    x.put 'c', 4
+    expect(rx.snap -> y.all()).toEqual {a: 42, b: 17, c: 4}
+    x.update {}
+    expect(rx.snap -> y.all()).toEqual {}
+
 describe 'cellToArray', ->
   it 'should propagate minimal splices for primitives', ->
     x = rx.cell([1,2,3])
