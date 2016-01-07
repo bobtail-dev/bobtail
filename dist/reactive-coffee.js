@@ -6,7 +6,7 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
+    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, flattenHelper, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -1338,26 +1338,29 @@
       }
     });
     rx.flatten = function(xs) {
-      return new DepArray(function() {
-        var x;
-        return _((function() {
-          var _i, _len, _results;
-          _results = [];
-          for (_i = 0, _len = xs.length; _i < _len; _i++) {
-            x = xs[_i];
-            if (x instanceof ObsArray) {
-              _results.push(x.raw());
-            } else if (x instanceof ObsCell) {
-              _results.push(x.get());
-            } else {
-              _results.push(x);
-            }
-          }
-          return _results;
-        })()).chain().flatten(true).filter(function(x) {
+      return rx.cellToArray(bind(function() {
+        var xsArray;
+        xsArray = rxt.cast(xs, 'array');
+        if (!xsArray.length()) {
+          return [];
+        }
+        return _.chain(xsArray.all()).map(flattenHelper).flatten().filter(function(x) {
           return x != null;
         }).value();
-      });
+      }));
+    };
+    flattenHelper = function(x) {
+      if (x instanceof ObsArray) {
+        return flattenHelper(x.raw());
+      } else if (x instanceof ObsCell) {
+        return flattenHelper(x.get());
+      } else if (_.isArray(x)) {
+        return x.map(function(x_k) {
+          return flattenHelper(x_k);
+        });
+      } else {
+        return x;
+      }
     };
     flatten = function(xss) {
       var xs;

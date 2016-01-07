@@ -412,6 +412,24 @@ describe 'flatten', ->
       2
     ]
     expect(flattened.all()).toEqual([1,2])
+  it 'should flatten recursively', ->
+    flattened = rx.flatten [
+      1
+      rx.cell()
+      rx.cell([rx.array([42]), [500, undefined, [800]], [null]])
+      undefined
+      [undefined]
+      bind -> undefined
+      rx.array([null])
+      rx.array [
+        rx.array(["ABC"])
+        rx.array([rx.array(["DEF"]), ["GHI"]]), [null], rx.array [[null]]]
+      "XYZ"
+      2
+    ]
+    expect(rx.snap -> flattened.all()).toEqual [
+      1, 42, 500, 800, "ABC", "DEF", "GHI", "XYZ", 2
+    ]
 
 describe 'Ev', ->
   it 'should support scoped subscription', ->
