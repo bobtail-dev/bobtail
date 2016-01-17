@@ -736,7 +736,7 @@
             return [
               [
                 0, [], _.zip(rx.snap(function() {
-                  return this.all();
+                  return _this.all();
                 }), _this.is)
               ]
             ];
