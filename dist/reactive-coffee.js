@@ -1066,6 +1066,23 @@
         return new ObsMapEntryCell(this, key);
       };
 
+      ObsMap.prototype._update = function(x) {
+        var k, v, _i, _len, _ref, _results;
+        _ref = _.difference(_.keys(this.x), _.keys(x));
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          k = _ref[_i];
+          this.realRemove(k);
+        }
+        _results = [];
+        for (k in x) {
+          v = x[k];
+          if (!(k in this.x) || this.x[k] !== v) {
+            _results.push(this.realPut(k, v));
+          }
+        }
+        return _results;
+      };
+
       return ObsMap;
 
     })();
@@ -1099,20 +1116,7 @@
       SrcMap.prototype.update = function(x) {
         return recorder.mutating((function(_this) {
           return function() {
-            var k, v, _i, _len, _ref, _results;
-            _ref = _.difference(_.keys(_this.x), _.keys(x));
-            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-              k = _ref[_i];
-              _this.realRemove(k);
-            }
-            _results = [];
-            for (k in x) {
-              v = x[k];
-              if (!(k in _this.x) || _this.x[k] !== v) {
-                _results.push(_this.realPut(k, v));
-              }
-            }
-            return _results;
+            return _this._update(x);
           };
         })(this));
       };
@@ -1124,28 +1128,18 @@
       __extends(DepMap, _super);
 
       function DepMap(f) {
+        var c;
         this.f = f;
         DepMap.__super__.constructor.call(this);
-        rx.autoSub(new DepCell(this.f).onSet, function(_arg) {
-          var k, old, v, val, _results;
-          old = _arg[0], val = _arg[1];
-          for (k in old) {
-            v = old[k];
-            if (!(k in val)) {
-              this.realRemove(k);
-            }
-          }
-          _results = [];
-          for (k in val) {
-            v = val[k];
-            if (this.x[k] !== v) {
-              _results.push(this.realPut(k, v));
-            } else {
-              _results.push(void 0);
-            }
-          }
-          return _results;
-        });
+        c = new DepCell(this.f);
+        c.refresh();
+        rx.autoSub(c.onSet, (function(_this) {
+          return function(_arg) {
+            var old, val;
+            old = _arg[0], val = _arg[1];
+            return _this._update(val);
+          };
+        })(this));
       }
 
       return DepMap;
@@ -1370,6 +1364,13 @@
       return new DepArray((function() {
         return cell.get();
       }), diff);
+    };
+    rx.cellToMap = function(cell) {
+      return new rx.DepMap(function() {
+        return this.done(this.record(function() {
+          return cell.get();
+        }));
+      });
     };
     rx.basicDiff = function(key) {
       if (key == null) {

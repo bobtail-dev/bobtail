@@ -458,6 +458,9 @@ rxFactory = (_, $) ->
       val
     cell: (key) ->
       new ObsMapEntryCell(@, key)
+    _update: (x) ->
+      @realRemove(k) for k in _.difference(_.keys(@x), _.keys(x))
+      @realPut(k,v) for k,v of x when k not of @x or @x[k] != v
 
   SrcMap = class rx.SrcMap extends ObsMap
     put: (key, val) ->
@@ -466,21 +469,14 @@ rxFactory = (_, $) ->
       recorder.mutating => @realRemove(key)
     cell: (key) ->
       new SrcMapEntryCell(@, key)
-    update: (x) ->
-      recorder.mutating =>
-        @realRemove(k) for k in _.difference(_.keys(@x), _.keys(x))
-        @realPut(k,v) for k,v of x when k not of @x or @x[k] != v
+    update: (x) -> recorder.mutating => @_update(x)
 
   DepMap = class rx.DepMap extends ObsMap
     constructor: (@f) ->
       super()
-      rx.autoSub new DepCell(@f).onSet, ([old, val]) ->
-        for k,v of old
-          if k not of val
-            @realRemove(k)
-        for k,v of val
-          if @x[k] != v
-            @realPut(k,v)
+      c = new DepCell(@f)
+      c.refresh()
+      rx.autoSub c.onSet, ([old, val]) => @_update val
 
   #
   # Converting POJO attributes to reactive ones.
@@ -616,6 +612,9 @@ rxFactory = (_, $) ->
 
   rx.cellToArray = (cell, diff) ->
     new DepArray((-> cell.get()), diff)
+
+  rx.cellToMap = (cell) ->
+    new rx.DepMap -> @.done @.record -> cell.get()
 
   # O(n) using hash key
   rx.basicDiff = (key = rx.smartUidify) -> (oldXs, newXs) ->
