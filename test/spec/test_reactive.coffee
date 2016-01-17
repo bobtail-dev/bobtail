@@ -717,6 +717,13 @@ describe 'DepArray', ->
     ys.push(6)
     xs.splice(0, 1, 0, 1)
     ys.replace([4,5,6,7])
+  it 'should behave correctly if the last element is removed', ->
+    foo = rx.array [1]
+    bar = rx.cellToArray bind -> foo.all() # easy way to get a DepArray
+    expect(bar instanceof rx.DepArray).toBe(true)
+    foo.removeAt(0)
+    expect(rx.snap -> foo.all().length).toBe(0)
+    expect(rx.snap -> bar.all().length).toBe(0)
 
 describe 'SrcArray', ->
   it 'should not change anything if remove query not found', ->
