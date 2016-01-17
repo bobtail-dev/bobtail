@@ -355,7 +355,7 @@ rxFactory = (_, $) ->
       super(xs, diff)
       @is = (rx.cell(i) for x,i in @cells)
       @onChangeCells = new Ev(=> [[0, [], _.zip(@cells, @is)]]) # [index, removed, added]
-      @onChange = new Ev(=> [[0, [], _.zip((rx.snap -> @all()), @is)]])
+      @onChange = new Ev(=> [[0, [], _.zip((rx.snap => @all()), @is)]])
     # TODO duplicate code with ObsArray
     map: (f) ->
       ys = new MappedDepArray()
