@@ -599,16 +599,20 @@ rxFactory = (_, $) ->
   # Reactive utilities
   #
 
-  rx.flatten = (xs) ->
-    new DepArray -> _(
-      for x in xs
-        if x instanceof ObsArray
-          x.raw()
-        else if x instanceof ObsCell
-          x.get()
-        else
-          x
-    ).chain().flatten(true).filter((x) -> x?).value()
+  rx.flatten = (xs) -> rx.cellToArray bind ->
+    xsArray = rxt.cast(xs, 'array')
+    if not xsArray.length() then return []
+    _.chain xsArray.all()
+     .map flattenHelper
+     .flatten()
+     .filter (x) -> x?
+     .value()
+
+  flattenHelper = (x) ->
+    if x instanceof ObsArray then flattenHelper x.raw()
+    else if x instanceof ObsCell then flattenHelper x.get()
+    else if _.isArray x then x.map (x_k) -> flattenHelper x_k
+    else x
 
   flatten = (xss) ->
     xs = _.flatten(xss)
