@@ -6,7 +6,7 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
+    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, flattenHelper, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -736,7 +736,7 @@
             return [
               [
                 0, [], _.zip(rx.snap(function() {
-                  return this.all();
+                  return _this.all();
                 }), _this.is)
               ]
             ];
@@ -1066,6 +1066,23 @@
         return new ObsMapEntryCell(this, key);
       };
 
+      ObsMap.prototype._update = function(x) {
+        var k, v, _i, _len, _ref, _results;
+        _ref = _.difference(_.keys(this.x), _.keys(x));
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          k = _ref[_i];
+          this.realRemove(k);
+        }
+        _results = [];
+        for (k in x) {
+          v = x[k];
+          if (!(k in this.x) || this.x[k] !== v) {
+            _results.push(this.realPut(k, v));
+          }
+        }
+        return _results;
+      };
+
       return ObsMap;
 
     })();
@@ -1099,20 +1116,7 @@
       SrcMap.prototype.update = function(x) {
         return recorder.mutating((function(_this) {
           return function() {
-            var k, v, _i, _len, _ref, _results;
-            _ref = _.difference(_.keys(_this.x), _.keys(x));
-            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-              k = _ref[_i];
-              _this.realRemove(k);
-            }
-            _results = [];
-            for (k in x) {
-              v = x[k];
-              if (!(k in _this.x) || _this.x[k] !== v) {
-                _results.push(_this.realPut(k, v));
-              }
-            }
-            return _results;
+            return _this._update(x);
           };
         })(this));
       };
@@ -1124,28 +1128,18 @@
       __extends(DepMap, _super);
 
       function DepMap(f) {
+        var c;
         this.f = f;
         DepMap.__super__.constructor.call(this);
-        rx.autoSub(new DepCell(this.f).onSet, function(_arg) {
-          var k, old, v, val, _results;
-          old = _arg[0], val = _arg[1];
-          for (k in old) {
-            v = old[k];
-            if (!(k in val)) {
-              this.realRemove(k);
-            }
-          }
-          _results = [];
-          for (k in val) {
-            v = val[k];
-            if (this.x[k] !== v) {
-              _results.push(this.realPut(k, v));
-            } else {
-              _results.push(void 0);
-            }
-          }
-          return _results;
-        });
+        c = new DepCell(this.f);
+        c.refresh();
+        rx.autoSub(c.onSet, (function(_this) {
+          return function(_arg) {
+            var old, val;
+            old = _arg[0], val = _arg[1];
+            return _this._update(val);
+          };
+        })(this));
       }
 
       return DepMap;
@@ -1338,26 +1332,29 @@
       }
     });
     rx.flatten = function(xs) {
-      return new DepArray(function() {
-        var x;
-        return _((function() {
-          var _i, _len, _results;
-          _results = [];
-          for (_i = 0, _len = xs.length; _i < _len; _i++) {
-            x = xs[_i];
-            if (x instanceof ObsArray) {
-              _results.push(x.raw());
-            } else if (x instanceof ObsCell) {
-              _results.push(x.get());
-            } else {
-              _results.push(x);
-            }
-          }
-          return _results;
-        })()).chain().flatten(true).filter(function(x) {
+      return rx.cellToArray(bind(function() {
+        var xsArray;
+        xsArray = rxt.cast(xs, 'array');
+        if (!xsArray.length()) {
+          return [];
+        }
+        return _.chain(xsArray.all()).map(flattenHelper).flatten().filter(function(x) {
           return x != null;
         }).value();
-      });
+      }));
+    };
+    flattenHelper = function(x) {
+      if (x instanceof ObsArray) {
+        return flattenHelper(x.raw());
+      } else if (x instanceof ObsCell) {
+        return flattenHelper(x.get());
+      } else if (_.isArray(x)) {
+        return x.map(function(x_k) {
+          return flattenHelper(x_k);
+        });
+      } else {
+        return x;
+      }
     };
     flatten = function(xss) {
       var xs;
@@ -1370,6 +1367,13 @@
       return new DepArray((function() {
         return cell.get();
       }), diff);
+    };
+    rx.cellToMap = function(cell) {
+      return new rx.DepMap(function() {
+        return this.done(this.record(function() {
+          return cell.get();
+        }));
+      });
     };
     rx.basicDiff = function(key) {
       if (key == null) {
@@ -1410,6 +1414,9 @@
     };
     permToSplices = function(oldLength, newXs, perm) {
       var cur, i, last, refs, splice, splices;
+      if (!newXs.length) {
+        return null;
+      }
       refs = (function() {
         var _i, _len, _results;
         _results = [];
