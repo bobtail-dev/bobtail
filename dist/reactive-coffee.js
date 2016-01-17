@@ -1410,6 +1410,9 @@
     };
     permToSplices = function(oldLength, newXs, perm) {
       var cur, i, last, refs, splice, splices;
+      if (!newXs.length) {
+        return null;
+      }
       refs = (function() {
         var _i, _len, _results;
         _results = [];
