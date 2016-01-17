@@ -642,6 +642,8 @@ rxFactory = (_, $) ->
   # duplications; only handles (multiple) simple insertions and removals
   # (batching them together into splices).
   permToSplices = (oldLength, newXs, perm) ->
+    if not newXs.length
+      return null # just do a full splice if we're emptying the array
     refs = (i for i in perm when i >= 0)
     return null if _.some(refs[i + 1] - refs[i] <= 0 for i in [0...refs.length - 1])
     splices = []
