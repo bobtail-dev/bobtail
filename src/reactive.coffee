@@ -422,18 +422,19 @@ rxFactory = (_, $) ->
     constructor: (@_map, @_key) ->
     get: -> @_map.get(@_key)
 
+
   ObsMap = class rx.ObsMap
     constructor: (@x = {}) ->
-      @onAdd = new Ev(-> ([k,v] for k,v of x)) # [key, new]
-      @onRemove = new Ev() # [key, old]
-      @onChange = new Ev() # [key, old, new]
+      @onAdd = new Ev(=> @x) # {key: new...}
+      @onRemove = new Ev() # {key: old...}
+      @onChange = new Ev() # {key: [old, new]...}
     get: (key) ->
-      recorder.sub (target) => rx.autoSub @onAdd, ([subkey, val]) ->
-        target.refresh() if key == subkey
-      recorder.sub (target) => rx.autoSub @onChange, ([subkey, old, val]) ->
-        target.refresh() if key == subkey
-      recorder.sub (target) => rx.autoSub @onRemove, ([subkey, old]) ->
-        target.refresh() if key == subkey
+      recorder.sub (target) => rx.autoSub @onAdd, (additions) ->
+        target.refresh() if key of additions
+      recorder.sub (target) => rx.autoSub @onChange, (changes) ->
+        target.refresh() if key of changes
+      recorder.sub (target) => rx.autoSub @onRemove, (removals) ->
+        target.refresh() if key of removals
       @x[key]
     has: (key) ->
       @x[key]?
@@ -446,21 +447,53 @@ rxFactory = (_, $) ->
       if key of @x
         old = @x[key]
         @x[key] = val
-        @onChange.pub([key, old, val])
+        @onChange.pub _.object [[key, [old, val]]]
         old
       else
         @x[key] = val
-        @onAdd.pub([key, val])
+        @onAdd.pub _.object [[key, val]]
         undefined
     realRemove: (key) ->
       val = popKey(@x, key)
-      @onRemove.pub([key, val])
+      @onRemove.pub _.object [[key, val]]
       val
     cell: (key) ->
       new ObsMapEntryCell(@, key)
-    _update: (x) ->
-      @realRemove(k) for k in _.difference(_.keys(@x), _.keys(x))
-      @realPut(k,v) for k,v of x when k not of @x or @x[k] != v
+    _update: (other) ->
+      removals = (
+        _.chain @x
+         .keys()
+         .difference _.keys other
+         .map (k) => [k, popKey(@x, k)]
+         .object()
+         .value()
+      )
+      additions = (
+        _.chain other
+         .keys()
+         .difference _.keys @x
+         .map (k) =>
+           val = other[k]
+           @x[k] = val
+           return [k, val]
+         .object()
+         .value()
+      )
+      changes = (
+        _.chain other
+         .pairs()
+         .filter ([k, val]) => k of @x and @x[k] != val
+         .map ([k, val]) =>
+           old = @x[k]
+           @x[k] = val
+           return [k, [old, val]]
+         .object()
+         .value()
+      )
+
+      if _.keys(removals).length then @onRemove.pub removals
+      if _.keys(additions).length then @onAdd.pub additions
+      if _.keys(changes).length then @onChange.pub changes
 
   SrcMap = class rx.SrcMap extends ObsMap
     put: (key, val) ->

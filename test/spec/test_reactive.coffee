@@ -93,10 +93,10 @@ describe 'tag', ->
           type: 'rotate'
           from: '0 60 60'
           to: '360 60 60'
-          repeatCount: 'indefinite' 
+          repeatCount: 'indefinite'
         }
       ]
-      
+
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
       expect(elt instanceof SVGRectElement).toBe(true)
@@ -218,15 +218,15 @@ describe 'ObsMap', ->
   it 'should fire onChange event for replaced keys', ->
     x.onChange.sub cb
     x.put('a', 1)
-    expect(cb).toHaveBeenCalledWith(['a',0,1])
+    expect(cb).toHaveBeenCalledWith({'a':[0,1]})
   it 'should fire onAdd event for new keys', ->
     x.onAdd.sub cb
     x.put('b', 2)
-    expect(cb).toHaveBeenCalledWith(['b', 2])
+    expect(cb).toHaveBeenCalledWith({'b': 2})
   it 'should fire onRemove event for deleted keys', ->
     x.onRemove.sub cb
     x.remove('a')
-    expect(cb).toHaveBeenCalledWith(['a', 0])
+    expect(cb).toHaveBeenCalledWith({'a': 0})
   it 'should re-evaluate .get() binds on any change', ->
     expect(a.get()).toBe(0)
     expect(b.get()).toBeUndefined()
@@ -698,7 +698,8 @@ describe 'rxt', ->
 describe 'cellToMap', ->
   it 'should correctly track changes', ->
     x = rx.map {a: 42}
-    y = rx.cellToMap bind -> x.all()
+    y = rx.cellToMap bind ->
+      x.all()
     expect(rx.snap -> y.all()).toEqual {a: 42}
     x.put 'b', 17
     expect(rx.snap -> y.all()).toEqual {a: 42, b: 17}

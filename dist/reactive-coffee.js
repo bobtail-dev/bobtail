@@ -962,15 +962,11 @@
     ObsMap = rx.ObsMap = (function() {
       function ObsMap(x) {
         this.x = x != null ? x : {};
-        this.onAdd = new Ev(function() {
-          var k, v, _results;
-          _results = [];
-          for (k in x) {
-            v = x[k];
-            _results.push([k, v]);
-          }
-          return _results;
-        });
+        this.onAdd = new Ev((function(_this) {
+          return function() {
+            return _this.x;
+          };
+        })(this));
         this.onRemove = new Ev();
         this.onChange = new Ev();
       }
@@ -978,10 +974,8 @@
       ObsMap.prototype.get = function(key) {
         recorder.sub((function(_this) {
           return function(target) {
-            return rx.autoSub(_this.onAdd, function(_arg) {
-              var subkey, val;
-              subkey = _arg[0], val = _arg[1];
-              if (key === subkey) {
+            return rx.autoSub(_this.onAdd, function(additions) {
+              if (key in additions) {
                 return target.refresh();
               }
             });
@@ -989,10 +983,8 @@
         })(this));
         recorder.sub((function(_this) {
           return function(target) {
-            return rx.autoSub(_this.onChange, function(_arg) {
-              var old, subkey, val;
-              subkey = _arg[0], old = _arg[1], val = _arg[2];
-              if (key === subkey) {
+            return rx.autoSub(_this.onChange, function(changes) {
+              if (key in changes) {
                 return target.refresh();
               }
             });
@@ -1000,10 +992,8 @@
         })(this));
         recorder.sub((function(_this) {
           return function(target) {
-            return rx.autoSub(_this.onRemove, function(_arg) {
-              var old, subkey;
-              subkey = _arg[0], old = _arg[1];
-              if (key === subkey) {
+            return rx.autoSub(_this.onRemove, function(removals) {
+              if (key in removals) {
                 return target.refresh();
               }
             });
@@ -1046,11 +1036,11 @@
         if (key in this.x) {
           old = this.x[key];
           this.x[key] = val;
-          this.onChange.pub([key, old, val]);
+          this.onChange.pub(_.object([[key, [old, val]]]));
           return old;
         } else {
           this.x[key] = val;
-          this.onAdd.pub([key, val]);
+          this.onAdd.pub(_.object([[key, val]]));
           return void 0;
         }
       };
@@ -1058,7 +1048,7 @@
       ObsMap.prototype.realRemove = function(key) {
         var val;
         val = popKey(this.x, key);
-        this.onRemove.pub([key, val]);
+        this.onRemove.pub(_.object([[key, val]]));
         return val;
       };
 
@@ -1066,21 +1056,45 @@
         return new ObsMapEntryCell(this, key);
       };
 
-      ObsMap.prototype._update = function(x) {
-        var k, v, _i, _len, _ref, _results;
-        _ref = _.difference(_.keys(this.x), _.keys(x));
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          k = _ref[_i];
-          this.realRemove(k);
+      ObsMap.prototype._update = function(other) {
+        var additions, changes, removals;
+        removals = _.chain(this.x).keys().difference(_.keys(other)).map((function(_this) {
+          return function(k) {
+            return [k, popKey(_this.x, k)];
+          };
+        })(this)).object().value();
+        additions = _.chain(other).keys().difference(_.keys(this.x)).map((function(_this) {
+          return function(k) {
+            var val;
+            val = other[k];
+            _this.x[k] = val;
+            return [k, val];
+          };
+        })(this)).object().value();
+        changes = _.chain(other).pairs().filter((function(_this) {
+          return function(_arg) {
+            var k, val;
+            k = _arg[0], val = _arg[1];
+            return k in _this.x && _this.x[k] !== val;
+          };
+        })(this)).map((function(_this) {
+          return function(_arg) {
+            var k, old, val;
+            k = _arg[0], val = _arg[1];
+            old = _this.x[k];
+            _this.x[k] = val;
+            return [k, [old, val]];
+          };
+        })(this)).object().value();
+        if (_.keys(removals).length) {
+          this.onRemove.pub(removals);
         }
-        _results = [];
-        for (k in x) {
-          v = x[k];
-          if (!(k in this.x) || this.x[k] !== v) {
-            _results.push(this.realPut(k, v));
-          }
+        if (_.keys(additions).length) {
+          this.onAdd.pub(additions);
         }
-        return _results;
+        if (_.keys(changes).length) {
+          return this.onChange.pub(changes);
+        }
       };
 
       return ObsMap;
