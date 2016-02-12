@@ -355,7 +355,7 @@ rxFactory = (_, $) ->
       super(xs, diff)
       @is = (rx.cell(i) for x,i in @cells)
       @onChangeCells = new Ev(=> [[0, [], _.zip(@cells, @is)]]) # [index, removed, added]
-      @onChange = new Ev(=> [[0, [], _.zip((rx.snap -> @all()), @is)]])
+      @onChange = new Ev(=> [[0, [], _.zip((rx.snap => @all()), @is)]])
     # TODO duplicate code with ObsArray
     map: (f) ->
       ys = new MappedDepArray()
@@ -422,18 +422,19 @@ rxFactory = (_, $) ->
     constructor: (@_map, @_key) ->
     get: -> @_map.get(@_key)
 
+
   ObsMap = class rx.ObsMap
     constructor: (@x = {}) ->
-      @onAdd = new Ev(-> ([k,v] for k,v of x)) # [key, new]
-      @onRemove = new Ev() # [key, old]
-      @onChange = new Ev() # [key, old, new]
+      @onAdd = new Ev(=> @x) # {key: new...}
+      @onRemove = new Ev() # {key: old...}
+      @onChange = new Ev() # {key: [old, new]...}
     get: (key) ->
-      recorder.sub (target) => rx.autoSub @onAdd, ([subkey, val]) ->
-        target.refresh() if key == subkey
-      recorder.sub (target) => rx.autoSub @onChange, ([subkey, old, val]) ->
-        target.refresh() if key == subkey
-      recorder.sub (target) => rx.autoSub @onRemove, ([subkey, old]) ->
-        target.refresh() if key == subkey
+      recorder.sub (target) => rx.autoSub @onAdd, (additions) ->
+        target.refresh() if key of additions
+      recorder.sub (target) => rx.autoSub @onChange, (changes) ->
+        target.refresh() if key of changes
+      recorder.sub (target) => rx.autoSub @onRemove, (removals) ->
+        target.refresh() if key of removals
       @x[key]
     has: (key) ->
       @x[key]?
@@ -446,18 +447,53 @@ rxFactory = (_, $) ->
       if key of @x
         old = @x[key]
         @x[key] = val
-        @onChange.pub([key, old, val])
+        @onChange.pub _.object [[key, [old, val]]]
         old
       else
         @x[key] = val
-        @onAdd.pub([key, val])
+        @onAdd.pub _.object [[key, val]]
         undefined
     realRemove: (key) ->
       val = popKey(@x, key)
-      @onRemove.pub([key, val])
+      @onRemove.pub _.object [[key, val]]
       val
     cell: (key) ->
       new ObsMapEntryCell(@, key)
+    _update: (other) ->
+      removals = (
+        _.chain @x
+         .keys()
+         .difference _.keys other
+         .map (k) => [k, popKey(@x, k)]
+         .object()
+         .value()
+      )
+      additions = (
+        _.chain other
+         .keys()
+         .difference _.keys @x
+         .map (k) =>
+           val = other[k]
+           @x[k] = val
+           return [k, val]
+         .object()
+         .value()
+      )
+      changes = (
+        _.chain other
+         .pairs()
+         .filter ([k, val]) => k of @x and @x[k] != val
+         .map ([k, val]) =>
+           old = @x[k]
+           @x[k] = val
+           return [k, [old, val]]
+         .object()
+         .value()
+      )
+
+      if _.keys(removals).length then @onRemove.pub removals
+      if _.keys(additions).length then @onAdd.pub additions
+      if _.keys(changes).length then @onChange.pub changes
 
   SrcMap = class rx.SrcMap extends ObsMap
     put: (key, val) ->
@@ -466,21 +502,14 @@ rxFactory = (_, $) ->
       recorder.mutating => @realRemove(key)
     cell: (key) ->
       new SrcMapEntryCell(@, key)
-    update: (x) ->
-      recorder.mutating =>
-        @realRemove(k) for k in _.difference(_.keys(@x), _.keys(x))
-        @realPut(k,v) for k,v of x when k not of @x or @x[k] != v
+    update: (x) -> recorder.mutating => @_update(x)
 
   DepMap = class rx.DepMap extends ObsMap
     constructor: (@f) ->
       super()
-      rx.autoSub new DepCell(@f).onSet, ([old, val]) ->
-        for k,v of old
-          if k not of val
-            @realRemove(k)
-        for k,v of val
-          if @x[k] != v
-            @realPut(k,v)
+      c = new DepCell(@f)
+      c.refresh()
+      rx.autoSub c.onSet, ([old, val]) => @_update val
 
   #
   # Converting POJO attributes to reactive ones.
@@ -599,16 +628,20 @@ rxFactory = (_, $) ->
   # Reactive utilities
   #
 
-  rx.flatten = (xs) ->
-    new DepArray -> _(
-      for x in xs
-        if x instanceof ObsArray
-          x.raw()
-        else if x instanceof ObsCell
-          x.get()
-        else
-          x
-    ).chain().flatten(true).filter((x) -> x?).value()
+  rx.flatten = (xs) -> rx.cellToArray bind ->
+    xsArray = rxt.cast(xs, 'array')
+    if not xsArray.length() then return []
+    _.chain xsArray.all()
+     .map flattenHelper
+     .flatten()
+     .filter (x) -> x?
+     .value()
+
+  flattenHelper = (x) ->
+    if x instanceof ObsArray then flattenHelper x.raw()
+    else if x instanceof ObsCell then flattenHelper x.get()
+    else if _.isArray x then x.map (x_k) -> flattenHelper x_k
+    else x
 
   flatten = (xss) ->
     xs = _.flatten(xss)
@@ -616,6 +649,9 @@ rxFactory = (_, $) ->
 
   rx.cellToArray = (cell, diff) ->
     new DepArray((-> cell.get()), diff)
+
+  rx.cellToMap = (cell) ->
+    new rx.DepMap -> @done @record -> cell.get()
 
   # O(n) using hash key
   rx.basicDiff = (key = rx.smartUidify) -> (oldXs, newXs) ->
@@ -642,6 +678,8 @@ rxFactory = (_, $) ->
   # duplications; only handles (multiple) simple insertions and removals
   # (batching them together into splices).
   permToSplices = (oldLength, newXs, perm) ->
+    if not newXs.length
+      return null # just do a full splice if we're emptying the array
     refs = (i for i in perm when i >= 0)
     return null if _.some(refs[i + 1] - refs[i] <= 0 for i in [0...refs.length - 1])
     splices = []

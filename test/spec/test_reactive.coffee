@@ -93,10 +93,10 @@ describe 'tag', ->
           type: 'rotate'
           from: '0 60 60'
           to: '360 60 60'
-          repeatCount: 'indefinite' 
+          repeatCount: 'indefinite'
         }
       ]
-      
+
     it 'should have the right tag', ->
       expect(elt).toBeDefined()
       expect(elt instanceof SVGRectElement).toBe(true)
@@ -218,15 +218,15 @@ describe 'ObsMap', ->
   it 'should fire onChange event for replaced keys', ->
     x.onChange.sub cb
     x.put('a', 1)
-    expect(cb).toHaveBeenCalledWith(['a',0,1])
+    expect(cb).toHaveBeenCalledWith({'a':[0,1]})
   it 'should fire onAdd event for new keys', ->
     x.onAdd.sub cb
     x.put('b', 2)
-    expect(cb).toHaveBeenCalledWith(['b', 2])
+    expect(cb).toHaveBeenCalledWith({'b': 2})
   it 'should fire onRemove event for deleted keys', ->
     x.onRemove.sub cb
     x.remove('a')
-    expect(cb).toHaveBeenCalledWith(['a', 0])
+    expect(cb).toHaveBeenCalledWith({'a': 0})
   it 'should re-evaluate .get() binds on any change', ->
     expect(a.get()).toBe(0)
     expect(b.get()).toBeUndefined()
@@ -412,6 +412,24 @@ describe 'flatten', ->
       2
     ]
     expect(flattened.all()).toEqual([1,2])
+  it 'should flatten recursively', ->
+    flattened = rx.flatten [
+      1
+      rx.cell()
+      rx.cell([rx.array([42]), [500, undefined, [800]], [null]])
+      undefined
+      [undefined]
+      bind -> undefined
+      rx.array([null])
+      rx.array [
+        rx.array(["ABC"])
+        rx.array([rx.array(["DEF"]), ["GHI"]]), [null], rx.array [[null]]]
+      "XYZ"
+      2
+    ]
+    expect(rx.snap -> flattened.all()).toEqual [
+      1, 42, 500, 800, "ABC", "DEF", "GHI", "XYZ", 2
+    ]
 
 describe 'Ev', ->
   it 'should support scoped subscription', ->
@@ -677,6 +695,19 @@ describe 'rxt', ->
       expect(outerHtml(div(maybeArray(rxt.rawHtml('<em>hi</em>'))))).toBe('<div><em>hi</em></div>')
       expect(outerHtml(div(maybeArray($('<em>hi</em>')[0])))).toBe('<div><em>hi</em></div>')
 
+describe 'cellToMap', ->
+  it 'should correctly track changes', ->
+    x = rx.map {a: 42}
+    y = rx.cellToMap bind ->
+      x.all()
+    expect(rx.snap -> y.all()).toEqual {a: 42}
+    x.put 'b', 17
+    expect(rx.snap -> y.all()).toEqual {a: 42, b: 17}
+    x.put 'c', 4
+    expect(rx.snap -> y.all()).toEqual {a: 42, b: 17, c: 4}
+    x.update {}
+    expect(rx.snap -> y.all()).toEqual {}
+
 describe 'cellToArray', ->
   it 'should propagate minimal splices for primitives', ->
     x = rx.cell([1,2,3])
@@ -717,6 +748,13 @@ describe 'DepArray', ->
     ys.push(6)
     xs.splice(0, 1, 0, 1)
     ys.replace([4,5,6,7])
+  it 'should behave correctly if the last element is removed', ->
+    foo = rx.array [1]
+    bar = rx.cellToArray bind -> foo.all() # easy way to get a DepArray
+    expect(bar instanceof rx.DepArray).toBe(true)
+    foo.removeAt(0)
+    expect(rx.snap -> foo.all().length).toBe(0)
+    expect(rx.snap -> bar.all().length).toBe(0)
 
 describe 'SrcArray', ->
   it 'should not change anything if remove query not found', ->
