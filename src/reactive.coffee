@@ -432,11 +432,11 @@ rxFactory = (_, $) ->
       @onChange = new Ev() # {key: [old, new]...}
     get: (key) ->
       recorder.sub (target) => rx.autoSub @onAdd, (additions) ->
-        target.refresh() if key of additions
+        target.refresh() if key of (additions ? {})
       recorder.sub (target) => rx.autoSub @onChange, (changes) ->
-        target.refresh() if key of changes
+        target.refresh() if key of (changes ? {})
       recorder.sub (target) => rx.autoSub @onRemove, (removals) ->
-        target.refresh() if key of removals
+        target.refresh() if key of (removals ? {})
       @x[key]
     has: (key) ->
       @x[key]?

@@ -987,7 +987,7 @@
         recorder.sub((function(_this) {
           return function(target) {
             return rx.autoSub(_this.onAdd, function(additions) {
-              if (key in additions) {
+              if (key in (additions != null ? additions : {})) {
                 return target.refresh();
               }
             });
@@ -996,7 +996,7 @@
         recorder.sub((function(_this) {
           return function(target) {
             return rx.autoSub(_this.onChange, function(changes) {
-              if (key in changes) {
+              if (key in (changes != null ? changes : {})) {
                 return target.refresh();
               }
             });
@@ -1005,7 +1005,7 @@
         recorder.sub((function(_this) {
           return function(target) {
             return rx.autoSub(_this.onRemove, function(removals) {
-              if (key in removals) {
+              if (key in (removals != null ? removals : {})) {
                 return target.refresh();
               }
             });
