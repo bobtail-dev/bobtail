@@ -10,14 +10,6 @@ rxFactory = (_, $) ->
     delete x[k]
     v
 
-  nthWhere = (xs, n, f) ->
-    for x,i in xs
-      if f(x) and (n -= 1) < 0
-        return [x, i]
-    [null, -1]
-
-  firstWhere = (xs, f) -> nthWhere(xs, 0, f)
-
   mkMap = (xs = []) ->
     map = if Object.create? then Object.create(null) else {}
     if _.isArray(xs)
@@ -135,7 +127,7 @@ rxFactory = (_, $) ->
     sub: (sub) ->
       if @stack.length > 0 and not @isIgnoring
         topCell = _(@stack).last()
-        handle = sub(topCell)
+        sub(topCell)
     addCleanup: (cleanup) ->
       _(@stack).last().addCleanup(cleanup) if @stack.length > 0
     # Delimit the function as one where a mutation takes place, such that if
@@ -298,16 +290,26 @@ rxFactory = (_, $) ->
       recorder.sub (target) => rx.autoSub @onChangeCells, ([index, removed, added]) ->
         target.refresh() if removed.length != added.length
       @cells.length
-    map: (f) ->
+    map: (f) -> # TODO: Reimplement using transform for consistency?
       ys = new MappedDepArray()
       rx.autoSub @onChangeCells, ([index, removed, added]) =>
         for cell in ys.cells[index...index + removed.length]
           cell.disconnect()
-        newCells =
-          added.map (item) ->
-            cell = bind -> f(item.get())
+        newCells = added.map (item) -> bind -> f(item.get())
         ys.realSpliceCells(index, removed.length, newCells)
       ys
+    transform: (f, diff) -> new DepArray (=> f @all()), diff
+    filter: (f) -> @transform (arr) -> arr.filter f
+    slice: (x, y) -> @transform (arr) -> arr.slice(x, y)
+    reduce: (f, i) ->  @all().reduce f, i
+    reduceRight: (f, i) ->  @all().reduceRight f, i
+    every: (f) ->  @all().every f
+    some: (f) ->  @all().some f
+    indexOf: (val, from=0) ->  @all().indexOf val, from
+    lastIndexOf: (val, from=0) ->  @all().lastIndexOf val, from
+    join: (separator=',') ->  @all().join separator
+    first: -> @at 0
+    last: -> @at(@length() - 1)
     indexed: ->
       if not @indexed_?
         @indexed_ = new IndexedDepArray()
@@ -326,13 +328,11 @@ rxFactory = (_, $) ->
     _update: (val, diff = @diff) ->
       old = rx.snap => (x.get() for x in @cells)
       fullSplice = [0, old.length, val]
-      x = null
       splices =
         if diff?
           permToSplices(old.length, val, diff(old, val)) ? [fullSplice]
         else
           [fullSplice]
-      #console.log(old, val, splices, fullSplice, diff, @diff)
       for splice in splices
         [index, count, additions] = splice
         @realSplice(index, count, additions)
@@ -343,13 +343,62 @@ rxFactory = (_, $) ->
     splice: (index, count, additions...) -> @spliceArray(index, count, additions)
     insert: (x, index) -> @splice(index, 0, x)
     remove: (x) ->
-      i = _(@raw()).indexOf(x)
+      i = _(rx.snap => @all()).indexOf(x)
       @removeAt(i) if i >= 0
-    removeAt: (index) -> @splice(index, 1)
+    removeAll: (x) -> rx.transaction =>
+      i = _(rx.snap => @all()).indexOf x
+      while i >= 0
+        @removeAt i
+        i = _(rx.snap => @all()).indexOf x
+    removeAt: (index) ->
+      val = rx.snap => @at index
+      @splice(index, 1)
+      return val
     push: (x) -> @splice(rx.snap(=> @length()), 0, x)
+    pop: () -> @removeAt rx.snap => @length() - 1
     put: (i, x) -> @splice(i, 1, x)
     replace: (xs) -> @spliceArray(0, rx.snap(=> @length()), xs)
+    unshift: (x) -> @insert x, 0
+    shift: -> @removeAt 0
+    # TODO: How is this different from replace? we should use one or the other.
     update: (xs) -> recorder.mutating => @_update(xs)
+    move: (src, dest) -> rx.transaction =>
+      if src == dest then return
+
+      len = rx.snap(=> @length())
+
+      if src < 0 or src > len - 1
+        throw "Source #{src} is outside of bounds of array of length #{len}"
+      if dest < 0 or dest > len
+        throw "Destination #{dest} is outside of bounds of array of length #{len}"
+
+      val = rx.snap => @all()[src]
+
+      if src > dest
+        @removeAt src
+        @insert val, dest
+      else
+        @insert val, dest
+        @removeAt src
+
+      return  # removeAt returns, but insert doesn't, so let's avoid inconsistency
+    swap: (i1, i2) -> rx.transaction =>
+      len = rx.snap(=> @length())
+      if i1 < 0 or i1 > len - 1
+        throw "i1 #{i1} is outside of bounds of array of length #{len}"
+      if i2 < 0 or i2 > len - 1
+        throw "i2 #{i2} is outside of bounds of array of length #{len}"
+
+      first = Math.min i1, i2
+      second = Math.max i1, i2
+
+      @move first, second + 1
+      @move second - 1, first
+
+    reverse: ->
+      # Javascript's Array.reverse both reverses the Array and returns its value
+      @update rx.snap => @all().reverse()
+      return rx.snap => @all()
 
   MappedDepArray = class rx.MappedDepArray extends ObsArray
   IndexedDepArray = class rx.IndexedDepArray extends ObsArray
@@ -381,22 +430,14 @@ rxFactory = (_, $) ->
       addedElems = rx.snap -> (x3.get() for x3 in additions)
       @onChangeCells.pub([index, removed, _.zip(additions, newIs)])
       @onChange.pub([index, removedElems, _.zip(addedElems, newIs)])
-  IndexedMappedDepArray = class rx.IndexedMappedDepArray extends IndexedDepArray
 
   DepArray = class rx.DepArray extends ObsArray
     constructor: (@f, diff) ->
       super([], diff)
       rx.autoSub (bind => @f()).onSet, ([old, val]) => @_update(val)
 
-  IndexedArray = class rx.IndexedArray extends DepArray
-    constructor: (@xs) ->
-    map: (f) ->
-      ys = new MappedDepArray()
-      rx.autoSub @xs.onChange, ([index, removed, added]) ->
-        ys.realSplice(index, removed.length, added.map(f))
-      ys
-
   rx.concat = (xss...) ->
+    # todo: This seems like overkill?
     ys = new MappedDepArray()
     repLens = (0 for xs in xss)
     xss.map (xs, i) ->
@@ -424,7 +465,6 @@ rxFactory = (_, $) ->
     constructor: (@_map, @_key) ->
     get: -> @_map.get(@_key)
 
-
   ObsMap = class rx.ObsMap
     constructor: (@x = {}) ->
       @onAdd = new Ev(=> @x) # {key: new...}
@@ -439,12 +479,18 @@ rxFactory = (_, $) ->
         target.refresh() if key of (removals ? {})
       @x[key]
     has: (key) ->
-      @x[key]?
+      recorder.sub (target) => rx.autoSub @onAdd, (additions) ->
+        target.refresh() if key of (additions ? {})
+      recorder.sub (target) => rx.autoSub @onRemove, (removals) ->
+        target.refresh() if key of (removals ? {})
+      key of @x
     all: ->
       recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
       _.clone(@x)
+    keys: -> rx.cellToArray bind => _.keys @all()
+    values: -> rx.cellToArray bind => _.values @all()
     realPut: (key, val) ->
       if key of @x
         old = @x[key]
@@ -599,7 +645,7 @@ rxFactory = (_, $) ->
                   configurable: true
                   enumerable: true
                   get: ->
-                    view.raw()
+                    view.all()
                     view
                   set: (x) ->
                     view.splice(0, view.length, x...)
@@ -640,14 +686,10 @@ rxFactory = (_, $) ->
      .value()
 
   flattenHelper = (x) ->
-    if x instanceof ObsArray then flattenHelper x.raw()
+    if x instanceof ObsArray then flattenHelper x.all()
     else if x instanceof ObsCell then flattenHelper x.get()
     else if _.isArray x then x.map (x_k) -> flattenHelper x_k
     else x
-
-  flatten = (xss) ->
-    xs = _.flatten(xss)
-    rx.cellToArray bind -> _.flatten(xss)
 
   rx.cellToArray = (cell, diff) ->
     new DepArray((-> cell.get()), diff)

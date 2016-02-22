@@ -6,7 +6,7 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, flattenHelper, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
+    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, flattenHelper, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -20,19 +20,6 @@
       v = x[k];
       delete x[k];
       return v;
-    };
-    nthWhere = function(xs, n, f) {
-      var i, x, _i, _len;
-      for (i = _i = 0, _len = xs.length; _i < _len; i = ++_i) {
-        x = xs[i];
-        if (f(x) && (n -= 1) < 0) {
-          return [x, i];
-        }
-      }
-      return [null, -1];
-    };
-    firstWhere = function(xs, f) {
-      return nthWhere(xs, 0, f);
     };
     mkMap = function(xs) {
       var k, map, v, _i, _len, _ref;
@@ -199,10 +186,10 @@
       };
 
       Recorder.prototype.sub = function(sub) {
-        var handle, topCell;
+        var topCell;
         if (this.stack.length > 0 && !this.isIgnoring) {
           topCell = _(this.stack).last();
-          return handle = sub(topCell);
+          return sub(topCell);
         }
       };
 
@@ -552,7 +539,7 @@
               cell.disconnect();
             }
             newCells = added.map(function(item) {
-              return cell = bind(function() {
+              return bind(function() {
                 return f(item.get());
               });
             });
@@ -560,6 +547,71 @@
           };
         })(this));
         return ys;
+      };
+
+      ObsArray.prototype.transform = function(f, diff) {
+        return new DepArray(((function(_this) {
+          return function() {
+            return f(_this.all());
+          };
+        })(this)), diff);
+      };
+
+      ObsArray.prototype.filter = function(f) {
+        return this.transform(function(arr) {
+          return arr.filter(f);
+        });
+      };
+
+      ObsArray.prototype.slice = function(x, y) {
+        return this.transform(function(arr) {
+          return arr.slice(x, y);
+        });
+      };
+
+      ObsArray.prototype.reduce = function(f, i) {
+        return this.all().reduce(f, i);
+      };
+
+      ObsArray.prototype.reduceRight = function(f, i) {
+        return this.all().reduceRight(f, i);
+      };
+
+      ObsArray.prototype.every = function(f) {
+        return this.all().every(f);
+      };
+
+      ObsArray.prototype.some = function(f) {
+        return this.all().some(f);
+      };
+
+      ObsArray.prototype.indexOf = function(val, from) {
+        if (from == null) {
+          from = 0;
+        }
+        return this.all().indexOf(val, from);
+      };
+
+      ObsArray.prototype.lastIndexOf = function(val, from) {
+        if (from == null) {
+          from = 0;
+        }
+        return this.all().lastIndexOf(val, from);
+      };
+
+      ObsArray.prototype.join = function(separator) {
+        if (separator == null) {
+          separator = ',';
+        }
+        return this.all().join(separator);
+      };
+
+      ObsArray.prototype.first = function() {
+        return this.at(0);
+      };
+
+      ObsArray.prototype.last = function() {
+        return this.at(this.length() - 1);
       };
 
       ObsArray.prototype.indexed = function() {
@@ -610,7 +662,7 @@
       };
 
       ObsArray.prototype._update = function(val, diff) {
-        var additions, count, fullSplice, index, old, splice, splices, x, _i, _len, _ref, _results;
+        var additions, count, fullSplice, index, old, splice, splices, _i, _len, _ref, _results;
         if (diff == null) {
           diff = this.diff;
         }
@@ -627,7 +679,6 @@
           };
         })(this));
         fullSplice = [0, old.length, val];
-        x = null;
         splices = diff != null ? (_ref = permToSplices(old.length, val, diff(old, val))) != null ? _ref : [fullSplice] : [fullSplice];
         _results = [];
         for (_i = 0, _len = splices.length; _i < _len; _i++) {
@@ -668,14 +719,44 @@
 
       SrcArray.prototype.remove = function(x) {
         var i;
-        i = _(this.raw()).indexOf(x);
+        i = _(rx.snap((function(_this) {
+          return function() {
+            return _this.all();
+          };
+        })(this))).indexOf(x);
         if (i >= 0) {
           return this.removeAt(i);
         }
       };
 
+      SrcArray.prototype.removeAll = function(x) {
+        return rx.transaction((function(_this) {
+          return function() {
+            var i, _results;
+            i = _(rx.snap(function() {
+              return _this.all();
+            })).indexOf(x);
+            _results = [];
+            while (i >= 0) {
+              _this.removeAt(i);
+              _results.push(i = _(rx.snap(function() {
+                return _this.all();
+              })).indexOf(x));
+            }
+            return _results;
+          };
+        })(this));
+      };
+
       SrcArray.prototype.removeAt = function(index) {
-        return this.splice(index, 1);
+        var val;
+        val = rx.snap((function(_this) {
+          return function() {
+            return _this.at(index);
+          };
+        })(this));
+        this.splice(index, 1);
+        return val;
       };
 
       SrcArray.prototype.push = function(x) {
@@ -684,6 +765,14 @@
             return _this.length();
           };
         })(this)), 0, x);
+      };
+
+      SrcArray.prototype.pop = function() {
+        return this.removeAt(rx.snap((function(_this) {
+          return function() {
+            return _this.length() - 1;
+          };
+        })(this)));
       };
 
       SrcArray.prototype.put = function(i, x) {
@@ -698,10 +787,82 @@
         })(this)), xs);
       };
 
+      SrcArray.prototype.unshift = function(x) {
+        return this.insert(x, 0);
+      };
+
+      SrcArray.prototype.shift = function() {
+        return this.removeAt(0);
+      };
+
       SrcArray.prototype.update = function(xs) {
         return recorder.mutating((function(_this) {
           return function() {
             return _this._update(xs);
+          };
+        })(this));
+      };
+
+      SrcArray.prototype.move = function(src, dest) {
+        return rx.transaction((function(_this) {
+          return function() {
+            var len, val;
+            if (src === dest) {
+              return;
+            }
+            len = rx.snap(function() {
+              return _this.length();
+            });
+            if (src < 0 || src > len - 1) {
+              throw "Source " + src + " is outside of bounds of array of length " + len;
+            }
+            if (dest < 0 || dest > len) {
+              throw "Destination " + dest + " is outside of bounds of array of length " + len;
+            }
+            val = rx.snap(function() {
+              return _this.all()[src];
+            });
+            if (src > dest) {
+              _this.removeAt(src);
+              _this.insert(val, dest);
+            } else {
+              _this.insert(val, dest);
+              _this.removeAt(src);
+            }
+          };
+        })(this));
+      };
+
+      SrcArray.prototype.swap = function(i1, i2) {
+        return rx.transaction((function(_this) {
+          return function() {
+            var first, len, second;
+            len = rx.snap(function() {
+              return _this.length();
+            });
+            if (i1 < 0 || i1 > len - 1) {
+              throw "i1 " + i1 + " is outside of bounds of array of length " + len;
+            }
+            if (i2 < 0 || i2 > len - 1) {
+              throw "i2 " + i2 + " is outside of bounds of array of length " + len;
+            }
+            first = Math.min(i1, i2);
+            second = Math.max(i1, i2);
+            _this.move(first, second + 1);
+            return _this.move(second - 1, first);
+          };
+        })(this));
+      };
+
+      SrcArray.prototype.reverse = function() {
+        this.update(rx.snap((function(_this) {
+          return function() {
+            return _this.all().reverse();
+          };
+        })(this)));
+        return rx.snap((function(_this) {
+          return function() {
+            return _this.all();
           };
         })(this));
       };
@@ -827,16 +988,6 @@
       return IndexedDepArray;
 
     })(ObsArray);
-    IndexedMappedDepArray = rx.IndexedMappedDepArray = (function(_super) {
-      __extends(IndexedMappedDepArray, _super);
-
-      function IndexedMappedDepArray() {
-        return IndexedMappedDepArray.__super__.constructor.apply(this, arguments);
-      }
-
-      return IndexedMappedDepArray;
-
-    })(IndexedDepArray);
     DepArray = rx.DepArray = (function(_super) {
       __extends(DepArray, _super);
 
@@ -859,27 +1010,6 @@
       return DepArray;
 
     })(ObsArray);
-    IndexedArray = rx.IndexedArray = (function(_super) {
-      __extends(IndexedArray, _super);
-
-      function IndexedArray(xs) {
-        this.xs = xs;
-      }
-
-      IndexedArray.prototype.map = function(f) {
-        var ys;
-        ys = new MappedDepArray();
-        rx.autoSub(this.xs.onChange, function(_arg) {
-          var added, index, removed;
-          index = _arg[0], removed = _arg[1], added = _arg[2];
-          return ys.realSplice(index, removed.length, added.map(f));
-        });
-        return ys;
-      };
-
-      return IndexedArray;
-
-    })(DepArray);
     rx.concat = function() {
       var repLens, xs, xss, ys;
       xss = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -1015,7 +1145,25 @@
       };
 
       ObsMap.prototype.has = function(key) {
-        return this.x[key] != null;
+        recorder.sub((function(_this) {
+          return function(target) {
+            return rx.autoSub(_this.onAdd, function(additions) {
+              if (key in (additions != null ? additions : {})) {
+                return target.refresh();
+              }
+            });
+          };
+        })(this));
+        recorder.sub((function(_this) {
+          return function(target) {
+            return rx.autoSub(_this.onRemove, function(removals) {
+              if (key in (removals != null ? removals : {})) {
+                return target.refresh();
+              }
+            });
+          };
+        })(this));
+        return key in this.x;
       };
 
       ObsMap.prototype.all = function() {
@@ -1041,6 +1189,22 @@
           };
         })(this));
         return _.clone(this.x);
+      };
+
+      ObsMap.prototype.keys = function() {
+        return rx.cellToArray(bind((function(_this) {
+          return function() {
+            return _.keys(_this.all());
+          };
+        })(this)));
+      };
+
+      ObsMap.prototype.values = function() {
+        return rx.cellToArray(bind((function(_this) {
+          return function() {
+            return _.values(_this.all());
+          };
+        })(this)));
       };
 
       ObsMap.prototype.realPut = function(key, val) {
@@ -1304,7 +1468,7 @@
                     configurable: true,
                     enumerable: true,
                     get: function() {
-                      view.raw();
+                      view.all();
                       return view;
                     },
                     set: function(x) {
@@ -1371,7 +1535,7 @@
     };
     flattenHelper = function(x) {
       if (x instanceof ObsArray) {
-        return flattenHelper(x.raw());
+        return flattenHelper(x.all());
       } else if (x instanceof ObsCell) {
         return flattenHelper(x.get());
       } else if (_.isArray(x)) {
@@ -1381,13 +1545,6 @@
       } else {
         return x;
       }
-    };
-    flatten = function(xss) {
-      var xs;
-      xs = _.flatten(xss);
-      return rx.cellToArray(bind(function() {
-        return _.flatten(xss);
-      }));
     };
     rx.cellToArray = function(cell, diff) {
       return new DepArray((function() {
