@@ -123,10 +123,11 @@ using their <code>disconnect</code> method:</p>
 </pre></div>
 
 <p>If you try something like the following, i.e. explicitly wire up a
-dependent cell to modify a source cell:</p>
-<div class="highlight"><pre><span class="nx">bind</span> <span class="nf">-&gt;</span>
+dependent cell (plusOne, which depends on src) to modify another source cell (dst):</p>
+<div class="highlight"><pre><span class="nv">dst = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">cell</span><span class="p">()</span>
+<span class="nx">bind</span> <span class="nf">-&gt;</span>
   <span class="nv">x = </span><span class="nx">plusOne</span><span class="p">.</span><span class="nx">get</span><span class="p">()</span>
-  <span class="nx">dst</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">val</span><span class="p">)</span>
+  <span class="nx">dst</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span>
 <span class="nx">src</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 
@@ -295,7 +296,7 @@ bringing this idea to the table.</p>
       ga('send', 'pageview');
     </script>
     <footer>
-      <div class="inner"><p>Copyright 2015 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+      <div class="inner"><p>Copyright 2016 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
 
       </div>
     </footer>
