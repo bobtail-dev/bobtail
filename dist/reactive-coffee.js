@@ -1665,7 +1665,9 @@
         if (elt.html) {
           elt.html('');
         }
-        if (_.isArray(contents)) {
+        if (contents == null) {
+
+        } else if (_.isArray(contents)) {
           nodes = toNodes(contents);
           elt.append(nodes);
           if (false) {

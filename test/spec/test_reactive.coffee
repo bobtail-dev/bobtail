@@ -43,12 +43,13 @@ describe 'tag', ->
       size = rx.cell(10)
       elt = rxt.tags.header {
         class: 'my-class'
-        style: bind -> "font-size: #{size.get()}px"
+        style: bind -> if size.get()? then "font-size: #{size.get()}px" else null
         id: 'my-elt'
         click: ->
         init: -> @data('foo', 'bar')
       }, bind -> [
         'hello world'
+        rxt.tags.span bind -> if size.get()? then size.get() * 2
         rxt.tags.button ['click me']
       ]
     it 'should have the right tag', ->
@@ -65,12 +66,19 @@ describe 'tag', ->
       size.set(9)
       expect(elt.attr('style')).toBe('font-size: 9px')
       expect(elt.css('font-size')).toBe('9px')
+      expect(elt.contents()[1].textContent).toBe('18')
+      size.set()
+      expect(elt.attr('style')).toBe(undefined)
+      expect(elt.css('font-size')).toBe('')
+      expect(elt.contents()[1].textContent).toBe('')
     it 'should have the given child contents', ->
       cont = elt.contents()
       child = cont.last()
-      expect(cont.length).toBe(2)
+      expect(cont.length).toBe(3)
       expect(cont[0]).toEqual(jasmine.any(Text))
       expect(cont[0].textContent).toBe('hello world')
+      expect(cont[1].tagName).toBe('SPAN')
+      expect(cont[1].textContent).toBe('20')
       expect(cont.last().is('button')).toBe(true)
       expect(cont.last().text()).toBe('click me')
     it 'should not have special attrs set', ->
