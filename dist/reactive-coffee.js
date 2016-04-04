@@ -675,7 +675,11 @@
       };
 
       SrcArray.prototype.push = function(x) {
-        return this.splice(this.length(), 0, x);
+        return this.splice(rx.snap((function(_this) {
+          return function() {
+            return _this.length();
+          };
+        })(this)), 0, x);
       };
 
       SrcArray.prototype.put = function(i, x) {
@@ -683,7 +687,11 @@
       };
 
       SrcArray.prototype.replace = function(xs) {
-        return this.spliceArray(0, this.length(), xs);
+        return this.spliceArray(0, rx.snap((function(_this) {
+          return function() {
+            return _this.length();
+          };
+        })(this)), xs);
       };
 
       SrcArray.prototype.update = function(xs) {
