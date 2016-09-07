@@ -848,7 +848,9 @@ rxFactory = (_, $) ->
 
     updateContents = (elt, contents) ->
       elt.html('') if elt.html
-      if _.isArray(contents)
+      if not contents?
+        return
+      else if _.isArray(contents)
         nodes = toNodes(contents)
         elt.append(nodes)
         if false # this is super slow
