@@ -153,6 +153,12 @@ describe 'rxt of observable array', ->
     expect(cont.eq(1).text()).toBe('item 1')
     expect(cont[2]).toEqual(jasmine.any(Text))
     expect(cont.eq(2).text()).toBe('plain 2')
+  it "should work with reactive map functions", ->
+    multiplierCell = rx.cell(1)
+    $ul = rxt.tags.ul xs.map (f) -> rxt.tags.li f * multiplierCell.get()
+    expect($(x).text() for x in $("li", $ul)).toEqual(["1", "2", "3"])
+    multiplierCell.set(10) 
+    expect($(x).text() for x in $("li", $ul)).toEqual(["10", "20", "30"])   
 
 describe 'SrcArray', ->
   it 'should not remove anything if element not found', ->

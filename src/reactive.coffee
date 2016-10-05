@@ -309,8 +309,8 @@ rxFactory = (_, $) ->
     indexed: ->
       if not @indexed_?
         @indexed_ = new IndexedDepArray()
-        rx.autoSub @onChange, ([index, removed, added]) =>
-          @indexed_.realSplice(index, removed.length, added)
+        rx.autoSub @onChangeCells, ([index, removed, added]) =>
+          @indexed_.realSpliceCells(index, removed.length, added)
       @indexed_
     concat: (that) -> rx.concat(this, that)
     realSpliceCells: (index, count, additions) ->
@@ -888,7 +888,7 @@ rxFactory = (_, $) ->
               for [cell, icell] in added
                 do (cell, icell) ->
                   rx.autoSub cell.onSet, rx.skipFirst ([old, val]) ->
-                    ival = snap -> icell.get()
+                    ival = rx.snap -> icell.get()
                     toAdd = toNodes([val])
                     elt.contents().eq(ival).replaceWith(toAdd)
           else if contents instanceof ObsCell
