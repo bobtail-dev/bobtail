@@ -856,3 +856,137 @@ describe 'transaction', ->
       y.set(5)
       expect(z.get()).toBe(5)
     expect(z.get()).toBe(5)
+
+describe 'onElementAttrsChanged', ->
+  it 'should trigger for each changed attribute', ->
+    rxt.events.enabled = true
+    handler = jasmine.createSpy()
+    rx.autoSub rxt.events.onElementAttrsChanged, handler
+      
+    stateCell = rx.cell("safe")
+    offsetCell = rx.cell(0)
+    $div = rxt.tags.div {
+      class: bind -> ["notif", "notif--#{stateCell.get()}"]
+      style: bind -> {left: offsetCell.get()}
+      otherThing: "yes"
+    }
+
+    expect(handler.calls.length).toBe(2)
+    expect(handler).toHaveBeenCalledWith({$element: $div, attr: "class"})
+    expect(handler).toHaveBeenCalledWith({$element: $div, attr: "style"})
+
+    handler.calls.splice(0, handler.calls.length)
+    stateCell.set("danger")
+    expect(handler.calls.length).toBe(1)
+    expect(handler).toHaveBeenCalledWith({$element: $div, attr: "class"})
+
+    handler.calls.splice(0, handler.calls.length)
+    offsetCell.set(10)
+    expect(handler.calls.length).toBe(1)
+    expect(handler).toHaveBeenCalledWith({$element: $div, attr: "style"})
+
+describe 'onElementChildrenChanged', ->
+  it 'should work for bind body', ->
+    rxt.events.enabled = true
+    handler = jasmine.createSpy()
+    rx.autoSub rxt.events.onElementChildrenChanged, handler
+      
+    stateCell = rx.cell("safe")
+    offsetCell = rx.cell(0)
+    $div = rxt.tags.div bind -> stateCell.get()
+
+    expect(handler.calls.length).toBe(1)
+    expect(handler).toHaveBeenCalledWith({$element: $div, type: "rerendered"})
+
+    handler.calls.splice(0, handler.calls.length)
+    stateCell.set("danger")
+    expect(handler.calls.length).toBe(1)
+    expect(handler).toHaveBeenCalledWith({$element: $div, type: "rerendered"})    
+
+  it "should work for reactive array body", ->
+    rxt.events.enabled = true
+    handler = jasmine.createSpy()
+    rx.autoSub rxt.events.onElementChildrenChanged, handler
+
+    items = rx.array([{name: "Chicken feet", price: 10}])
+
+    $ul = rxt.tags.ul items.map (item) -> rxt.tags.li item
+
+    expect(handler.calls.length).toBe(1)
+    expect(handler.calls[0].args[0].$element).toBe($ul)
+    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
+    expect(handler.calls[0].args[0].removed.length).toBe(0)
+    expect(handler.calls[0].args[0].added.length).toBe(1)
+    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
+    
+    handler.calls.splice(0, handler.calls.length)
+    items.push({name: "Intestines", price: 5})
+    expect(handler.calls.length).toBe(1)    
+    expect(handler.calls[0].args[0].$element).toBe($ul)
+    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
+    expect(handler.calls[0].args[0].removed.length).toBe(0)    
+    expect(handler.calls[0].args[0].added.length).toBe(1)
+    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[1])
+
+    handler.calls.splice(0, handler.calls.length)
+    items.insert({name: "Intestines", price: 5}, 0)
+    expect(handler.calls.length).toBe(1)    
+    expect(handler.calls[0].args[0].$element).toBe($ul)
+    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
+    expect(handler.calls[0].args[0].removed.length).toBe(0)    
+    expect(handler.calls[0].args[0].added.length).toBe(1)
+    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
+
+    handler.calls.splice(0, handler.calls.length)
+    items.removeAt(0)
+    expect(handler.calls.length).toBe(1)    
+    expect(handler.calls[0].args[0].$element).toBe($ul)
+    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
+    expect(handler.calls[0].args[0].added.length).toBe(0)    
+    expect(handler.calls[0].args[0].removed.length).toBe(1)
+
+    handler.calls.splice(0, handler.calls.length)
+    items.replace([{name: "Wonton"}, {name: "smelly tofu"}])
+    expect(handler.calls.length).toBe(1)
+    expect(handler.calls[0].args[0].$element).toBe($ul)
+    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
+    expect(handler.calls[0].args[0].added.length).toBe(2)
+    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
+    expect(handler.calls[0].args[0].added[1]).toBe($("li", $ul)[1])
+    expect(handler.calls[0].args[0].removed.length).toBe(2)
+
+  it "should work with reactive map function", ->
+    rxt.events.enabled = true
+    handler = jasmine.createSpy()
+    rx.autoSub rxt.events.onElementChildrenChanged, handler
+
+    onSaleCell = rx.cell(false)
+    items = rx.array([{name: "Chicken feet", price: 10}, {name: "buns", price: 5}])
+
+    $ul = rxt.tags.ul items.map (item) ->
+      rxt.tags.li if onSaleCell.get() then item.price * 0.1 else item.price
+            
+    expect(handler.calls.length).toEqual(1)
+    expect(handler.calls[0].args[0].$element).toBe($ul)
+    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
+    expect(handler.calls[0].args[0].added.length).toBe(2)
+    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
+    expect(handler.calls[0].args[0].added[1]).toBe($("li", $ul)[1])    
+    expect(handler.calls[0].args[0].removed.length).toBe(0)
+
+    handler.calls.splice(0, handler.calls.length)
+    onSaleCell.set(true)
+    expect(handler.calls.length).toEqual(2)
+    expect(handler.calls[0].args[0].$element).toBe($ul)
+    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
+    expect(handler.calls[0].args[0].added).toBe(undefined)
+    expect(handler.calls[0].args[0].removed).toBe(undefined)
+    expect(handler.calls[0].args[0].updated.length).toBe(1)    
+    expect(handler.calls[0].args[0].updated[0]).toBe($("li", $ul)[0])
+    
+    expect(handler.calls[1].args[0].$element).toBe($ul)
+    expect(handler.calls[1].args[0].type).toBe("childrenUpdated")
+    expect(handler.calls[1].args[0].added).toBe(undefined)
+    expect(handler.calls[1].args[0].removed).toBe(undefined)
+    expect(handler.calls[1].args[0].updated.length).toBe(1)    
+    expect(handler.calls[1].args[0].updated[0]).toBe($("li", $ul)[1])
