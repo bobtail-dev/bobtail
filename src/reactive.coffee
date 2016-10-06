@@ -309,8 +309,8 @@ rxFactory = (_, $) ->
     indexed: ->
       if not @indexed_?
         @indexed_ = new IndexedDepArray()
-        rx.autoSub @onChange, ([index, removed, added]) =>
-          @indexed_.realSplice(index, removed.length, added)
+        rx.autoSub @onChangeCells, ([index, removed, added]) =>
+          @indexed_.realSpliceCells(index, removed.length, added)
       @indexed_
     concat: (that) -> rx.concat(this, that)
     realSpliceCells: (index, count, additions) ->
@@ -743,6 +743,11 @@ rxFactory = (_, $) ->
 
     rxt = {}
 
+    rxt.events = {}
+    rxt.events.enabled = false
+    rxt.events.onElementChildrenChanged = new Ev()
+    rxt.events.onElementAttrsChanged = new Ev()
+
     RawHtml = class rxt.RawHtml
       constructor: (@html) ->
 
@@ -788,7 +793,10 @@ rxFactory = (_, $) ->
 
     setDynProp = (elt, prop, val, xform = _.identity) ->
       if val instanceof ObsCell
-        rx.autoSub val.onSet, ([o,n]) -> setProp(elt, prop, xform(n))
+        rx.autoSub val.onSet, ([o,n]) ->
+          setProp(elt, prop, xform(n))
+          if rxt.events.enabled
+            rxt.events.onElementAttrsChanged.pub {$element: elt, attr: prop}
       else
         setProp(elt, prop, xform(val))
 
@@ -863,9 +871,10 @@ rxFactory = (_, $) ->
               .addClass('updated-element').offset({top,left})
               .width($(node).width()).height($(node).height())
           setTimeout (-> $(cover).remove() for cover in covers), 2000
+        return nodes
       else if _.isString(contents) or _.isNumber(contents) or contents instanceof Element or
           contents instanceof SVGElement or contents instanceof RawHtml or contents instanceof $
-        updateContents(elt, [contents])
+        return updateContents(elt, [contents])
       else
         throw new Error("Unknown type for element contents: #{contents.constructor.name} (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)")
 
@@ -885,23 +894,37 @@ rxFactory = (_, $) ->
                 elt.append(toAdd)
               else
                 elt.contents().eq(index).before(toAdd)
+              if rxt.events.enabled and (removed.length or toAdd.length)
+                rxt.events.onElementChildrenChanged.pub {
+                  $element: elt,
+                  type: "childrenUpdated"
+                  added: toAdd
+                  removed: toNodes(removed.map (cell) -> rx.snap -> cell.get())
+                }
               for [cell, icell] in added
                 do (cell, icell) ->
                   rx.autoSub cell.onSet, rx.skipFirst ([old, val]) ->
-                    ival = snap -> icell.get()
+                    ival = rx.snap -> icell.get()
                     toAdd = toNodes([val])
                     elt.contents().eq(ival).replaceWith(toAdd)
+                    if rxt.events.enabled
+                      rxt.events.onElementChildrenChanged.pub {
+                        $element: elt, type: "childrenUpdated", updated: toAdd
+                      }
           else if contents instanceof ObsCell
             # TODO: make this more efficient by checking each element to see if it
             # changed (i.e. layer a MappedDepArray over this, and make DepArrays
             # propagate the minimal change set)
-            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
+            rx.autoSub contents.onSet, ([old, val]) ->
+              updateContents(elt, val)
+              if rxt.events.enabled
+                rxt.events.onElementChildrenChanged.pub {$element: elt, type: "rerendered"}
           else
             updateContents(elt, contents)
         for key of attrs when key of specialAttrs
           specialAttrs[key](elt, attrs[key], attrs, contents)
         elt
-
+        
     # From <https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list>
     #
     # Extract with:
@@ -1029,11 +1052,14 @@ rxFactory = (_, $) ->
       ).join(' ')
 
     specialAttrs.style = (elt, value) ->
+      isCell = value instanceof ObsCell
       rx.autoSub rxt.cast(value).onSet, ([o,n]) ->
         if not n? or _.isString(n)
           setProp(elt, 'style', n)
         else
           elt.removeAttr('style').css(n)
+        if isCell and rxt.events.enabled
+          rxt.events.onElementAttrsChanged.pub {$element: elt, attr: "style"}
 
     rxt.smushClasses = (xs) ->
       _(xs).chain().flatten().compact().value().join(' ').replace(/\s+/, ' ').trim()

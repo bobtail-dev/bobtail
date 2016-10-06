@@ -561,11 +561,11 @@
       ObsArray.prototype.indexed = function() {
         if (this.indexed_ == null) {
           this.indexed_ = new IndexedDepArray();
-          rx.autoSub(this.onChange, (function(_this) {
+          rx.autoSub(this.onChangeCells, (function(_this) {
             return function(_arg) {
               var added, index, removed;
               index = _arg[0], removed = _arg[1], added = _arg[2];
-              return _this.indexed_.realSplice(index, removed.length, added);
+              return _this.indexed_.realSpliceCells(index, removed.length, added);
             };
           })(this));
         }
@@ -1530,6 +1530,10 @@
         }).call(this);
       };
       rxt = {};
+      rxt.events = {};
+      rxt.events.enabled = false;
+      rxt.events.onElementChildrenChanged = new Ev();
+      rxt.events.onElementAttrsChanged = new Ev();
       RawHtml = rxt.RawHtml = (function() {
         function RawHtml(html) {
           this.html = html;
@@ -1589,7 +1593,13 @@
           return rx.autoSub(val.onSet, function(_arg) {
             var n, o;
             o = _arg[0], n = _arg[1];
-            return setProp(elt, prop, xform(n));
+            setProp(elt, prop, xform(n));
+            if (rxt.events.enabled) {
+              return rxt.events.onElementAttrsChanged.pub({
+                $element: elt,
+                attr: prop
+              });
+            }
           });
         } else {
           return setProp(elt, prop, xform(val));
@@ -1697,7 +1707,7 @@
               }
               return _results;
             })();
-            return setTimeout((function() {
+            setTimeout((function() {
               var cover, _j, _len1, _results;
               _results = [];
               for (_j = 0, _len1 = covers.length; _j < _len1; _j++) {
@@ -1707,6 +1717,7 @@
               return _results;
             }), 2000);
           }
+          return nodes;
         } else if (_.isString(contents) || _.isNumber(contents) || contents instanceof Element || contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof $) {
           return updateContents(elt, [contents]);
         } else {
@@ -1741,6 +1752,18 @@
                 } else {
                   elt.contents().eq(index).before(toAdd);
                 }
+                if (rxt.events.enabled && (removed.length || toAdd.length)) {
+                  rxt.events.onElementChildrenChanged.pub({
+                    $element: elt,
+                    type: "childrenUpdated",
+                    added: toAdd,
+                    removed: toNodes(removed.map(function(cell) {
+                      return rx.snap(function() {
+                        return cell.get();
+                      });
+                    }))
+                  });
+                }
                 _results = [];
                 for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
                   _ref2 = added[_j], cell = _ref2[0], icell = _ref2[1];
@@ -1748,11 +1771,18 @@
                     return rx.autoSub(cell.onSet, rx.skipFirst(function(_arg1) {
                       var ival, old, val;
                       old = _arg1[0], val = _arg1[1];
-                      ival = snap(function() {
+                      ival = rx.snap(function() {
                         return icell.get();
                       });
                       toAdd = toNodes([val]);
-                      return elt.contents().eq(ival).replaceWith(toAdd);
+                      elt.contents().eq(ival).replaceWith(toAdd);
+                      if (rxt.events.enabled) {
+                        return rxt.events.onElementChildrenChanged.pub({
+                          $element: elt,
+                          type: "childrenUpdated",
+                          updated: toAdd
+                        });
+                      }
                     }));
                   })(cell, icell));
                 }
@@ -1762,7 +1792,13 @@
               rx.autoSub(contents.onSet, function(_arg) {
                 var old, val;
                 old = _arg[0], val = _arg[1];
-                return updateContents(elt, val);
+                updateContents(elt, val);
+                if (rxt.events.enabled) {
+                  return rxt.events.onElementChildrenChanged.pub({
+                    $element: elt,
+                    type: "rerendered"
+                  });
+                }
               });
             } else {
               updateContents(elt, contents);
@@ -1946,13 +1982,21 @@
         })()).join(' ');
       };
       specialAttrs.style = function(elt, value) {
+        var isCell;
+        isCell = value instanceof ObsCell;
         return rx.autoSub(rxt.cast(value).onSet, function(_arg) {
           var n, o;
           o = _arg[0], n = _arg[1];
           if ((n == null) || _.isString(n)) {
-            return setProp(elt, 'style', n);
+            setProp(elt, 'style', n);
           } else {
-            return elt.removeAttr('style').css(n);
+            elt.removeAttr('style').css(n);
+          }
+          if (isCell && rxt.events.enabled) {
+            return rxt.events.onElementAttrsChanged.pub({
+              $element: elt,
+              attr: "style"
+            });
           }
         });
       };
