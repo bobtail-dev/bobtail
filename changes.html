@@ -31,9 +31,21 @@
         <section id="main-content"><h1 id="change-log">Change Log</h1>
 <p>Changes for each version are roughly listed in order of descending
 noteworthiness.</p>
-<p><strong>v1.3.0 – under development</strong></p>
+<p><strong>v2.0.0 – under development</strong></p>
 <ul>
 <li>Add SVG support (<a href="https://github.com/yang/reactive-coffee/issues/14">#14</a>; contributed by <a href="https://github.com/eizenberg">@eizenberg</a> and <a href="https://github.com/drernie">@drernie</a>).</li>
+</ul>
+<p><strong>v1.3.0 – 2016-03-10</strong></p>
+<ul>
+<li>(Breaking change) Change map event handlers to take multiple keys at a
+time rather than a single key at a time.</li>
+<li>Add <code>cellToMap</code> function, analogous to <code>cellToArray</code>.</li>
+<li>(Breaking change) Improve <code>rx.flatten</code> to perform a fully recursive
+flatten, recursing into primitive arrays, reactive arrays, and reactive
+cells.</li>
+<li>Fix bug involving a dropped <code>this</code> in the <code>IndexedDepArray.onChange</code>.</li>
+<li>Fix bug where dependent arrays did not correctly update when set to
+empty.</li>
 </ul>
 <p><strong>v1.2.4 – 2015-08-25</strong></p>
 <ul>

@@ -122,6 +122,10 @@ concatenating multiple <code>ObsArray</code>s (efficiently maintained).</li>
 contents of the array to determine what has changed.  Similar in
 mechanism to <code>SrcArray.update</code>.  <code>diff</code> is an optional diff function (see
 <code>SrcArray.update</code> documentation) and defaults to <code>rx.basicDiff()</code>.</li>
+<li><code>cellToMap(cell)</code>: given an <code>ObsCell</code> of a primitive JS object, return a
+<code>DepMap</code> that, in response to future new values of the
+object, issues the minimal set of events by diffing the contents of the
+object to determine what has changed.</li>
 <li><code>basicDiff([key])</code>: returns a diff function that takes two arrays and
 uses the given key function, which defaults to <code>rx.smartUidify</code>, to
 efficiently hash-compare elements between the two arrays.  Used by
@@ -212,11 +216,12 @@ downstream recomputation necessary (particularly DOM manipulations).</li>
 <li><code>get(k)</code>: return value associated with key <code>k</code></li>
 <li><code>all()</code>: return raw object copy</li>
 <li><code>onAdd</code>: the event that is fired after an element is added.  The event
-data is <code>[key, newVal]</code>.</li>
+data is a map of added keys to their corresponding values.</li>
 <li><code>onRemove</code>: the event that is fired after an element is removed.  The
-event data is <code>[key, oldVal]</code>.</li>
+event data is a map of removed keys to their original values.</li>
 <li><code>onChange</code>: the event that is fired after a key&#39;s value is changed.  The
-event data is <code>[key, oldVal, newVal]</code>.</li>
+event data is a map of changed keys to a two-element list of <code>[old value,
+new value]</code>.</li>
 </ul>
 <p><strong><code>SrcMap</code> members</strong></p>
 <ul>
