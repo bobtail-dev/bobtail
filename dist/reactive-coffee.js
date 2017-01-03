@@ -506,18 +506,22 @@
       };
 
       ObsArray.prototype.at = function(i) {
+        var _ref;
         recorder.sub((function(_this) {
           return function(target) {
             return rx.autoSub(_this.onChange, function(_arg) {
               var added, index, removed;
               index = _arg[0], removed = _arg[1], added = _arg[2];
-              if (index === i) {
+              if (index <= i && removed.length !== added.length) {
+                target.refresh();
+              }
+              if (removed.length === added.length && i <= index + removed.length) {
                 return target.refresh();
               }
             });
           };
         })(this));
-        return this.cells[i].get();
+        return (_ref = this.cells[i]) != null ? _ref.get() : void 0;
       };
 
       ObsArray.prototype.length = function() {
