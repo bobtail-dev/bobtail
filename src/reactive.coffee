@@ -289,9 +289,11 @@ rxFactory = (_, $) ->
     rawCells: -> @cells
     at: (i) ->
       recorder.sub (target) => rx.autoSub @onChange, ([index, removed, added]) ->
-        # XXX FIXME
-        target.refresh() if index == i
-      @cells[i].get()
+        # if elements were inserted or removed prior to this element
+        if index <= i and removed.length != added.length then target.refresh()
+        # if this element is one of the elements changed
+        if removed.length == added.length and i <= index + removed.length then target.refresh()
+      @cells[i]?.get()
     length: ->
       recorder.sub (target) => rx.autoSub @onChangeCells, ([index, removed, added]) ->
         target.refresh() if removed.length != added.length
@@ -344,9 +346,9 @@ rxFactory = (_, $) ->
       i = _(@raw()).indexOf(x)
       @removeAt(i) if i >= 0
     removeAt: (index) -> @splice(index, 1)
-    push: (x) -> @splice(@length(), 0, x)
+    push: (x) -> @splice((rx.snap => @length()), 0, x)
     put: (i, x) -> @splice(i, 1, x)
-    replace: (xs) -> @spliceArray(0, @length(), xs)
+    replace: (xs) -> @spliceArray(0, (rx.snap => @length()), xs)
     update: (xs) -> recorder.mutating => @_update(xs)
 
   MappedDepArray = class rx.MappedDepArray extends ObsArray
@@ -757,7 +759,7 @@ rxFactory = (_, $) ->
       "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown",
       "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup",
       "ready", "resize", "scroll", "select", "submit", "toggle", "unload"]
-      
+
     svg_events = ["click"]
 
     specialAttrs = rxt.specialAttrs = {
@@ -769,7 +771,7 @@ rxFactory = (_, $) ->
         specialAttrs[ev] = (elt, fn) ->
           if elt instanceof SVGElement and ev in svg_events
             elt.addEventListener ev, fn
-          else 
+          else
             elt[ev]((e) -> fn.call(elt, e))
 
     # attr vs prop:
@@ -924,7 +926,7 @@ rxFactory = (_, $) ->
         for key of attrs when key of specialAttrs
           specialAttrs[key](elt, attrs[key], attrs, contents)
         elt
-        
+
     # From <https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list>
     #
     # Extract with:
@@ -948,32 +950,32 @@ rxFactory = (_, $) ->
       'menuitem', 'menu']
 
     # From <https://developer.mozilla.org/en-US/docs/Web/SVG/Element>
-    svg_tags = ['a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animate', 
-      'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 
-      'color-profile', 'cursor', 'defs', 'desc', 'ellipse', 'feblend', 
-      'fecolormatrix', 'fecomponenttransfer', 'fecomposite', 'feconvolvematrix', 
-      'fediffuselighting', 'fedisplacementmap', 'fedistantlight', 'feflood', 
-      'fefunca', 'fefuncb', 'fefuncg', 'fefuncr', 'fegaussianblur', 'feimage', 
-      'femerge', 'femergenode', 'femorphology', 'feoffset', 'fepointlight', 
-      'fespecularlighting', 'fespotlight', 'fetile', 'feturbulence', 'filter', 
-      'font', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 
-      'font-face-uri', 'foreignobject', 'g', 'glyph', 'glyphref', 'hkern', 'image', 
-      'line', 'lineargradient', 'marker', 'mask', 'metadata', 'missing-glyph', 
-      'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 
-      'script', 'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text', 
+    svg_tags = ['a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animate',
+      'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath',
+      'color-profile', 'cursor', 'defs', 'desc', 'ellipse', 'feblend',
+      'fecolormatrix', 'fecomponenttransfer', 'fecomposite', 'feconvolvematrix',
+      'fediffuselighting', 'fedisplacementmap', 'fedistantlight', 'feflood',
+      'fefunca', 'fefuncb', 'fefuncg', 'fefuncr', 'fegaussianblur', 'feimage',
+      'femerge', 'femergenode', 'femorphology', 'feoffset', 'fepointlight',
+      'fespecularlighting', 'fespotlight', 'fetile', 'feturbulence', 'filter',
+      'font', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src',
+      'font-face-uri', 'foreignobject', 'g', 'glyph', 'glyphref', 'hkern', 'image',
+      'line', 'lineargradient', 'marker', 'mask', 'metadata', 'missing-glyph',
+      'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect',
+      'script', 'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text',
       'textpath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern']
-      
+
     updateSVGContents = (elt, contents) ->
       (elt.removeChild elt.firstChild) while elt.firstChild
       if _.isArray(contents)
         toAdd = toNodes(contents)
-        (elt.appendChild node) for node in toAdd 
+        (elt.appendChild node) for node in toAdd
       else if _.isString(contents) or contents instanceof SVGElement
         updateSVGContents(elt, [contents])
       else
         console.error 'updateSVGContents', elt, contents
         throw "Must wrap contents #{contents} as array or string"
-            
+
     rxt.svg_mktag = mktag = (tag) ->
       (arg1, arg2) ->
         [attrs, contents] = normalizeTagArgs(arg1, arg2)
@@ -981,23 +983,23 @@ rxFactory = (_, $) ->
         elt = document.createElementNS('http://www.w3.org/2000/svg', tag)
         for name, value of _.omit(attrs, _.keys(specialAttrs))
           setDynProp(elt, name, value)
-          
+
         if contents?
           if contents instanceof ObsArray
-            contents.onChange.sub ([index, removed, added]) -> 
+            contents.onChange.sub ([index, removed, added]) ->
               (elt.removeChild elt.childNodes[index]) for i in [0...removed.length]
               toAdd = toNodes(added)
               if index == elt.childNodes.length
                 (elt.appendChild node) for node in toAdd
-              else 
+              else
                 (elt.childNodes[index].insertBefore node) for node in toAdd
           else if contents instanceof ObsCell
             first = contents.x[0]
 #            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
-            contents.onSet.sub(([old, val]) -> updateSVGContents(elt, val))      
+            contents.onSet.sub(([old, val]) -> updateSVGContents(elt, val))
           else
-            updateSVGContents(elt, contents)          
-        
+            updateSVGContents(elt, contents)
+
         for key of attrs when key of specialAttrs
           specialAttrs[key](elt, attrs[key], attrs, contents)
         elt

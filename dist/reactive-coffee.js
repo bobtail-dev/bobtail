@@ -506,18 +506,22 @@
       };
 
       ObsArray.prototype.at = function(i) {
+        var _ref;
         recorder.sub((function(_this) {
           return function(target) {
             return rx.autoSub(_this.onChange, function(_arg) {
               var added, index, removed;
               index = _arg[0], removed = _arg[1], added = _arg[2];
-              if (index === i) {
+              if (index <= i && removed.length !== added.length) {
+                target.refresh();
+              }
+              if (removed.length === added.length && i <= index + removed.length) {
                 return target.refresh();
               }
             });
           };
         })(this));
-        return this.cells[i].get();
+        return (_ref = this.cells[i]) != null ? _ref.get() : void 0;
       };
 
       ObsArray.prototype.length = function() {
@@ -675,7 +679,11 @@
       };
 
       SrcArray.prototype.push = function(x) {
-        return this.splice(this.length(), 0, x);
+        return this.splice(rx.snap((function(_this) {
+          return function() {
+            return _this.length();
+          };
+        })(this)), 0, x);
       };
 
       SrcArray.prototype.put = function(i, x) {
@@ -683,7 +691,11 @@
       };
 
       SrcArray.prototype.replace = function(xs) {
-        return this.spliceArray(0, this.length(), xs);
+        return this.spliceArray(0, rx.snap((function(_this) {
+          return function() {
+            return _this.length();
+          };
+        })(this)), xs);
       };
 
       SrcArray.prototype.update = function(xs) {
