@@ -346,9 +346,9 @@ rxFactory = (_, $) ->
       i = _(@raw()).indexOf(x)
       @removeAt(i) if i >= 0
     removeAt: (index) -> @splice(index, 1)
-    push: (x) -> @splice(@length(), 0, x)
+    push: (x) -> @splice((rx.snap => @length()), 0, x)
     put: (i, x) -> @splice(i, 1, x)
-    replace: (xs) -> @spliceArray(0, @length(), xs)
+    replace: (xs) -> @spliceArray(0, (rx.snap => @length()), xs)
     update: (xs) -> recorder.mutating => @_update(xs)
 
   MappedDepArray = class rx.MappedDepArray extends ObsArray
