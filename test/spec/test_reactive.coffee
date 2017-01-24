@@ -157,8 +157,8 @@ describe 'rxt of observable array', ->
     multiplierCell = rx.cell(1)
     $ul = rxt.tags.ul xs.map (f) -> rxt.tags.li f * multiplierCell.get()
     expect($(x).text() for x in $("li", $ul)).toEqual(["1", "2", "3"])
-    multiplierCell.set(10) 
-    expect($(x).text() for x in $("li", $ul)).toEqual(["10", "20", "30"])   
+    multiplierCell.set(10)
+    expect($(x).text() for x in $("li", $ul)).toEqual(["10", "20", "30"])
 
 describe 'SrcArray', ->
   it 'should not remove anything if element not found', ->
@@ -459,6 +459,45 @@ describe 'Ev', ->
       ev.pub(n += 1)
     ev.pub(n += 1)
     expect(hits).toBe(2)
+
+describe 'mutating', ->
+  it 'should not emit warnings if wrapped in a hideMutationWarnings block', ->
+    warnSpy = jasmine.createSpy('warn1')
+    oldWarningFn = rx._recorder.fireMutationWarning
+    rx._recorder.fireMutationWarning = warnSpy
+    a = rx.cell(0)
+    b = rx.cell(2)
+    expect(warnSpy).not.toHaveBeenCalled()
+    c = bind -> rx.hideMutationWarnings ->
+      b.set rx.snap -> b.get() + 1
+      a.get() * 2
+    expect(warnSpy).not.toHaveBeenCalled()
+    expect(rx.snap -> c.get()).toBe 0
+    expect(rx.snap -> b.get()).toBe 3
+
+    a.set 2
+    expect(rx.snap -> c.get()).toBe 4
+    expect(warnSpy).not.toHaveBeenCalled()
+    rx._recorder.fireMutationWarning = oldWarningFn
+    
+  it 'should otherwise fire a warning', ->
+    warnSpy = jasmine.createSpy('warn2')
+    oldWarningFn = rx._recorder.fireMutationWarning
+    rx._recorder.fireMutationWarning = warnSpy
+    a = rx.cell(0)
+    b = rx.cell(2)
+    expect(warnSpy).not.toHaveBeenCalled()
+    c = bind ->
+      b.set rx.snap -> b.get() + 1
+      a.get() * 2
+    expect(warnSpy.calls.length).toBe 1
+    expect(rx.snap -> c.get()).toBe 0
+    expect(rx.snap -> b.get()).toBe 3
+    a.set 2
+    expect(rx.snap -> c.get()).toBe 4
+    expect(warnSpy.calls.length).toBe 2
+    rx._recorder.fireMutationWarning = oldWarningFn
+
 
 describe 'nested mutations', ->
   it 'should not complain about directly nested mutations in dependent binds of dependent binds', ->
@@ -862,7 +901,7 @@ describe 'onElementAttrsChanged', ->
     rxt.events.enabled = true
     handler = jasmine.createSpy()
     rx.autoSub rxt.events.onElementAttrsChanged, handler
-      
+
     stateCell = rx.cell("safe")
     offsetCell = rx.cell(0)
     $div = rxt.tags.div {
@@ -890,7 +929,7 @@ describe 'onElementChildrenChanged', ->
     rxt.events.enabled = true
     handler = jasmine.createSpy()
     rx.autoSub rxt.events.onElementChildrenChanged, handler
-      
+
     stateCell = rx.cell("safe")
     offsetCell = rx.cell(0)
     $div = rxt.tags.div bind -> stateCell.get()
@@ -901,7 +940,7 @@ describe 'onElementChildrenChanged', ->
     handler.calls.splice(0, handler.calls.length)
     stateCell.set("danger")
     expect(handler.calls.length).toBe(1)
-    expect(handler).toHaveBeenCalledWith({$element: $div, type: "rerendered"})    
+    expect(handler).toHaveBeenCalledWith({$element: $div, type: "rerendered"})
 
   it "should work for reactive array body", ->
     rxt.events.enabled = true
@@ -918,31 +957,31 @@ describe 'onElementChildrenChanged', ->
     expect(handler.calls[0].args[0].removed.length).toBe(0)
     expect(handler.calls[0].args[0].added.length).toBe(1)
     expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
-    
+
     handler.calls.splice(0, handler.calls.length)
     items.push({name: "Intestines", price: 5})
-    expect(handler.calls.length).toBe(1)    
+    expect(handler.calls.length).toBe(1)
     expect(handler.calls[0].args[0].$element).toBe($ul)
     expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].removed.length).toBe(0)    
+    expect(handler.calls[0].args[0].removed.length).toBe(0)
     expect(handler.calls[0].args[0].added.length).toBe(1)
     expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[1])
 
     handler.calls.splice(0, handler.calls.length)
     items.insert({name: "Intestines", price: 5}, 0)
-    expect(handler.calls.length).toBe(1)    
+    expect(handler.calls.length).toBe(1)
     expect(handler.calls[0].args[0].$element).toBe($ul)
     expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].removed.length).toBe(0)    
+    expect(handler.calls[0].args[0].removed.length).toBe(0)
     expect(handler.calls[0].args[0].added.length).toBe(1)
     expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
 
     handler.calls.splice(0, handler.calls.length)
     items.removeAt(0)
-    expect(handler.calls.length).toBe(1)    
+    expect(handler.calls.length).toBe(1)
     expect(handler.calls[0].args[0].$element).toBe($ul)
     expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].added.length).toBe(0)    
+    expect(handler.calls[0].args[0].added.length).toBe(0)
     expect(handler.calls[0].args[0].removed.length).toBe(1)
 
     handler.calls.splice(0, handler.calls.length)
@@ -965,13 +1004,13 @@ describe 'onElementChildrenChanged', ->
 
     $ul = rxt.tags.ul items.map (item) ->
       rxt.tags.li if onSaleCell.get() then item.price * 0.1 else item.price
-            
+
     expect(handler.calls.length).toEqual(1)
     expect(handler.calls[0].args[0].$element).toBe($ul)
     expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
     expect(handler.calls[0].args[0].added.length).toBe(2)
     expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
-    expect(handler.calls[0].args[0].added[1]).toBe($("li", $ul)[1])    
+    expect(handler.calls[0].args[0].added[1]).toBe($("li", $ul)[1])
     expect(handler.calls[0].args[0].removed.length).toBe(0)
 
     handler.calls.splice(0, handler.calls.length)
@@ -981,12 +1020,12 @@ describe 'onElementChildrenChanged', ->
     expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
     expect(handler.calls[0].args[0].added).toBe(undefined)
     expect(handler.calls[0].args[0].removed).toBe(undefined)
-    expect(handler.calls[0].args[0].updated.length).toBe(1)    
+    expect(handler.calls[0].args[0].updated.length).toBe(1)
     expect(handler.calls[0].args[0].updated[0]).toBe($("li", $ul)[0])
-    
+
     expect(handler.calls[1].args[0].$element).toBe($ul)
     expect(handler.calls[1].args[0].type).toBe("childrenUpdated")
     expect(handler.calls[1].args[0].added).toBe(undefined)
     expect(handler.calls[1].args[0].removed).toBe(undefined)
-    expect(handler.calls[1].args[0].updated.length).toBe(1)    
+    expect(handler.calls[1].args[0].updated.length).toBe(1)
     expect(handler.calls[1].args[0].updated[0]).toBe($("li", $ul)[1])

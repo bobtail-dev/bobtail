@@ -107,6 +107,7 @@ rxFactory = (_, $) ->
       @stack = []
       @isMutating = false
       @isIgnoring = false
+      @hidingMutationWarnings = false
       @onMutationWarning = new Ev() # just fires null for now
     # takes a dep cell and push it onto the stack as the current invalidation
     # listener, so that calls to .sub (e.g. by ObsCell.get) can establish a
@@ -142,10 +143,18 @@ rxFactory = (_, $) ->
     # within this function we refresh a bind, we don't treat that bind as a
     # nested bind (which causes all sorts of problems e.g. the cascading
     # disconnects)
+    hideMutationWarnings: (f) ->
+      wasHiding = @hidingMutationWarnings
+      @hidingMutationWarnings = true
+      try f()
+      finally @hidingMutationWarnings = wasHiding
+
+    fireMutationWarning: ->
+      console.warn 'Mutation to observable detected during a bind context'
+      @onMutationWarning.pub null
     mutating: (f) ->
-      if @stack.length > 0
-        console.warn('Mutation to observable detected during a bind context')
-        @onMutationWarning.pub(null)
+      if @stack.length > 0 and not @hidingMutationWarnings
+        @fireMutationWarning()
       wasMutating = @isMutating
       @isMutating = true
       try f()
@@ -159,6 +168,8 @@ rxFactory = (_, $) ->
       finally @isIgnoring = wasIgnoring
 
   rx._recorder = recorder = new Recorder()
+
+  rx.hideMutationWarnings = (f) -> recorder.hideMutationWarnings f
 
   rx.asyncBind = asyncBind = (init, f) ->
     dep = new DepCell(f, init)
@@ -205,12 +216,11 @@ rxFactory = (_, $) ->
       @x
 
   SrcCell = class rx.SrcCell extends ObsCell
-    set: (x) -> recorder.mutating =>
-      if @x != x
-        old = @x
-        @x = x
-        @onSet.pub([old, x])
-        old
+    set: (x) -> recorder.mutating => if @x != x
+      old = @x
+      @x = x
+      @onSet.pub([old, x])
+      old
 
   DepCell = class rx.DepCell extends ObsCell
     constructor: (@body, init) ->
