@@ -1,5 +1,5 @@
 {
-  "name": "reactive-coffee",
+  "name": "bobtail",
   "version": "1.3.2",
   "main": [
     "dist/reactive-coffee.js",
