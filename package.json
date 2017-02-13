@@ -1,6 +1,6 @@
 {
   "name": "bobtail",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "repository": {
     "type": "git",
     "url": "git://github.com/yang/reactive-coffee.git"
@@ -38,6 +38,6 @@
   },
   "dependencies": {
     "underscore": "~1.6.0",
-    "jquery": "^2.1.1"
+    "jquery": ">=2.1.1"
   }
 }
