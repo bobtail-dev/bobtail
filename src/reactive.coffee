@@ -319,6 +319,20 @@ rxFactory = (_, $) ->
             cell = bind -> f(item.get())
         ys.realSpliceCells(index, removed.length, newCells)
       ys
+    transform: (f, diff) -> new DepArray (=> f @all()), diff
+    filter: (f) -> @transform (arr) -> arr.filter f
+    slice: (x, y) -> @transform (arr) -> arr.slice(x, y)
+    reduce: (f, init) ->  @all().reduce f, init ? @at 0
+    reduceRight: (f, init) ->  @all().reduceRight f, init ? @at 0
+    every: (f) ->  @all().every f
+    some: (f) ->  @all().some f
+    indexOf: (val, from=0) -> @all().indexOf val, from
+    lastIndexOf: (val, from) ->
+      from ?= @length() - 1
+      @all().lastIndexOf val, from
+    join: (separator=',') ->  @all().join separator
+    first: -> @at 0
+    last: -> @at(@length() - 1)
     indexed: ->
       if not @indexed_?
         @indexed_ = new IndexedDepArray()
