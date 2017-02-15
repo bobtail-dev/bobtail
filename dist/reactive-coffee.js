@@ -6,7 +6,7 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, flattenHelper, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
+    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, flattenHelper, lagBind, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents, _fn, _i, _len;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -20,19 +20,6 @@
       v = x[k];
       delete x[k];
       return v;
-    };
-    nthWhere = function(xs, n, f) {
-      var i, x, _i, _len;
-      for (i = _i = 0, _len = xs.length; _i < _len; i = ++_i) {
-        x = xs[i];
-        if (f(x) && (n -= 1) < 0) {
-          return [x, i];
-        }
-      }
-      return [null, -1];
-    };
-    firstWhere = function(xs, f) {
-      return nthWhere(xs, 0, f);
     };
     mkMap = function(xs) {
       var k, map, v, _i, _len, _ref;
@@ -200,10 +187,10 @@
       };
 
       Recorder.prototype.sub = function(sub) {
-        var handle, topCell;
+        var topCell;
         if (this.stack.length > 0 && !this.isIgnoring) {
           topCell = _(this.stack).last();
-          return handle = sub(topCell);
+          return sub(topCell);
         }
       };
 
@@ -571,7 +558,7 @@
               cell.disconnect();
             }
             newCells = added.map(function(item) {
-              return cell = bind(function() {
+              return bind(function() {
                 return f(item.get());
               });
             });
@@ -629,7 +616,7 @@
       };
 
       ObsArray.prototype._update = function(val, diff) {
-        var additions, count, fullSplice, index, old, splice, splices, x, _i, _len, _ref, _results;
+        var additions, count, fullSplice, index, old, splice, splices, _i, _len, _ref, _results;
         if (diff == null) {
           diff = this.diff;
         }
@@ -646,7 +633,6 @@
           };
         })(this));
         fullSplice = [0, old.length, val];
-        x = null;
         splices = diff != null ? (_ref = permToSplices(old.length, val, diff(old, val))) != null ? _ref : [fullSplice] : [fullSplice];
         _results = [];
         for (_i = 0, _len = splices.length; _i < _len; _i++) {
@@ -780,24 +766,20 @@
         ys = new MappedDepArray();
         rx.autoSub(this.onChangeCells, (function(_this) {
           return function(_arg) {
-            var added, cell, icell, index, item, newCells, removed, _i, _len, _ref;
+            var added, cell, index, newCells, removed, _i, _len, _ref;
             index = _arg[0], removed = _arg[1], added = _arg[2];
             _ref = ys.cells.slice(index, index + removed.length);
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               cell = _ref[_i];
               cell.disconnect();
             }
-            newCells = (function() {
-              var _j, _len1, _ref1, _results;
-              _results = [];
-              for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
-                _ref1 = added[_j], item = _ref1[0], icell = _ref1[1];
-                _results.push(cell = bind(function() {
-                  return f(item.get(), icell);
-                }));
-              }
-              return _results;
-            })();
+            newCells = added.map(function(_arg1) {
+              var icell, item;
+              item = _arg1[0], icell = _arg1[1];
+              return bind(function() {
+                return f(item.get(), icell);
+              });
+            });
             return ys.realSpliceCells(index, removed.length, newCells);
           };
         })(this));
@@ -846,16 +828,6 @@
       return IndexedDepArray;
 
     })(ObsArray);
-    IndexedMappedDepArray = rx.IndexedMappedDepArray = (function(_super) {
-      __extends(IndexedMappedDepArray, _super);
-
-      function IndexedMappedDepArray() {
-        return IndexedMappedDepArray.__super__.constructor.apply(this, arguments);
-      }
-
-      return IndexedMappedDepArray;
-
-    })(IndexedDepArray);
     DepArray = rx.DepArray = (function(_super) {
       __extends(DepArray, _super);
 
@@ -878,27 +850,6 @@
       return DepArray;
 
     })(ObsArray);
-    IndexedArray = rx.IndexedArray = (function(_super) {
-      __extends(IndexedArray, _super);
-
-      function IndexedArray(xs) {
-        this.xs = xs;
-      }
-
-      IndexedArray.prototype.map = function(f) {
-        var ys;
-        ys = new MappedDepArray();
-        rx.autoSub(this.xs.onChange, function(_arg) {
-          var added, index, removed;
-          index = _arg[0], removed = _arg[1], added = _arg[2];
-          return ys.realSplice(index, removed.length, added.map(f));
-        });
-        return ys;
-      };
-
-      return IndexedArray;
-
-    })(DepArray);
     rx.concat = function() {
       var repLens, xs, xss, ys;
       xss = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -1333,7 +1284,7 @@
                   };
                   break;
                 default:
-                  throw new Error("Unknown observable type: " + type);
+                  throw new Error("Unknown observable type: " + spec.type);
               }
               return [name, desc];
             })(name, spec));
@@ -1400,13 +1351,6 @@
       } else {
         return x;
       }
-    };
-    flatten = function(xss) {
-      var xs;
-      xs = _.flatten(xss);
-      return rx.cellToArray(bind(function() {
-        return _.flatten(xss);
-      }));
     };
     rx.cellToArray = function(cell, diff) {
       return new DepArray((function() {
@@ -1867,7 +1811,7 @@
       };
       rxt.svg_mktag = mktag = function(tag) {
         return function(arg1, arg2) {
-          var attrs, contents, elt, first, key, name, value, _ref, _ref1;
+          var attrs, contents, elt, key, name, value, _ref, _ref1;
           _ref = normalizeTagArgs(arg1, arg2), attrs = _ref[0], contents = _ref[1];
           elt = document.createElementNS('http://www.w3.org/2000/svg', tag);
           _ref1 = _.omit(attrs, _.keys(specialAttrs));
@@ -1901,8 +1845,7 @@
                 }
               });
             } else if (contents instanceof ObsCell) {
-              first = contents.x[0];
-              contents.onSet.sub(function(_arg) {
+              rx.autoSub(contents.onSet, function(_arg) {
                 var old, val;
                 old = _arg[0], val = _arg[1];
                 return updateSVGContents(elt, val);

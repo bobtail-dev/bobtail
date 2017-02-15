@@ -10,14 +10,6 @@ rxFactory = (_, $) ->
     delete x[k]
     v
 
-  nthWhere = (xs, n, f) ->
-    for x,i in xs
-      if f(x) and (n -= 1) < 0
-        return [x, i]
-    [null, -1]
-
-  firstWhere = (xs, f) -> nthWhere(xs, 0, f)
-
   mkMap = (xs = []) ->
     map = if Object.create? then Object.create(null) else {}
     if _.isArray(xs)
@@ -136,7 +128,7 @@ rxFactory = (_, $) ->
     sub: (sub) ->
       if @stack.length > 0 and not @isIgnoring
         topCell = _(@stack).last()
-        handle = sub(topCell)
+        sub(topCell)
     addCleanup: (cleanup) ->
       _(@stack).last().addCleanup(cleanup) if @stack.length > 0
     # Delimit the function as one where a mutation takes place, such that if
@@ -216,11 +208,12 @@ rxFactory = (_, $) ->
       @x
 
   SrcCell = class rx.SrcCell extends ObsCell
-    set: (x) -> recorder.mutating => if @x != x
-      old = @x
-      @x = x
-      @onSet.pub([old, x])
-      old
+    set: (x) -> recorder.mutating =>
+      if @x != x
+        old = @x
+        @x = x
+        @onSet.pub([old, x])
+        old
 
   DepCell = class rx.DepCell extends ObsCell
     constructor: (@body, init) ->
@@ -308,14 +301,12 @@ rxFactory = (_, $) ->
       recorder.sub (target) => rx.autoSub @onChangeCells, ([index, removed, added]) ->
         target.refresh() if removed.length != added.length
       @cells.length
-    map: (f) ->
+    map: (f) -> # TODO: Reimplement using transform for consistency?
       ys = new MappedDepArray()
       rx.autoSub @onChangeCells, ([index, removed, added]) =>
         for cell in ys.cells[index...index + removed.length]
           cell.disconnect()
-        newCells =
-          added.map (item) ->
-            cell = bind -> f(item.get())
+        newCells = added.map (item) -> bind -> f(item.get())
         ys.realSpliceCells(index, removed.length, newCells)
       ys
     indexed: ->
@@ -336,13 +327,11 @@ rxFactory = (_, $) ->
     _update: (val, diff = @diff) ->
       old = rx.snap => (x.get() for x in @cells)
       fullSplice = [0, old.length, val]
-      x = null
       splices =
         if diff?
           permToSplices(old.length, val, diff(old, val)) ? [fullSplice]
         else
           [fullSplice]
-      #console.log(old, val, splices, fullSplice, diff, @diff)
       for splice in splices
         [index, count, additions] = splice
         @realSplice(index, count, additions)
@@ -374,9 +363,7 @@ rxFactory = (_, $) ->
       rx.autoSub @onChangeCells, ([index, removed, added]) =>
         for cell in ys.cells[index...index + removed.length]
           cell.disconnect()
-        newCells =
-          for [item, icell] in added
-            cell = bind -> f(item.get(), icell)
+        newCells = added.map ([item, icell]) -> bind -> f(item.get(), icell)
         ys.realSpliceCells(index, removed.length, newCells)
       ys
     realSpliceCells: (index, count, additions) ->
@@ -391,22 +378,14 @@ rxFactory = (_, $) ->
       addedElems = rx.snap -> (x3.get() for x3 in additions)
       @onChangeCells.pub([index, removed, _.zip(additions, newIs)])
       @onChange.pub([index, removedElems, _.zip(addedElems, newIs)])
-  IndexedMappedDepArray = class rx.IndexedMappedDepArray extends IndexedDepArray
 
   DepArray = class rx.DepArray extends ObsArray
     constructor: (@f, diff) ->
       super([], diff)
       rx.autoSub (bind => @f()).onSet, ([old, val]) => @_update(val)
 
-  IndexedArray = class rx.IndexedArray extends DepArray
-    constructor: (@xs) ->
-    map: (f) ->
-      ys = new MappedDepArray()
-      rx.autoSub @xs.onChange, ([index, removed, added]) ->
-        ys.realSplice(index, removed.length, added.map(f))
-      ys
-
   rx.concat = (xss...) ->
+    # todo: This seems like overkill?
     ys = new MappedDepArray()
     repLens = (0 for xs in xss)
     xss.map (xs, i) ->
@@ -433,7 +412,6 @@ rxFactory = (_, $) ->
   ObsMapEntryCell = class rx.ObsMapEntryCell extends FakeObsCell
     constructor: (@_map, @_key) ->
     get: -> @_map.get(@_key)
-
 
   ObsMap = class rx.ObsMap
     constructor: (@x = {}) ->
@@ -614,7 +592,7 @@ rxFactory = (_, $) ->
                   set: (x) ->
                     view.splice(0, view.length, x...)
                     view
-              else throw new Error("Unknown observable type: #{type}")
+              else throw new Error("Unknown observable type: #{spec.type}")
             [name, desc]
       )
 
@@ -654,10 +632,6 @@ rxFactory = (_, $) ->
     else if x instanceof ObsCell then flattenHelper x.get()
     else if _.isArray x then x.map (x_k) -> flattenHelper x_k
     else x
-
-  flatten = (xss) ->
-    xs = _.flatten(xss)
-    rx.cellToArray bind -> _.flatten(xss)
 
   rx.cellToArray = (cell, diff) ->
     new DepArray((-> cell.get()), diff)
@@ -1004,9 +978,7 @@ rxFactory = (_, $) ->
               else
                 (elt.childNodes[index].insertBefore node) for node in toAdd
           else if contents instanceof ObsCell
-            first = contents.x[0]
-#            rx.autoSub contents.onSet, ([old, val]) -> updateContents(elt, val)
-            contents.onSet.sub(([old, val]) -> updateSVGContents(elt, val))
+            rx.autoSub contents.onSet, ([old, val]) -> updateSVGContents elt, val
           else
             updateSVGContents(elt, contents)
 
