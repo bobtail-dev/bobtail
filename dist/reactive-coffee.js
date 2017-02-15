@@ -679,8 +679,34 @@
         }
       };
 
+      SrcArray.prototype.removeAll = function(x) {
+        return rx.transaction((function(_this) {
+          return function() {
+            var i, _results;
+            i = _(rx.snap(function() {
+              return _this.all();
+            })).indexOf(x);
+            _results = [];
+            while (i >= 0) {
+              _this.removeAt(i);
+              _results.push(i = _(rx.snap(function() {
+                return _this.all();
+              })).indexOf(x));
+            }
+            return _results;
+          };
+        })(this));
+      };
+
       SrcArray.prototype.removeAt = function(index) {
-        return this.splice(index, 1);
+        var val;
+        val = rx.snap((function(_this) {
+          return function() {
+            return _this.at(index);
+          };
+        })(this));
+        this.splice(index, 1);
+        return val;
       };
 
       SrcArray.prototype.push = function(x) {
@@ -689,6 +715,14 @@
             return _this.length();
           };
         })(this)), 0, x);
+      };
+
+      SrcArray.prototype.pop = function() {
+        return this.removeAt(rx.snap((function(_this) {
+          return function() {
+            return _this.length() - 1;
+          };
+        })(this)));
       };
 
       SrcArray.prototype.put = function(i, x) {
@@ -703,10 +737,82 @@
         })(this)), xs);
       };
 
+      SrcArray.prototype.unshift = function(x) {
+        return this.insert(x, 0);
+      };
+
+      SrcArray.prototype.shift = function() {
+        return this.removeAt(0);
+      };
+
       SrcArray.prototype.update = function(xs) {
         return recorder.mutating((function(_this) {
           return function() {
             return _this._update(xs);
+          };
+        })(this));
+      };
+
+      SrcArray.prototype.move = function(src, dest) {
+        return rx.transaction((function(_this) {
+          return function() {
+            var len, val;
+            if (src === dest) {
+              return;
+            }
+            len = rx.snap(function() {
+              return _this.length();
+            });
+            if (src < 0 || src > len - 1) {
+              throw "Source " + src + " is outside of bounds of array of length " + len;
+            }
+            if (dest < 0 || dest > len) {
+              throw "Destination " + dest + " is outside of bounds of array of length " + len;
+            }
+            val = rx.snap(function() {
+              return _this.all()[src];
+            });
+            if (src > dest) {
+              _this.removeAt(src);
+              _this.insert(val, dest);
+            } else {
+              _this.insert(val, dest);
+              _this.removeAt(src);
+            }
+          };
+        })(this));
+      };
+
+      SrcArray.prototype.swap = function(i1, i2) {
+        return rx.transaction((function(_this) {
+          return function() {
+            var first, len, second;
+            len = rx.snap(function() {
+              return _this.length();
+            });
+            if (i1 < 0 || i1 > len - 1) {
+              throw "i1 " + i1 + " is outside of bounds of array of length " + len;
+            }
+            if (i2 < 0 || i2 > len - 1) {
+              throw "i2 " + i2 + " is outside of bounds of array of length " + len;
+            }
+            first = Math.min(i1, i2);
+            second = Math.max(i1, i2);
+            _this.move(first, second);
+            return _this.move(second, first);
+          };
+        })(this));
+      };
+
+      SrcArray.prototype.reverse = function() {
+        this.update(rx.snap((function(_this) {
+          return function() {
+            return _this.all().reverse();
+          };
+        })(this)));
+        return rx.snap((function(_this) {
+          return function() {
+            return _this.all();
           };
         })(this));
       };

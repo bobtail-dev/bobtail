@@ -344,11 +344,61 @@ rxFactory = (_, $) ->
     remove: (x) ->
       i = _(@raw()).indexOf(x)
       @removeAt(i) if i >= 0
-    removeAt: (index) -> @splice(index, 1)
+    removeAll: (x) -> rx.transaction =>
+      i = _(rx.snap => @all()).indexOf x
+      while i >= 0
+        @removeAt i
+        i = _(rx.snap => @all()).indexOf x
+    removeAt: (index) ->
+      val = rx.snap => @at index
+      @splice(index, 1)
+      return val
     push: (x) -> @splice(rx.snap(=> @length()), 0, x)
+    pop: () -> @removeAt rx.snap => @length() - 1
     put: (i, x) -> @splice(i, 1, x)
     replace: (xs) -> @spliceArray(0, rx.snap(=> @length()), xs)
+    unshift: (x) -> @insert x, 0
+    shift: -> @removeAt 0
+    # TODO: How is this different from replace? we should use one or the other.
     update: (xs) -> recorder.mutating => @_update(xs)
+    move: (src, dest) -> rx.transaction =>
+      # moves element at src to index before dest
+      if src == dest then return
+
+      len = rx.snap(=> @length())
+
+      if src < 0 or src > len - 1
+        throw "Source #{src} is outside of bounds of array of length #{len}"
+      if dest < 0 or dest > len
+        throw "Destination #{dest} is outside of bounds of array of length #{len}"
+
+      val = rx.snap => @all()[src]
+
+      if src > dest
+        @removeAt src
+        @insert val, dest
+      else
+        @insert val, dest
+        @removeAt src
+
+      return  # removeAt returns, but insert doesn't, so let's avoid inconsistency
+    swap: (i1, i2) -> rx.transaction =>
+      len = rx.snap(=> @length())
+      if i1 < 0 or i1 > len - 1
+        throw "i1 #{i1} is outside of bounds of array of length #{len}"
+      if i2 < 0 or i2 > len - 1
+        throw "i2 #{i2} is outside of bounds of array of length #{len}"
+
+      first = Math.min i1, i2
+      second = Math.max i1, i2
+
+      @move first, second
+      @move second, first
+
+    reverse: ->
+      # Javascript's Array.reverse both reverses the Array and returns its new value
+      @update rx.snap => @all().reverse()
+      return rx.snap => @all()
 
   MappedDepArray = class rx.MappedDepArray extends ObsArray
   IndexedDepArray = class rx.IndexedDepArray extends ObsArray
