@@ -6,7 +6,7 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, flattenHelper, fn1, j, lagBind, len, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents;
+    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, flattenHelper, fn1, j, lagBind, len1, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -22,8 +22,8 @@
       return v;
     };
     nthWhere = function(xs, n, f) {
-      var i, j, len, x;
-      for (i = j = 0, len = xs.length; j < len; i = ++j) {
+      var i, j, len1, x;
+      for (i = j = 0, len1 = xs.length; j < len1; i = ++j) {
         x = xs[i];
         if (f(x) && (n -= 1) < 0) {
           return [x, i];
@@ -35,13 +35,13 @@
       return nthWhere(xs, 0, f);
     };
     mkMap = function(xs) {
-      var j, k, len, map, ref, v;
+      var j, k, len1, map, ref, v;
       if (xs == null) {
         xs = [];
       }
       map = Object.create != null ? Object.create(null) : {};
       if (_.isArray(xs)) {
-        for (j = 0, len = xs.length; j < len; j++) {
+        for (j = 0, len1 = xs.length; j < len1; j++) {
           ref = xs[j], k = ref[0], v = ref[1];
           map[k] = v;
         }
@@ -54,9 +54,9 @@
       return map;
     };
     sum = function(xs) {
-      var j, len, n, x;
+      var j, len1, n, x;
       n = 0;
-      for (j = 0, len = xs.length; j < len; j++) {
+      for (j = 0, len1 = xs.length; j < len1; j++) {
         x = xs[j];
         n += x;
       }
@@ -78,7 +78,7 @@
       };
 
       DepMgr.prototype.transaction = function(f) {
-        var b, j, len, ref, res;
+        var b, j, len1, ref, res;
         this.buffering += 1;
         try {
           res = f();
@@ -86,7 +86,7 @@
           this.buffering -= 1;
           if (this.buffering === 0) {
             ref = this.buffer;
-            for (j = 0, len = ref.length; j < len; j++) {
+            for (j = 0, len1 = ref.length; j < len1; j++) {
               b = ref[j];
               b();
             }
@@ -107,11 +107,11 @@
       }
 
       Ev.prototype.sub = function(listener) {
-        var init, j, len, ref, uid;
+        var init, j, len1, ref, uid;
         uid = mkuid();
         if (this.inits != null) {
           ref = this.inits();
-          for (j = 0, len = ref.length; j < len; j++) {
+          for (j = 0, len1 = ref.length; j < len1; j++) {
             init = ref[j];
             listener(init);
           }
@@ -442,14 +442,14 @@
       };
 
       DepCell.prototype.disconnect = function() {
-        var cleanup, j, l, len, len1, nestedBind, ref, ref1;
+        var cleanup, j, l, len1, len2, nestedBind, ref, ref1;
         ref = this.cleanups;
-        for (j = 0, len = ref.length; j < len; j++) {
+        for (j = 0, len1 = ref.length; j < len1; j++) {
           cleanup = ref[j];
           cleanup();
         }
         ref1 = this.nestedBinds;
-        for (l = 0, len1 = ref1.length; l < len1; l++) {
+        for (l = 0, len2 = ref1.length; l < len2; l++) {
           nestedBind = ref1[l];
           nestedBind.disconnect();
         }
@@ -477,10 +477,10 @@
             return [
               [
                 0, [], rx.snap(function() {
-                  var j, len, ref, results, x0;
+                  var j, len1, ref, results, x0;
                   ref = _this.cells;
                   results = [];
-                  for (j = 0, len = ref.length; j < len; j++) {
+                  for (j = 0, len1 = ref.length; j < len1; j++) {
                     x0 = ref[j];
                     results.push(x0.get());
                   }
@@ -499,7 +499,7 @@
       }
 
       ObsArray.prototype.all = function() {
-        var j, len, ref, results, x1;
+        var j, len1, ref, results, x1;
         recorder.sub((function(_this) {
           return function(target) {
             return rx.autoSub(_this.onChange, function() {
@@ -509,7 +509,7 @@
         })(this));
         ref = this.cells;
         results = [];
-        for (j = 0, len = ref.length; j < len; j++) {
+        for (j = 0, len1 = ref.length; j < len1; j++) {
           x1 = ref[j];
           results.push(x1.get());
         }
@@ -563,10 +563,10 @@
         ys = new MappedDepArray();
         rx.autoSub(this.onChangeCells, (function(_this) {
           return function(arg) {
-            var added, cell, index, j, len, newCells, ref, removed;
+            var added, cell, index, j, len1, newCells, ref, removed;
             index = arg[0], removed = arg[1], added = arg[2];
             ref = ys.cells.slice(index, index + removed.length);
-            for (j = 0, len = ref.length; j < len; j++) {
+            for (j = 0, len1 = ref.length; j < len1; j++) {
               cell = ref[j];
               cell.disconnect();
             }
@@ -603,18 +603,18 @@
         var addedElems, removed, removedElems;
         removed = this.cells.splice.apply(this.cells, [index, count].concat(additions));
         removedElems = rx.snap(function() {
-          var j, len, results, x2;
+          var j, len1, results, x2;
           results = [];
-          for (j = 0, len = removed.length; j < len; j++) {
+          for (j = 0, len1 = removed.length; j < len1; j++) {
             x2 = removed[j];
             results.push(x2.get());
           }
           return results;
         });
         addedElems = rx.snap(function() {
-          var j, len, results, x3;
+          var j, len1, results, x3;
           results = [];
-          for (j = 0, len = additions.length; j < len; j++) {
+          for (j = 0, len1 = additions.length; j < len1; j++) {
             x3 = additions[j];
             results.push(x3.get());
           }
@@ -629,16 +629,16 @@
       };
 
       ObsArray.prototype._update = function(val, diff) {
-        var additions, count, fullSplice, index, j, len, old, ref, results, splice, splices, x;
+        var additions, count, fullSplice, index, j, len1, old, ref, results, splice, splices, x;
         if (diff == null) {
           diff = this.diff;
         }
         old = rx.snap((function(_this) {
           return function() {
-            var j, len, ref, results, x;
+            var j, len1, ref, results, x;
             ref = _this.cells;
             results = [];
-            for (j = 0, len = ref.length; j < len; j++) {
+            for (j = 0, len1 = ref.length; j < len1; j++) {
               x = ref[j];
               results.push(x.get());
             }
@@ -649,7 +649,7 @@
         x = null;
         splices = diff != null ? (ref = permToSplices(old.length, val, diff(old, val))) != null ? ref : [fullSplice] : [fullSplice];
         results = [];
-        for (j = 0, len = splices.length; j < len; j++) {
+        for (j = 0, len1 = splices.length; j < len1; j++) {
           splice = splices[j];
           index = splice[0], count = splice[1], additions = splice[2];
           results.push(this.realSplice(index, count, additions));
@@ -693,8 +693,34 @@
         }
       };
 
+      SrcArray.prototype.removeAll = function(x) {
+        return rx.transaction((function(_this) {
+          return function() {
+            var i, results;
+            i = _(rx.snap(function() {
+              return _this.all();
+            })).indexOf(x);
+            results = [];
+            while (i >= 0) {
+              _this.removeAt(i);
+              results.push(i = _(rx.snap(function() {
+                return _this.all();
+              })).indexOf(x));
+            }
+            return results;
+          };
+        })(this));
+      };
+
       SrcArray.prototype.removeAt = function(index) {
-        return this.splice(index, 1);
+        var val;
+        val = rx.snap((function(_this) {
+          return function() {
+            return _this.at(index);
+          };
+        })(this));
+        this.splice(index, 1);
+        return val;
       };
 
       SrcArray.prototype.push = function(x) {
@@ -703,6 +729,14 @@
             return _this.length();
           };
         })(this)), 0, x);
+      };
+
+      SrcArray.prototype.pop = function() {
+        return this.removeAt(rx.snap((function(_this) {
+          return function() {
+            return _this.length() - 1;
+          };
+        })(this)));
       };
 
       SrcArray.prototype.put = function(i, x) {
@@ -717,10 +751,82 @@
         })(this)), xs);
       };
 
+      SrcArray.prototype.unshift = function(x) {
+        return this.insert(x, 0);
+      };
+
+      SrcArray.prototype.shift = function() {
+        return this.removeAt(0);
+      };
+
       SrcArray.prototype.update = function(xs) {
         return recorder.mutating((function(_this) {
           return function() {
             return _this._update(xs);
+          };
+        })(this));
+      };
+
+      SrcArray.prototype.move = function(src, dest) {
+        return rx.transaction((function(_this) {
+          return function() {
+            var len, val;
+            if (src === dest) {
+              return;
+            }
+            len = rx.snap(function() {
+              return _this.length();
+            });
+            if (src < 0 || src > len - 1) {
+              throw "Source " + src + " is outside of bounds of array of length " + len;
+            }
+            if (dest < 0 || dest > len) {
+              throw "Destination " + dest + " is outside of bounds of array of length " + len;
+            }
+            val = rx.snap(function() {
+              return _this.all()[src];
+            });
+            if (src > dest) {
+              _this.removeAt(src);
+              _this.insert(val, dest);
+            } else {
+              _this.insert(val, dest);
+              _this.removeAt(src);
+            }
+          };
+        })(this));
+      };
+
+      SrcArray.prototype.swap = function(i1, i2) {
+        return rx.transaction((function(_this) {
+          return function() {
+            var first, len, second;
+            len = rx.snap(function() {
+              return _this.length();
+            });
+            if (i1 < 0 || i1 > len - 1) {
+              throw "i1 " + i1 + " is outside of bounds of array of length " + len;
+            }
+            if (i2 < 0 || i2 > len - 1) {
+              throw "i2 " + i2 + " is outside of bounds of array of length " + len;
+            }
+            first = Math.min(i1, i2);
+            second = Math.max(i1, i2);
+            _this.move(first, second);
+            return _this.move(second, first);
+          };
+        })(this));
+      };
+
+      SrcArray.prototype.reverse = function() {
+        this.update(rx.snap((function(_this) {
+          return function() {
+            return _this.all().reverse();
+          };
+        })(this)));
+        return rx.snap((function(_this) {
+          return function() {
+            return _this.all();
           };
         })(this));
       };
@@ -748,10 +854,10 @@
         }
         IndexedDepArray.__super__.constructor.call(this, xs, diff);
         this.is = (function() {
-          var j, len, ref, results;
+          var j, len1, ref, results;
           ref = this.cells;
           results = [];
-          for (i = j = 0, len = ref.length; j < len; i = ++j) {
+          for (i = j = 0, len1 = ref.length; j < len1; i = ++j) {
             x = ref[i];
             results.push(rx.cell(i));
           }
@@ -780,17 +886,17 @@
         ys = new MappedDepArray();
         rx.autoSub(this.onChangeCells, (function(_this) {
           return function(arg) {
-            var added, cell, icell, index, item, j, len, newCells, ref, removed;
+            var added, cell, icell, index, item, j, len1, newCells, ref, removed;
             index = arg[0], removed = arg[1], added = arg[2];
             ref = ys.cells.slice(index, index + removed.length);
-            for (j = 0, len = ref.length; j < len; j++) {
+            for (j = 0, len1 = ref.length; j < len1; j++) {
               cell = ref[j];
               cell.disconnect();
             }
             newCells = (function() {
-              var l, len1, ref1, results;
+              var l, len2, ref1, results;
               results = [];
-              for (l = 0, len1 = added.length; l < len1; l++) {
+              for (l = 0, len2 = added.length; l < len2; l++) {
                 ref1 = added[l], item = ref1[0], icell = ref1[1];
                 results.push(cell = bind(function() {
                   return f(item.get(), icell);
@@ -805,19 +911,19 @@
       };
 
       IndexedDepArray.prototype.realSpliceCells = function(index, count, additions) {
-        var addedElems, i, j, len, newIs, offset, ref, ref1, removed, removedElems;
+        var addedElems, i, j, len1, newIs, offset, ref, ref1, removed, removedElems;
         removed = this.cells.splice.apply(this.cells, [index, count].concat(additions));
         removedElems = rx.snap(function() {
-          var j, len, results, x2;
+          var j, len1, results, x2;
           results = [];
-          for (j = 0, len = removed.length; j < len; j++) {
+          for (j = 0, len1 = removed.length; j < len1; j++) {
             x2 = removed[j];
             results.push(x2.get());
           }
           return results;
         });
         ref = this.is.slice(index + count);
-        for (offset = j = 0, len = ref.length; j < len; offset = ++j) {
+        for (offset = j = 0, len1 = ref.length; j < len1; offset = ++j) {
           i = ref[offset];
           i.set(index + additions.length + offset);
         }
@@ -831,9 +937,9 @@
         })();
         (ref1 = this.is).splice.apply(ref1, [index, count].concat(slice.call(newIs)));
         addedElems = rx.snap(function() {
-          var l, len1, results, x3;
+          var l, len2, results, x3;
           results = [];
-          for (l = 0, len1 = additions.length; l < len1; l++) {
+          for (l = 0, len2 = additions.length; l < len2; l++) {
             x3 = additions[l];
             results.push(x3.get());
           }
@@ -904,9 +1010,9 @@
       xss = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       ys = new MappedDepArray();
       repLens = (function() {
-        var j, len, results;
+        var j, len1, results;
         results = [];
-        for (j = 0, len = xss.length; j < len; j++) {
+        for (j = 0, len1 = xss.length; j < len1; j++) {
           xs = xss[j];
           results.push(0);
         }
@@ -1193,10 +1299,10 @@
     rx.liftSpec = function(obj) {
       var name, type, val;
       return _.object((function() {
-        var j, len, ref, results;
+        var j, len1, ref, results;
         ref = Object.getOwnPropertyNames(obj);
         results = [];
-        for (j = 0, len = ref.length; j < len; j++) {
+        for (j = 0, len1 = ref.length; j < len1; j++) {
           name = ref[j];
           val = obj[name];
           if ((val != null) && (val instanceof rx.ObsMap || val instanceof rx.ObsCell || val instanceof rx.ObsArray)) {
@@ -1221,10 +1327,10 @@
       for (name in fieldspec) {
         spec = fieldspec[name];
         if (!_.some((function() {
-          var j, len, ref, results;
+          var j, len1, ref, results;
           ref = [ObsCell, ObsArray, ObsMap];
           results = [];
-          for (j = 0, len = ref.length; j < len; j++) {
+          for (j = 0, len1 = ref.length; j < len1; j++) {
             c = ref[j];
             results.push(x[name] instanceof c);
           }
@@ -1263,10 +1369,10 @@
       if (_.isArray(obj)) {
         arr = rx.array(_.clone(obj));
         Object.defineProperties(obj, _.object((function() {
-          var j, len, ref, results;
+          var j, len1, ref, results;
           ref = _.functions(arr);
           results = [];
-          for (j = 0, len = ref.length; j < len; j++) {
+          for (j = 0, len1 = ref.length; j < len1; j++) {
             methName = ref[j];
             if (methName !== 'length') {
               results.push((function(methName) {
@@ -1345,10 +1451,10 @@
     rx.autoReactify = function(obj) {
       var name, type, val;
       return rx.reactify(obj, _.object((function() {
-        var j, len, ref, results;
+        var j, len1, ref, results;
         ref = Object.getOwnPropertyNames(obj);
         results = [];
-        for (j = 0, len = ref.length; j < len; j++) {
+        for (j = 0, len1 = ref.length; j < len1; j++) {
           name = ref[j];
           val = obj[name];
           if (val instanceof ObsMap || val instanceof ObsCell || val instanceof ObsArray) {
@@ -1425,18 +1531,18 @@
         key = rx.smartUidify;
       }
       return function(oldXs, newXs) {
-        var i, j, len, oldKeys, ref, results, x;
+        var i, j, len1, oldKeys, ref, results, x;
         oldKeys = mkMap((function() {
-          var j, len, results;
+          var j, len1, results;
           results = [];
-          for (i = j = 0, len = oldXs.length; j < len; i = ++j) {
+          for (i = j = 0, len1 = oldXs.length; j < len1; i = ++j) {
             x = oldXs[i];
             results.push([key(x), i]);
           }
           return results;
         })());
         results = [];
-        for (j = 0, len = newXs.length; j < len; j++) {
+        for (j = 0, len1 = newXs.length; j < len1; j++) {
           x = newXs[j];
           results.push((ref = oldKeys[key(x)]) != null ? ref : -1);
         }
@@ -1463,9 +1569,9 @@
         return null;
       }
       refs = (function() {
-        var j, len, results;
+        var j, len1, results;
         results = [];
-        for (j = 0, len = perm.length; j < len; j++) {
+        for (j = 0, len1 = perm.length; j < len1; j++) {
           i = perm[j];
           if (i >= 0) {
             results.push(i);
@@ -1591,15 +1697,15 @@
           }
         };
       };
-      for (j = 0, len = events.length; j < len; j++) {
+      for (j = 0, len1 = events.length; j < len1; j++) {
         ev = events[j];
         fn1(ev);
       }
       props = ['async', 'autofocus', 'checked', 'location', 'multiple', 'readOnly', 'selected', 'selectedIndex', 'tagName', 'nodeName', 'nodeType', 'ownerDocument', 'defaultChecked', 'defaultSelected'];
       propSet = _.object((function() {
-        var l, len1, results;
+        var l, len2, results;
         results = [];
-        for (l = 0, len1 = props.length; l < len1; l++) {
+        for (l = 0, len2 = props.length; l < len2; l++) {
           prop = props[l];
           results.push([prop, null]);
         }
@@ -1648,9 +1754,9 @@
         }
       };
       toNodes = function(contents) {
-        var child, l, len1, parsed, results;
+        var child, l, len2, parsed, results;
         results = [];
-        for (l = 0, len1 = contents.length; l < len1; l++) {
+        for (l = 0, len2 = contents.length; l < len2; l++) {
           child = contents[l];
           if (child != null) {
             if (_.isString(child) || _.isNumber(child)) {
@@ -1698,10 +1804,10 @@
               }
             };
             covers = (function() {
-              var l, len1, ref, ref1, results;
+              var l, len2, ref, ref1, results;
               ref = nodes != null ? nodes : [];
               results = [];
-              for (l = 0, len1 = ref.length; l < len1; l++) {
+              for (l = 0, len2 = ref.length; l < len2; l++) {
                 node = ref[l];
                 if (!(hasWidth(node))) {
                   continue;
@@ -1715,9 +1821,9 @@
               return results;
             })();
             setTimeout((function() {
-              var cover, l, len1, results;
+              var cover, l, len2, results;
               results = [];
-              for (l = 0, len1 = covers.length; l < len1; l++) {
+              for (l = 0, len2 = covers.length; l < len2; l++) {
                 cover = covers[l];
                 results.push($(cover).remove());
               }
@@ -1744,7 +1850,7 @@
           if (contents != null) {
             if (contents instanceof ObsArray) {
               rx.autoSub(contents.indexed().onChangeCells, function(arg) {
-                var added, cell, icell, index, l, len1, ref2, removed, results, toAdd;
+                var added, cell, icell, index, l, len2, ref2, removed, results, toAdd;
                 index = arg[0], removed = arg[1], added = arg[2];
                 elt.contents().slice(index, index + removed.length).remove();
                 toAdd = toNodes(added.map(function(arg3) {
@@ -1772,7 +1878,7 @@
                   });
                 }
                 results = [];
-                for (l = 0, len1 = added.length; l < len1; l++) {
+                for (l = 0, len2 = added.length; l < len2; l++) {
                   ref2 = added[l], cell = ref2[0], icell = ref2[1];
                   results.push((function(cell, icell) {
                     return rx.autoSub(cell.onSet, rx.skipFirst(function(arg3) {
@@ -1822,14 +1928,14 @@
       tags = ['html', 'head', 'title', 'base', 'link', 'meta', 'style', 'script', 'noscript', 'body', 'body', 'section', 'nav', 'article', 'aside', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h1', 'h6', 'header', 'footer', 'address', 'main', 'main', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'dd', 'figure', 'figcaption', 'div', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'object', 'param', 'object', 'video', 'audio', 'source', 'video', 'audio', 'track', 'video', 'audio', 'canvas', 'map', 'area', 'area', 'map', 'svg', 'math', 'table', 'caption', 'colgroup', 'col', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'form', 'fieldset', 'legend', 'fieldset', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'select', 'datalist', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'details', 'menuitem', 'menu'];
       svg_tags = ['a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animate', 'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 'color-profile', 'cursor', 'defs', 'desc', 'ellipse', 'feblend', 'fecolormatrix', 'fecomponenttransfer', 'fecomposite', 'feconvolvematrix', 'fediffuselighting', 'fedisplacementmap', 'fedistantlight', 'feflood', 'fefunca', 'fefuncb', 'fefuncg', 'fefuncr', 'fegaussianblur', 'feimage', 'femerge', 'femergenode', 'femorphology', 'feoffset', 'fepointlight', 'fespecularlighting', 'fespotlight', 'fetile', 'feturbulence', 'filter', 'font', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri', 'foreignobject', 'g', 'glyph', 'glyphref', 'hkern', 'image', 'line', 'lineargradient', 'marker', 'mask', 'metadata', 'missing-glyph', 'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 'script', 'set', 'stop', 'style', 'svg', 'switch', 'symbol', 'text', 'textpath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern'];
       updateSVGContents = function(elt, contents) {
-        var l, len1, node, results, toAdd;
+        var l, len2, node, results, toAdd;
         while (elt.firstChild) {
           elt.removeChild(elt.firstChild);
         }
         if (_.isArray(contents)) {
           toAdd = toNodes(contents);
           results = [];
-          for (l = 0, len1 = toAdd.length; l < len1; l++) {
+          for (l = 0, len2 = toAdd.length; l < len2; l++) {
             node = toAdd[l];
             results.push(elt.appendChild(node));
           }
@@ -1854,7 +1960,7 @@
           if (contents != null) {
             if (contents instanceof ObsArray) {
               contents.onChange.sub(function(arg) {
-                var added, i, index, l, len1, len2, m, node, p, ref2, removed, results, results1, toAdd;
+                var added, i, index, l, len2, len3, m, node, p, ref2, removed, results, results1, toAdd;
                 index = arg[0], removed = arg[1], added = arg[2];
                 for (i = l = 0, ref2 = removed.length; 0 <= ref2 ? l < ref2 : l > ref2; i = 0 <= ref2 ? ++l : --l) {
                   elt.removeChild(elt.childNodes[index]);
@@ -1862,14 +1968,14 @@
                 toAdd = toNodes(added);
                 if (index === elt.childNodes.length) {
                   results = [];
-                  for (m = 0, len1 = toAdd.length; m < len1; m++) {
+                  for (m = 0, len2 = toAdd.length; m < len2; m++) {
                     node = toAdd[m];
                     results.push(elt.appendChild(node));
                   }
                   return results;
                 } else {
                   results1 = [];
-                  for (p = 0, len2 = toAdd.length; p < len2; p++) {
+                  for (p = 0, len3 = toAdd.length; p < len3; p++) {
                     node = toAdd[p];
                     results1.push(elt.childNodes[index].insertBefore(node));
                   }
@@ -1896,18 +2002,18 @@
         };
       };
       rxt.tags = _.object((function() {
-        var l, len1, results;
+        var l, len2, results;
         results = [];
-        for (l = 0, len1 = tags.length; l < len1; l++) {
+        for (l = 0, len2 = tags.length; l < len2; l++) {
           tag = tags[l];
           results.push([tag, rxt.mktag(tag)]);
         }
         return results;
       })());
       rxt.svg_tags = _.object((function() {
-        var l, len1, results;
+        var l, len2, results;
         results = [];
-        for (l = 0, len1 = svg_tags.length; l < len1; l++) {
+        for (l = 0, len2 = svg_tags.length; l < len2; l++) {
           tag = svg_tags[l];
           results.push([tag, rxt.svg_mktag(tag)]);
         }
