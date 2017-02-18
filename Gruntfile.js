@@ -114,6 +114,22 @@ module.exports = function (grunt) {
         }
       }
     },
+    ts: {
+      options: {
+        compile: true,         // perform compilation. [true (default) | false]
+        comments: false,       // same as !removeComments. [true | false (default)]
+        target: 'es5',         // target javascript language. [es3 | es5 (grunt-ts default) | es6]
+        noImplicitAny: false,  // set to true to pass --noImplicitAny to the compiler. [true | false (default)]
+        strictNullChecks: true,
+        alwaysStrict: false
+      },
+      dev: {
+        src: ["src/**/*.ts"],  // The source typescript files, http://gruntjs.com/configuring-tasks#files
+        options: {
+          module: 'commonjs'
+        }
+      }
+    }
   });
 
   grunt.renameTask('regarde', 'watch');

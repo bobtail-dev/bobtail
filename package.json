@@ -30,7 +30,8 @@
     "karma-phantomjs-launcher": "^1.0.2",
     "matchdep": "^1.0.1",
     "phantomjs": "~1.9.7-1",
-    "serve-static": "^1.11.2"
+    "serve-static": "^1.11.2",
+    "typescript": "^2.1.6"
   },
   "scripts": {
     "test": "grunt test && node test/nodeTest.js"
