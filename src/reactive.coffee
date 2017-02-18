@@ -195,7 +195,8 @@ rxFactory = (_, $) ->
     timeout = null
     asyncBind init, ->
       {val, ms} = @record(f)
-      clearTimeout(timeout) if timeout?
+      if timeout?
+        clearTimeout(timeout)
       timeout = setTimeout((=> @done(val)), ms)
 
   rx.snap = (f) -> recorder.ignoring(f)

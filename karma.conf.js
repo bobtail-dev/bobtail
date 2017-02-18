@@ -7,6 +7,13 @@ module.exports = function(config) {
     preprocessors: {
       '**/*.coffee': ['coffee']
     },
+    coffeePreprocessor: {
+      // options passed to the coffee compiler
+      options: {
+        bare: true,
+        sourceMap: true
+      }
+    },
 
     // list of files / patterns to load in the browser
     files: [

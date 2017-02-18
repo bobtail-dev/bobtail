@@ -1,13 +1,12 @@
 'use strict';
-var lrSnippet = require('grunt-contrib-livereload/lib/utils').livereloadSnippet;
-var mountFolder = function (connect, dir) {
-  return connect.static(require('path').resolve(dir));
-};
-
 module.exports = function (grunt) {
   // load all grunt tasks
   require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
-
+  var serveStatic = require('serve-static');
+  var path = require('path');
+  var mountFolder = function (connect, dir) {
+    return serveStatic(path.resolve(dir));
+  };
   // configurable paths
   var yeomanConfig = {
     name: 'reactive-coffee',
@@ -40,17 +39,6 @@ module.exports = function (grunt) {
         port: 9000,
         // Change this to '0.0.0.0' to access the server from outside.
         hostname: 'localhost'
-      },
-      livereload: {
-        options: {
-          middleware: function (connect) {
-            return [
-              lrSnippet,
-              mountFolder(connect, '.tmp'),
-              mountFolder(connect, yeomanConfig.src)
-            ];
-          }
-        }
       },
       test: {
         options: {
@@ -132,8 +120,9 @@ module.exports = function (grunt) {
 
   grunt.registerTask('test', [
     'clean:server',
-    // 'bower:install', // slows down build a bit and puts things in ./lib
+    'ts:dev',
     'coffee',
+    // 'bower:install', // slows down build a bit and puts things in ./lib
     'connect:test',
     'karma'
   ]);
