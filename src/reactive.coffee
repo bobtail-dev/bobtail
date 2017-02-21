@@ -813,15 +813,6 @@ rxFactory = (_, $) ->
       else
         setProp(elt, prop, xform(val))
 
-    mkAtts = (attstr) ->
-      do(atts = {}) ->
-        id = attstr.match /[#](\w+)/
-        atts.id = id[1] if id
-        classes = attstr.match(/\.\w+/g)
-        if classes
-          atts.class = (cls.replace(/^\./, '') for cls in classes).join(' ')
-        atts
-
     # arguments to a tag may be:
     #   ()
     #   (attrs: Object)
@@ -834,8 +825,6 @@ rxFactory = (_, $) ->
         [{}, null]
       else if arg1 instanceof Object and arg2?
         [arg1, arg2]
-      else if _.isString(arg1) and arg2?
-        [mkAtts(arg1), arg2]
       else if not arg2? and
           _.isString(arg1) or
           _.isNumber(arg1) or

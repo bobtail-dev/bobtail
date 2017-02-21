@@ -117,16 +117,6 @@ describe 'tag', ->
       expect(kids.length).toBe(1)
       expect(kids[0] instanceof SVGElement).toBe(true)
 
-  describe 'attribute id and class parsing', ->
-    it 'should be creatable with #id', ->
-      elt = div '#zip', 'text'
-      expect(elt.prop('id')).toBe('zip')
-    it 'should be creatable with #id.cls1.cls2', ->
-      elt = div '#zip.zap.zop', 'text'
-      expect(elt.prop('id')).toBe('zip')
-      expect(elt.hasClass('zap')).toBe(true)
-      expect(elt.hasClass('zop')).toBe(true)
-
 describe 'rxt of observable array', ->
   xs = elt = null
   beforeEach ->
