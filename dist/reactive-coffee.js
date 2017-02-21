@@ -6,7 +6,7 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, flattenHelper, fn1, j, lagBind, len, mkAtts, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents;
+    var DepArray, DepCell, DepMap, DepMgr, Ev, FakeObsCell, FakeSrcCell, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsMapEntryCell, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcMapEntryCell, asyncBind, bind, depMgr, ev, events, firstWhere, flatten, flattenHelper, fn1, j, lagBind, len, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, updateContents, updateSVGContents;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -1636,35 +1636,11 @@
           return setProp(elt, prop, xform(val));
         }
       };
-      mkAtts = function(attstr) {
-        return (function(atts) {
-          var classes, cls, id;
-          id = attstr.match(/[#](\w+)/);
-          if (id) {
-            atts.id = id[1];
-          }
-          classes = attstr.match(/\.\w+/g);
-          if (classes) {
-            atts["class"] = ((function() {
-              var l, len1, results;
-              results = [];
-              for (l = 0, len1 = classes.length; l < len1; l++) {
-                cls = classes[l];
-                results.push(cls.replace(/^\./, ''));
-              }
-              return results;
-            })()).join(' ');
-          }
-          return atts;
-        })({});
-      };
       normalizeTagArgs = function(arg1, arg2) {
         if ((arg1 == null) && (arg2 == null)) {
           return [{}, null];
         } else if (arg1 instanceof Object && (arg2 != null)) {
           return [arg1, arg2];
-        } else if (_.isString(arg1) && (arg2 != null)) {
-          return [mkAtts(arg1), arg2];
         } else if ((arg2 == null) && _.isString(arg1) || _.isNumber(arg1) || arg1 instanceof Element || arg1 instanceof SVGElement || arg1 instanceof RawHtml || arg1 instanceof $ || _.isArray(arg1) || arg1 instanceof ObsCell || arg1 instanceof ObsArray) {
           return [{}, arg1];
         } else {
