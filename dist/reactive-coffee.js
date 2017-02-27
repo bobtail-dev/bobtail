@@ -176,6 +176,7 @@
         this.stack = [];
         this.isMutating = false;
         this.isIgnoring = false;
+        this.hidingMutationWarnings = false;
         this.onMutationWarning = new Ev();
       }
 
@@ -212,11 +213,26 @@
         }
       };
 
+      Recorder.prototype.hideMutationWarnings = function(f) {
+        var wasHiding;
+        wasHiding = this.hidingMutationWarnings;
+        this.hidingMutationWarnings = true;
+        try {
+          return f();
+        } finally {
+          this.hidingMutationWarnings = wasHiding;
+        }
+      };
+
+      Recorder.prototype.fireMutationWarning = function() {
+        console.warn('Mutation to observable detected during a bind context');
+        return this.onMutationWarning.pub(null);
+      };
+
       Recorder.prototype.mutating = function(f) {
         var wasMutating;
-        if (this.stack.length > 0) {
-          console.warn('Mutation to observable detected during a bind context');
-          this.onMutationWarning.pub(null);
+        if (this.stack.length > 0 && !this.hidingMutationWarnings) {
+          this.fireMutationWarning();
         }
         wasMutating = this.isMutating;
         this.isMutating = true;
@@ -242,6 +258,9 @@
 
     })();
     rx._recorder = recorder = new Recorder();
+    rx.hideMutationWarnings = function(f) {
+      return recorder.hideMutationWarnings(f);
+    };
     rx.asyncBind = asyncBind = function(init, f) {
       var dep;
       dep = new DepCell(f, init);
