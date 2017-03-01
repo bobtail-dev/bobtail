@@ -3,8 +3,9 @@
 div = rxt.tags.div
 outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
+{jasmine} = window
+
 jasmine.CATCH_EXCEPTIONS = false
-{}
 
 describe 'source cell', ->
   src = null
@@ -752,67 +753,178 @@ describe 'DepArray', ->
     expect(mapEvalCount).toBe(startMapEvalCount + 3)
 
 describe 'ObsMap', ->
-  x = cb = a = b = all = null
+  x = cb = a = b = all = hasA = hasB = size = cbA = cbB = cbHasA = cbHasB = cbAll = cbSize = null
   beforeEach ->
-    x = new rx.map({a:0})
-    cb = jasmine.createSpy('cb')
-    a = bind -> x.get('a')
-    b = bind -> x.get('b')
+    x = rx.map {a:0}
+    cb = jasmine.createSpy 'cb'
+    a = bind -> x.get 'a'
+    b = bind -> x.get 'b'
+    hasA = bind -> x.has 'a'
+    hasB = bind -> x.has 'b'
     all = bind -> x.all()
-  it 'should fire onChange event for replaced keys', ->
-    x.onChange.sub cb
-    x.put('a', 1)
-    expect(cb).toHaveBeenCalledWith({'a':[0,1]})
-  it 'should fire onAdd event for new keys', ->
-    x.onAdd.sub cb
-    x.put('b', 2)
-    expect(cb).toHaveBeenCalledWith({'b': 2})
-  it 'should fire onRemove event for deleted keys', ->
-    x.onRemove.sub cb
-    x.remove('a')
-    expect(cb).toHaveBeenCalledWith({'a': 0})
-  it 'should re-evaluate .get() binds on any change', ->
-    expect(a.get()).toBe(0)
-    expect(b.get()).toBeUndefined()
-    x.put('a', 1)
-    expect(a.get()).toBe(1)
-    expect(b.get()).toBeUndefined()
-    x.put('b', 2)
-    expect(a.get()).toBe(1)
-    expect(b.get()).toBe(2)
-    x.remove('a')
-    expect(a.get()).toBeUndefined()
-    expect(b.get()).toBe(2)
-  it 'should re-evaluate .all() binds on any change', ->
-    expect(all.get()).toEqual({a:0})
-    x.put('a', 1)
-    expect(all.get()).toEqual({a:1})
-    x.put('b', 2)
-    expect(all.get()).toEqual({a:1,b:2})
-    x.remove('a')
-    expect(all.get()).toEqual({b:2})
-  it 'should yield working cells', ->
-    a = x.cell('a')
-    b = x.cell('b')
-    aa = bind -> a.get()
-    bb = bind -> b.get()
-    expect(aa.get()).toBe(0)
-    expect(bb.get()).toBeUndefined()
-    a.set(1)
-    expect(aa.get()).toBe(1)
-    expect(bb.get()).toBeUndefined()
-    b.set(2)
-    expect(aa.get()).toBe(1)
-    expect(bb.get()).toBe(2)
-  it 'should support update()', ->
-    called = null
-    a.onSet.sub rx.skipFirst ([o,n]) -> called = [o,n]
-    x.update({a:0,b:1})
-    expect(called).toBe(null)
-    expect(x.all()).toEqual({a:0,b:1})
-    x.update({b:2,c:3})
-    expect(called).toEqual([0, undefined])
-    expect(x.all()).toEqual({b:2,c:3})
+    size = bind -> x.size()
+    cbA = jasmine.createSpy 'cbA'
+    cbB = jasmine.createSpy 'cbB'
+    cbHasA = jasmine.createSpy 'cbHasA'
+    cbHasB = jasmine.createSpy 'cbHasB'
+    cbAll = jasmine.createSpy 'all'
+    cbSize = jasmine.createSpy 'size'
+    rx.autoSub a.onSet, cbA
+    rx.autoSub b.onSet, cbB
+    rx.autoSub hasA.onSet, cbHasA
+    rx.autoSub hasB.onSet, cbHasB
+    rx.autoSub all.onSet, cbAll
+    rx.autoSub size.onSet, cbAll
+    cbA.calls.reset()
+    cbB.calls.reset()
+    cbHasA.calls.reset()
+    cbHasB.calls.reset()
+    cbAll.calls.reset()
+    cbSize.calls.reset()
+  describe 'events', ->
+    it 'should fire onChange event for replaced keys', ->
+      rx.autoSub x.onChange, (map) -> cb map
+      expect(x.put 'a', 1).toBe 0
+      expect(cb.calls.mostRecent().args).toEqual [new Map [['a', [0,1]]]]
+      expect(x.put 'a', 2).toBe 1
+      expect(cb.calls.mostRecent().args).toEqual [new Map [['a', [1,2]]]]
+    it 'should not fire onChange event if value does not change', ->
+      rx.autoSub x.onChange, cb
+      cb.calls.reset()
+      x.put 'a', 0
+      expect(cb).not.toHaveBeenCalled()
+    it 'should fire onAdd event for new keys', ->
+      rx.autoSub x.onAdd, cb
+      cb.calls.reset()
+      x.put 'b', 2
+      expect(cb.calls.mostRecent().args).toEqual [new Map [['b', 2]]]
+    it 'should not fire onAdd event for existing keys', ->
+      rx.autoSub x.onAdd, cb
+      cb.calls.reset()
+      x.put 'a', 0
+      expect(cb).not.toHaveBeenCalled()
+      x.put 'a', 1
+      expect(cb).not.toHaveBeenCalled()
+    it 'should fire onRemove event for deleted keys', ->
+      rx.autoSub x.onRemove, cb
+      cb.calls.reset()
+      x.remove 'a'
+      expect(cb.calls.mostRecent().args).toEqual [new Map [['a', 0]]]
+    it 'should not fire onRemove event if key is not in Map', ->
+      rx.autoSub x.onRemove, cb
+      cb.calls.reset()
+      x.remove 'nope'
+      expect(cb).not.toHaveBeenCalled()
+  describe 'binds', ->
+    it 'should re-evaluate .get() binds on any change', ->
+      expect(a.get()).toBe 0
+      expect(b.get()).toBeUndefined()
+      x.put 'a', 1
+      expect(a.get()).toBe 1
+      expect(b.get()).toBeUndefined()
+      x.put 'b', 2
+      expect(a.get()).toBe 1
+      expect(b.get()).toBe 2
+      x.remove 'a'
+      expect(a.get()).toBeUndefined()
+      expect(b.get()).toBe 2
+    it 'should not re-evaluate binds on no-ops', ->
+      x.put 'a', 0
+      x.remove 'b'
+      expect(cbA).not.toHaveBeenCalled()
+      expect(cbB).not.toHaveBeenCalled()
+      expect(cbAll).not.toHaveBeenCalled()
+      expect(cbHasA).not.toHaveBeenCalled()
+      expect(cbHasB).not.toHaveBeenCalled()
+      expect(cbSize).not.toHaveBeenCalled()
+      expect(a.get()).toBe 0
+      expect(b.get()).toBe undefined
+      expect(hasA.get()).toBe true
+      expect(hasB.get()).toBe false
+      expect(all.get()).toEqual new Map [['a', 0]]
+      expect(size.get()).toEqual 1
+    it 'should re-evaluate .has() or .size() binds on any additions and removals', ->
+      expect(hasA.get()).toBe true
+      expect(hasB.get()).toBe false
+      expect(size.get()).toBe 1
+      x.remove 'a'
+      expect(hasA.get()).toBe false
+      expect(size.get()).toBe 0
+      x.put 'b', 42
+      expect(hasB.get()).toBe true
+      expect(size.get()).toBe 1
+      x.put {}, 50
+      expect(size.get()).toBe 2
+    it 'should not re-evaluate .has() or .size() binds when keys are not added or removed', ->
+      x.put 'a', 42
+      x.remove 'b'
+      expect(cbHasA).not.toHaveBeenCalled()
+      expect(cbHasB).not.toHaveBeenCalled()
+      expect(cbSize).not.toHaveBeenCalled()
+    it 'should re-evaluate .all() binds on any change', ->
+      expect(all.get()).toEqual new Map [['a', 0]]
+      x.put('a', 1)
+      expect(all.get()).toEqual new Map [['a', 1]]
+      x.put('b', 2)
+      expect(all.get()).toEqual new Map [['a', 1], ['b', 2]]
+      x.remove('a')
+      expect(all.get()).toEqual new Map [['b', 2]]
+  describe 'SrcMap mutations', ->
+    it 'should support update() via object, pair array, and Map', ->
+      called = {}
+      rx.autoSub a.onSet, ([o,n]) -> called.a = [o,n]
+      expect(a.get()).toBe 0
+      expect(called.a).toEqual [null, 0]
+      expect(x.update {a: 1, b: 2}).toEqual new Map [['a', 0]]
+      expect(a.get()).toBe 1
+      expect(b.get()).toBe 2
+      expect(called.a).toEqual [0, 1]
+      expected = new Map [['a', 0], ['b', 1]]
+      expect(x.all()).toEqual expected
+      expect(x.update [['b', 2], ['c', 3]]).toEqual expected
+      expect(called.a).toEqual [1, undefined]
+      expected = new Map [['b', 2], ['c', 3]]
+      expect(x.all()).toEqual expected
+      expect(x.update new Map [[]]).toEqual expected
+    it 'should support put', ->
+      expect(x.put 'a', 1).toBe 0
+      expect(x.put 'a', 2).toBe 1
+      expect(x.put 'b', 10).toBe undefined
+      expect(x.put 'b', 20).toBe 10
+    it 'should support remove', ->
+      expect(x.remove 'a').toBe 0
+      expect(x.remove 'b').toBe undefined
+    it 'should support clear', ->
+      rx.autoSub x.onRemove, cb
+      cb.calls.reset()
+      expect(x.clear()).toEqual new Map [['a', 0]]
+      cb.calls.reset()
+      expect(x.clear()).toEqual new Map []
+      expect(cb).not.toHaveBeenCalled()
+
+  it 'should support non-string keys', ->
+    obj = {zzz: 777}
+    x.put obj, 888
+    expect(x.get obj).toBe 888
+    expect(x.has obj).toBe true
+    x.remove obj
+    expect(x.has obj).toBe false
+    x.update [[obj, 999]]
+    expect(x.get obj).toBe 999
+    expect(x.has obj).toBe true
+  describe 'initialization', ->
+    it 'should support initialization by object', ->
+      y = rx.map {a: 0, b: 1}
+      expect(y.all()).toEqual new Map [['a', 0], [b, 1]]
+    it 'should support initialization by array of pairs', ->
+      arr = []
+      y = rx.map [['a', 42], [arr, 0]]
+      expect(y.all()).toEqual new Map [['a', 42], [arr, 0]]
+    it 'should support initialization by Map', ->
+      arr = []
+      y = rx.map new Map [['a', 42], [arr, 0]]
+      expect(y.all()).toEqual new Map [['a', 42], [arr, 0]]
+
 
 describe 'nested bindings', ->
   x = a = b = elt = null
@@ -1183,7 +1295,7 @@ describe 'lagBind', ->
             ->
               expect(y.get()).toBe 1
               done()
-            20
+            60
           )
         10
       )
@@ -1308,13 +1420,17 @@ describe 'cellToMap', ->
     x = rx.map {a: 42}
     y = rx.cellToMap bind ->
       x.all()
-    expect(snap -> y.all()).toEqual {a: 42}
+    expect(rx.snap -> y.all()).toEqual new Map [['a', 42]]
     x.put 'b', 17
-    expect(snap -> y.all()).toEqual {a: 42, b: 17}
+    expect(rx.snap -> y.all()).toEqual new Map [['a', 42], ['b', 17]]
     x.put 'c', 4
-    expect(snap -> y.all()).toEqual {a: 42, b: 17, c: 4}
-    x.update {}
-    expect(snap -> y.all()).toEqual {}
+    expect(rx.snap -> y.all()).toEqual new Map [['a', 42], ['b', 17], ['c', 4]]
+    x.update new Map []
+    expect(rx.snap -> y.all()).toEqual new Map []
+    obj = {}
+    x.update new Map [[obj, 0]]
+    expect(rx.snap -> y.all()).toEqual new Map [[obj, 0]]
+
 
 describe 'cellToArray', ->
   it 'should propagate minimal splices for primitives', ->
