@@ -20,6 +20,7 @@ module.exports = function(config) {
       'bower_components/underscore/underscore.js',
       'bower_components/jquery/dist/jquery.js',
       'bower_components/es5-shim/es5-shim.js',
+      'bower_components/es6-shim/es6-shim.js',
       'src/*.coffee',
       'src/**/*.js',
       'test/mock/**/*.js',
