@@ -2141,6 +2141,8 @@
     } else if ((typeof module !== "undefined" && module !== null ? module.exports : void 0) != null) {
       $ = is_browser ? require('jquery') : void 0;
       _ = require('underscore');
+      require('es5-shim');
+      require('es6-shim');
       rx = factory(_, $);
       return module.exports = rx;
     } else if ((root._ != null) && (root.$ != null)) {

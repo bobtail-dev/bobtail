@@ -1134,6 +1134,8 @@ do(root = this, factory = rxFactory) ->
   else if module?.exports?
     $ = if is_browser then require('jquery')
     _ = require 'underscore'
+    require 'es5-shim'
+    require 'es6-shim'
     rx = factory(_, $)
     module.exports = rx
   else if root._? and root.$?
