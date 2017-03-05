@@ -70,13 +70,11 @@ rxFactory = (_, $) ->
   rx._depMgr = depMgr = new DepMgr()
 
   Ev = class rx.Ev
-    constructor: (@inits) ->
+    constructor: (@init) ->
       @subs = mkMap()
     sub: (listener) ->
       uid = mkuid()
-      if @inits?
-        for init in @inits()
-          listener(init)
+      if @init? then listener @init()
       @subs[uid] = listener
       depMgr.sub(uid, this)
       uid
@@ -217,7 +215,7 @@ rxFactory = (_, $) ->
   ObsCell = class rx.ObsCell
     constructor: (@x) ->
       @x = @x ? null
-      @onSet = new Ev(=> [[null, @x]]) # [old, new]
+      @onSet = new Ev => [null, @x] # [old, new]
     get: ->
       recorder.sub (target) => rx.autoSub @onSet, -> target.refresh()
       @x
@@ -296,8 +294,8 @@ rxFactory = (_, $) ->
 
   ObsArray = class rx.ObsArray
     constructor: (@cells = [], @diff = rx.basicDiff()) ->
-      @onChange = new Ev(=> [[0, [], rx.snap => (x0.get() for x0 in @cells)]]) # [index, removed, added]
-      @onChangeCells = new Ev(=> [[0, [], @cells]]) # [index, removed, added]
+      @onChange = new Ev => [0, [], rx.snap => @cells.map (c) -> c.get()] # [index, removed, added]
+      @onChangeCells = new Ev => [0, [], @cells] # [index, removed, added]
       @indexed_ = null
     all: ->
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
@@ -437,8 +435,8 @@ rxFactory = (_, $) ->
     constructor: (xs = [], diff) ->
       super(xs, diff)
       @is = (rx.cell(i) for x,i in @cells)
-      @onChangeCells = new Ev(=> [[0, [], _.zip(@cells, @is)]]) # [index, removed, added]
-      @onChange = new Ev(=> [[0, [], _.zip((rx.snap => @all()), @is)]])
+      @onChangeCells = new Ev => [0, [], _.zip(@cells, @is)] # [index, removed, added]
+      @onChange = new Ev => [0, [], _.zip(@is, rx.snap => @all())]
     # TODO duplicate code with ObsArray
     map: (f) ->
       ys = new MappedDepArray()
@@ -500,9 +498,9 @@ rxFactory = (_, $) ->
   ObsMap = class rx.ObsMap
     constructor: (@x = new Map()) ->
       @x = objToJSMap @x
-      @onAdd = new Ev => [new Map @x] # {key: new...}
-      @onRemove = new Ev => [new Map()] # {key: old...}
-      @onChange = new Ev => [new Map()] # {key: [old, new]...}
+      @onAdd = new Ev => new Map @x # {key: new...}
+      @onRemove = new Ev => new Map() # {key: old...}
+      @onChange = new Ev => new Map() # {key: [old, new]...}
     get: (key) ->
       recorder.sub (target) => rx.autoSub @onAdd, (additions) -> if additions.has key then target.refresh()
       recorder.sub (target) => rx.autoSub @onChange, (changes) -> if changes.has key then target.refresh()
@@ -610,7 +608,7 @@ rxFactory = (_, $) ->
   ObsSet = class rx.ObsSet
     constructor: (@_x = new Set()) ->
       @_x = objToJSSet @_x
-      @onChange = new Ev => [[@_x, new Set()]]  # additions, removals
+      @onChange = new Ev => [@_x, new Set()]  # additions, removals
     has: (key) ->
       recorder.sub (target) => rx.autoSub @onChange, ([additions, removals]) ->
         if additions.has(key) or removals.has(key) then target.refresh()

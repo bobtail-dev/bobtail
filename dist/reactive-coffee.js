@@ -106,20 +106,16 @@
     })();
     rx._depMgr = depMgr = new DepMgr();
     Ev = rx.Ev = (function() {
-      function Ev(inits) {
-        this.inits = inits;
+      function Ev(init1) {
+        this.init = init1;
         this.subs = mkMap();
       }
 
       Ev.prototype.sub = function(listener) {
-        var init, j, len1, ref, uid;
+        var uid;
         uid = mkuid();
-        if (this.inits != null) {
-          ref = this.inits();
-          for (j = 0, len1 = ref.length; j < len1; j++) {
-            init = ref[j];
-            listener(init);
-          }
+        if (this.init != null) {
+          listener(this.init());
         }
         this.subs[uid] = listener;
         depMgr.sub(uid, this);
@@ -337,7 +333,7 @@
         this.x = (ref = this.x) != null ? ref : null;
         this.onSet = new Ev((function(_this) {
           return function() {
-            return [[null, _this.x]];
+            return [null, _this.x];
           };
         })(this));
       }
@@ -480,24 +476,17 @@
         this.onChange = new Ev((function(_this) {
           return function() {
             return [
-              [
-                0, [], rx.snap(function() {
-                  var j, len1, ref, results, x0;
-                  ref = _this.cells;
-                  results = [];
-                  for (j = 0, len1 = ref.length; j < len1; j++) {
-                    x0 = ref[j];
-                    results.push(x0.get());
-                  }
-                  return results;
-                })
-              ]
+              0, [], rx.snap(function() {
+                return _this.cells.map(function(c) {
+                  return c.get();
+                });
+              })
             ];
           };
         })(this));
         this.onChangeCells = new Ev((function(_this) {
           return function() {
-            return [[0, [], _this.cells]];
+            return [0, [], _this.cells];
           };
         })(this));
         this.indexed_ = null;
@@ -937,17 +926,15 @@
         }).call(this);
         this.onChangeCells = new Ev((function(_this) {
           return function() {
-            return [[0, [], _.zip(_this.cells, _this.is)]];
+            return [0, [], _.zip(_this.cells, _this.is)];
           };
         })(this));
         this.onChange = new Ev((function(_this) {
           return function() {
             return [
-              [
-                0, [], _.zip(rx.snap(function() {
-                  return _this.all();
-                }), _this.is)
-              ]
+              0, [], _.zip(_this.is, rx.snap(function() {
+                return _this.all();
+              }))
             ];
           };
         })(this));
@@ -1132,17 +1119,17 @@
         this.x = objToJSMap(this.x);
         this.onAdd = new Ev((function(_this) {
           return function() {
-            return [new Map(_this.x)];
+            return new Map(_this.x);
           };
         })(this));
         this.onRemove = new Ev((function(_this) {
           return function() {
-            return [new Map()];
+            return new Map();
           };
         })(this));
         this.onChange = new Ev((function(_this) {
           return function() {
-            return [new Map()];
+            return new Map();
           };
         })(this));
       }
@@ -1436,7 +1423,7 @@
         this._x = objToJSSet(this._x);
         this.onChange = new Ev((function(_this) {
           return function() {
-            return [[_this._x, new Set()]];
+            return [_this._x, new Set()];
           };
         })(this));
       }
