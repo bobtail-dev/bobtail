@@ -638,6 +638,188 @@ describe 'ObsMap', ->
       expect(y.all()).toEqual new Map [['a', 42], [arr, 0]]
 
 
+describe 'ObsSet', ->
+  x = cb = all = hasA = hasB = size = cbHasA = cbHasB = cbAll = cbSize = null
+  beforeEach ->
+    x = rx.set ['a']
+    cb = jasmine.createSpy 'cb'
+    hasA = bind -> x.has 'a'
+    hasB = bind -> x.has 'b'
+    all = bind -> x.all()
+    size = bind -> x.size()
+    cbHasA = jasmine.createSpy 'cbHasA'
+    cbHasB = jasmine.createSpy 'cbHasB'
+    cbAll = jasmine.createSpy 'all'
+    cbSize = jasmine.createSpy 'size'
+    rx.autoSub hasA.onSet, cbHasA
+    rx.autoSub hasB.onSet, cbHasB
+    rx.autoSub all.onSet, cbAll
+    rx.autoSub size.onSet, cbSize
+    cbHasA.calls.reset()
+    cbHasB.calls.reset()
+    cbAll.calls.reset()
+    cbSize.calls.reset()
+  describe 'events', ->
+    it 'should fire onChange event for new keys', ->
+      rx.autoSub x.onChange, cb
+      cb.calls.reset()
+      x.put 'b'
+      expect(cb.calls.mostRecent().args).toEqual [[new Set(['b']), new Set()]]
+    it 'should not fire onChange event for existing keys', ->
+      rx.autoSub x.onChange, cb
+      cb.calls.reset()
+      x.put 'a'
+      expect(cb).not.toHaveBeenCalled()
+      x.put 'a'
+      expect(cb).not.toHaveBeenCalled()
+    it 'should fire onChange event for deleted keys', ->
+      rx.autoSub x.onChange, cb
+      cb.calls.reset()
+      x.remove 'a'
+      expect(cb.calls.mostRecent().args).toEqual [[new Set(['a']), new Set()]]
+    it 'should not fire onChange event if key is not in Set', ->
+      rx.autoSub x.onChange, cb
+      cb.calls.reset()
+      x.remove 'nope'
+      expect(cb).not.toHaveBeenCalled()
+  describe 'binds', ->
+    it 'should not re-evaluate .all() binds on no-ops', ->
+      x.put 'a'
+      x.remove 'b'
+      expect(cbAll).not.toHaveBeenCalled()
+      expect(all.get()).toEqual new Set ['a']
+    it 'should re-evaluate .has() and .size() binds on any additions and removals', ->
+      expect(hasA.get()).toBe true
+      expect(hasB.get()).toBe false
+      expect(size.get()).toBe 1
+      x.remove 'a'
+      expect(size.get()).toBe 0
+      expect(hasA.get()).toBe false
+      x.put 'b'
+      expect(hasB.get()).toBe true
+      expect(size.get()).toBe 1
+      x.put {a: 42}
+      expect(size.get()).toBe 2
+    it 'should not re-evaluate any binds when values are not added or removed', ->
+      x.put 'a'
+      x.remove 'b'
+      expect(cbHasA).not.toHaveBeenCalled()
+      expect(cbHasB).not.toHaveBeenCalled()
+      expect(cbAll).not.toHaveBeenCalled()
+      expect(cbSize).not.toHaveBeenCalled()
+      rx.transaction =>
+        x.put 'b'
+        x.remove 'b'
+        x.remove 'a'
+        x.put 'a'
+      expect(cbHasA).not.toHaveBeenCalled()
+      expect(cbHasB).not.toHaveBeenCalled()
+      expect(cbAll).not.toHaveBeenCalled()
+      expect(cbSize).not.toHaveBeenCalled()
+    it 'should re-evaluate .all() binds on any change', ->
+      expect(all.get()).toEqual new Set ['a']
+      x.put 'b'
+      expect(all.get()).toEqual new Set ['a', 'b']
+      x.remove 'a'
+      expect(all.get()).toEqual new Set ['b']
+  describe 'SrcSet mutations', ->
+    it 'should support update', ->
+      expect(x.update ['zzzyx', 42]).toEqual new Set ['a']
+      expect(x.update new Set 'xkcd').toEqual new Set ['zzzyx', 42]
+    it 'should support put', ->
+      expect(x.put 42).toBe 42
+      expect(x.has 42).toBe true
+      expect(x.put 42).toBe 42
+      expect(x.has 42).toBe true
+      expect(x.put 43).toBe 43
+      expect(x.has 42).toBe true
+      expect(x.has 43).toBe true
+    it 'should support remove', ->
+      expect(x.remove 'a').toBe 'a'
+  it 'should support non-string values', ->
+    obj = {zzz: 777}
+    x.put obj
+    expect(x.has obj).toBe true
+    x.remove obj
+    expect(x.has obj).toBe false
+
+
+describe 'ObsSet operations', ->
+  x = y = z = null
+  beforeEach ->
+    x = rx.set ['a', 'c', []]
+    y = rx.set ['a', {}, 'b']
+    z = new Set ['a', {}, 'b']
+  it 'should support union', ->
+    reactive = x.union y
+    simple = x.union z
+    expect(reactive.all()).toEqual new Set ['a', 'b', 'c', {}, []]
+    expect(simple.all()).toEqual new Set ['a', 'b', 'c', {}, []]
+    x.put 42
+    expect(reactive.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
+    expect(simple.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
+    y.put 42
+    expect(reactive.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
+    expect(simple.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
+    x.put 50
+    expect(reactive.all()).toEqual new Set [42, 50, 'a', 'b', 'c', {}, []]
+    expect(simple.all()).toEqual new Set [42, 50, 'a', 'b', 'c', {}, []]
+    y.put 60
+    expect(reactive.all()).toEqual new Set [60, 42, 50, 'a', 'b', 'c', {}, []]
+    expect(simple.all()).toEqual new Set [42, 50, 'a', 'b', 'c', {}, []]
+  it 'should support intersection', ->
+    reactive = x.intersection y
+    simple = x.intersection z
+    expect(reactive.all()).toEqual new Set ['a']
+    expect(simple.all()).toEqual new Set ['a']
+    x.put 42
+    expect(reactive.all()).toEqual new Set ['a']
+    expect(simple.all()).toEqual new Set ['a']
+    y.put 42
+    expect(reactive.all()).toEqual new Set [42, 'a']
+    expect(simple.all()).toEqual new Set ['a']
+    x.put 50
+    expect(reactive.all()).toEqual new Set [42, 'a']
+    expect(simple.all()).toEqual new Set ['a']
+    y.put 60
+    expect(reactive.all()).toEqual new Set [42, 'a']
+    expect(simple.all()).toEqual new Set ['a']
+  it 'should support difference', ->
+    reactive = x.difference y
+    simple = x.difference z
+    expect(reactive.all()).toEqual new Set ['c', []]
+    expect(simple.all()).toEqual new Set ['c', []]
+    x.put 42
+    expect(reactive.all()).toEqual new Set ['c', 42, []]
+    expect(simple.all()).toEqual new Set ['c', 42, []]
+    y.put 42
+    expect(reactive.all()).toEqual new Set ['c', []]
+    expect(simple.all()).toEqual new Set ['c', 42, []]
+    x.put 50
+    expect(reactive.all()).toEqual new Set ['c', 50, []]
+    expect(simple.all()).toEqual new Set ['c', 42, 50, []]
+    y.put 60
+    expect(reactive.all()).toEqual new Set ['c', 50, []]
+    expect(simple.all()).toEqual new Set ['c', 42, 50, []]
+  it 'should support symmetricDifference', ->
+    reactive = x.symmetricDifference y
+    simple = x.symmetricDifference z
+    expect(reactive.all()).toEqual new Set ['c', [], {}, 'b']
+    expect(simple.all()).toEqual new Set ['c', [], {}, 'b']
+    x.put 42
+    expect(reactive.all()).toEqual new Set ['c', [], 42, {}, 'b']
+    expect(simple.all()).toEqual new Set ['c', [], {}, 42, 'b']
+    y.put 42
+    expect(reactive.all()).toEqual new Set ['c', [], {}, 'b']
+    expect(simple.all()).toEqual new Set ['c', [], {}, 42, 'b']
+    x.put 50
+    expect(reactive.all()).toEqual new Set ['c', 50, [], {}, 'b']
+    expect(simple.all()).toEqual new Set [50, 'c', [], {}, 42, 'b']
+    y.put 60
+    expect(reactive.all()).toEqual new Set ['c', 50, [], {},  60, 'b']
+    expect(simple.all()).toEqual new Set [50, 'c', [], {}, 42, 'b']
+
+
 describe 'nested bindings', ->
   x = a = b = elt = null
   outerDisposed = innerDisposed = false
@@ -744,6 +926,8 @@ describe 'flatten', ->
     xs = rx.array(['b','c'])
     ys = rx.array(['E','F'])
     i = rx.cell('i')
+    zset = rx.set ['X', 'K', [], 'C', 'D', [new Set ['XKCD!']]]
+    new Set [50]
     flattened = rx.flatten [
       'A'
       xs.map (x) -> x.toUpperCase()
@@ -751,17 +935,18 @@ describe 'flatten', ->
       ys.map (y) -> y
       ['G','H']
       bind -> i.get().toUpperCase()
+      zset.all()
     ]
     mapped = flattened.map (x) -> x.toLowerCase()
   it 'should flatten and react to observables', ->
-    expect(flattened.all()).toEqual(['A','B','C','D','E','F','G','H','I'])
-    expect(mapped.all()).toEqual(['a','b','c','d','e','f','g','h','i'])
+    expect(flattened.all()).toEqual ['A','B','C','D','E','F','G','H','I','X','K','C','D','XKCD!']
+    expect(mapped.all()).toEqual(['a','b','c','d','e','f','g','h','i','x','k','c','d','xkcd!'])
     i.set('j')
-    expect(flattened.all()).toEqual(['A','B','C','D','E','F','G','H','J'])
-    expect(mapped.all()).toEqual(['a','b','c','d','e','f','g','h','j'])
+    expect(flattened.all()).toEqual(['A','B','C','D','E','F','G','H','J','X','K','C','D','XKCD!'])
+    expect(mapped.all()).toEqual(['a','b','c','d','e','f','g','h','j','x','k','c','d','xkcd!'])
     ys.push('f')
-    expect(flattened.all()).toEqual(['A','B','C','D','E','F','f','G','H','J'])
-    expect(mapped.all()).toEqual(['a','b','c','d','e','f','f','g','h','j'])
+    expect(flattened.all()).toEqual(['A','B','C','D','E','F','f','G','H','J','X','K','C','D','XKCD!'])
+    expect(mapped.all()).toEqual(['a','b','c','d','e','f','f','g','h','j','x','k','c','d','xkcd!'])
   it 'should not flatten jQuery objects (which are array-like)', ->
     flattened = rx.flatten [
       $('body')
@@ -784,7 +969,7 @@ describe 'flatten', ->
     flattened = rx.flatten [
       1
       rx.cell()
-      rx.cell([rx.array([42]), [500, undefined, [800]], [null]])
+      rx.cell([rx.array([42]), [500, undefined, rx.set [800]], [null, new Set [null]]])
       undefined
       [undefined]
       bind -> undefined
@@ -1032,7 +1217,7 @@ describe 'lagBind', ->
 describe 'postLagBind', ->
   x = y = evaled = null
   beforeEach ->
-    x = rx.cell(20)
+    x = rx.cell 30
     y = rx.postLagBind 'none', ->
       r = val: x.get(), ms: x.get()
       return r
@@ -1048,7 +1233,7 @@ describe 'postLagBind', ->
       ->
         expect(y.get()).toBe(15)
         done()
-      25
+      60
     )
   it 'should not update as long as new refresh keeps getting scheduled', (done) ->
     for snooze in [5, 10, 15, 20]
@@ -1059,7 +1244,7 @@ describe 'postLagBind', ->
         ), snooze
     setTimeout(
       ->
-        expect(y.get()).toBe(20)
+        expect(y.get()).toBe 20
         done()
       60
     )
@@ -1142,6 +1327,19 @@ describe 'cellToMap', ->
     obj = {}
     x.update new Map [[obj, 0]]
     expect(rx.snap -> y.all()).toEqual new Map [[obj, 0]]
+
+describe 'cellToSet', ->
+  it 'should correctly track changes', ->
+    obj = {}
+    x = rx.set ['a', obj, 42]
+    y = rx.cellToSet bind -> x.all()
+    expect(rx.snap -> y.all()).toEqual new Set ['a', obj, 42]
+    x.put 'b'
+    expect(rx.snap -> y.all()).toEqual new Set ['a', obj, 42, 'b']
+    x.put 'c'
+    expect(rx.snap -> y.all()).toEqual new Set ['a', obj, 42, 'b', 'c']
+    x.update new Set []
+    expect(rx.snap -> y.all()).toEqual new Set []
 
 
 describe 'cellToArray', ->
