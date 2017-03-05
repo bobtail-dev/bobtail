@@ -6,7 +6,7 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, DepSet, Ev, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsCell, ObsMap, ObsSet, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcSet, _castOther, asyncBind, bind, depMgr, difference, ev, events, firstWhere, flatten, flattenHelper, fn1, intersection, j, lagBind, len1, mapPop, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, objToJSMap, objToJSSet, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, union, updateContents, updateSVGContents;
+    var DepArray, DepCell, DepMap, DepMgr, DepSet, Ev, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsBase, ObsCell, ObsMap, ObsSet, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcSet, _castOther, asyncBind, bind, depMgr, difference, ev, events, firstWhere, flatten, flattenHelper, fn1, intersection, j, lagBind, len1, mapPop, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, objToJSMap, objToJSSet, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, union, updateContents, updateSVGContents;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -258,6 +258,12 @@
       return Recorder;
 
     })();
+    rx.types = {
+      'cell': 'cell',
+      'array': 'array',
+      'map': 'map',
+      'set': 'set'
+    };
     rx._recorder = recorder = new Recorder();
     rx.hideMutationWarnings = function(f) {
       return recorder.hideMutationWarnings(f);
@@ -326,7 +332,48 @@
       });
       return subid;
     };
-    ObsCell = rx.ObsCell = (function() {
+    ObsBase = rx.ObsBase = (function() {
+      function ObsBase() {
+        var events1;
+        events1 = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        this.events = events1;
+      }
+
+      ObsBase.prototype.to = {
+        cell: function() {
+          return rx.cell.from(ObsBase);
+        },
+        array: function() {
+          return rx.array.from(ObsBase);
+        },
+        map: function() {
+          return rx.map.from(ObsBase);
+        },
+        set: function() {
+          return rx.set.from(ObsBase);
+        }
+      };
+
+      ObsBase.prototype.flatten = function() {
+        return rx.flatten(this);
+      };
+
+      ObsBase.prototype.subAll = function(targetFn) {
+        return this.events.forEach(function(ev) {
+          return recorder.sub(function(target) {
+            return rx.autoSub(ev, function(result) {
+              return targetFn(target, result);
+            });
+          });
+        });
+      };
+
+      return ObsBase;
+
+    })();
+    ObsCell = rx.ObsCell = (function(superClass) {
+      extend(ObsCell, superClass);
+
       function ObsCell(x4) {
         var ref;
         this.x = x4;
@@ -336,22 +383,23 @@
             return [null, _this.x];
           };
         })(this));
+        ObsCell.__super__.constructor.call(this, this.onSet);
       }
 
-      ObsCell.prototype.get = function() {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onSet, function() {
-              return target.refresh();
-            });
-          };
-        })(this));
+      ObsCell.prototype.all = function() {
+        this.subAll(function(target) {
+          return target.refresh();
+        });
         return this.x;
+      };
+
+      ObsCell.prototype.get = function() {
+        return this.all();
       };
 
       return ObsCell;
 
-    })();
+    })(ObsBase);
     SrcCell = rx.SrcCell = (function(superClass) {
       extend(SrcCell, superClass);
 
@@ -469,7 +517,9 @@
       return DepCell;
 
     })(ObsCell);
-    ObsArray = rx.ObsArray = (function() {
+    ObsArray = rx.ObsArray = (function(superClass) {
+      extend(ObsArray, superClass);
+
       function ObsArray(cells, diff1) {
         this.cells = cells != null ? cells : [];
         this.diff = diff1 != null ? diff1 : rx.basicDiff();
@@ -490,6 +540,7 @@
           };
         })(this));
         this.indexed_ = null;
+        ObsArray.__super__.constructor.call(this, this.onChange, this.onChangeCells);
       }
 
       ObsArray.prototype.all = function() {
@@ -550,6 +601,10 @@
           };
         })(this));
         return this.cells.length;
+      };
+
+      ObsArray.prototype.size = function() {
+        return this.length();
       };
 
       ObsArray.prototype.map = function(f) {
@@ -720,7 +775,7 @@
 
       return ObsArray;
 
-    })();
+    })(ObsBase);
     SrcArray = rx.SrcArray = (function(superClass) {
       extend(SrcArray, superClass);
 
@@ -1029,7 +1084,7 @@
         DepArray.__super__.constructor.call(this, [], diff);
         rx.autoSub((bind((function(_this) {
           return function() {
-            return _this.f();
+            return Array.from(_this.f());
           };
         })(this))).onSet, (function(_this) {
           return function(arg) {
@@ -1113,7 +1168,9 @@
         return !second.has(item);
       }));
     };
-    ObsMap = rx.ObsMap = (function() {
+    ObsMap = rx.ObsMap = (function(superClass) {
+      extend(ObsMap, superClass);
+
       function ObsMap(x4) {
         this.x = x4 != null ? x4 : new Map();
         this.x = objToJSMap(this.x);
@@ -1132,36 +1189,15 @@
             return new Map();
           };
         })(this));
+        ObsMap.__super__.constructor.call(this, this.onAdd, this.onRemove, this.onChange);
       }
 
       ObsMap.prototype.get = function(key) {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onAdd, function(additions) {
-              if (additions.has(key)) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChange, function(changes) {
-              if (changes.has(key)) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onRemove, function(removals) {
-              if (removals.has(key)) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
+        this.subAll(function(target, result) {
+          if (result.has(key)) {
+            return target.refresh();
+          }
+        });
         return this.x.get(key);
       };
 
@@ -1170,15 +1206,6 @@
           return function(target) {
             return rx.autoSub(_this.onAdd, function(additions) {
               if (additions.has(key)) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChange, function(changes) {
-              if (changes.has(key)) {
                 return target.refresh();
               }
             });
@@ -1197,27 +1224,9 @@
       };
 
       ObsMap.prototype.all = function() {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onAdd, function() {
-              return target.refresh();
-            });
-          };
-        })(this));
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChange, function() {
-              return target.refresh();
-            });
-          };
-        })(this));
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onRemove, function() {
-              return target.refresh();
-            });
-          };
-        })(this));
+        this.subAll(function(target) {
+          return target.refresh();
+        });
         return new Map(this.x);
       };
 
@@ -1312,7 +1321,7 @@
 
       return ObsMap;
 
-    })();
+    })(ObsBase);
     SrcMap = rx.SrcMap = (function(superClass) {
       extend(SrcMap, superClass);
 
@@ -1417,7 +1426,9 @@
       }
       return new Set(other);
     };
-    ObsSet = rx.ObsSet = (function() {
+    ObsSet = rx.ObsSet = (function(superClass) {
+      extend(ObsSet, superClass);
+
       function ObsSet(_x) {
         this._x = _x != null ? _x : new Set();
         this._x = objToJSSet(this._x);
@@ -1426,31 +1437,24 @@
             return [_this._x, new Set()];
           };
         })(this));
+        ObsSet.__super__.constructor.call(this, this.onChange);
       }
 
       ObsSet.prototype.has = function(key) {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChange, function(arg) {
-              var additions, removals;
-              additions = arg[0], removals = arg[1];
-              if (additions.has(key) || removals.has(key)) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
+        this.subAll(function(target, arg) {
+          var additions, removals;
+          additions = arg[0], removals = arg[1];
+          if (additions.has(key) || removals.has(key)) {
+            return target.refresh();
+          }
+        });
         return this._x.has(key);
       };
 
       ObsSet.prototype.all = function() {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChange, function() {
-              return target.refresh();
-            });
-          };
-        })(this));
+        this.subAll(function(target) {
+          return target.refresh();
+        });
         return new Set(this._x);
       };
 
@@ -1463,17 +1467,13 @@
       };
 
       ObsSet.prototype.size = function() {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChange, function(arg) {
-              var additions, removals;
-              additions = arg[0], removals = arg[1];
-              if (additions.size !== removals.size) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
+        this.subAll(function(target, arg) {
+          var additions, removals;
+          additions = arg[0], removals = arg[1];
+          if (additions.size !== removals.size) {
+            return target.refresh();
+          }
+        });
         return this._x.size;
       };
 
@@ -1546,7 +1546,7 @@
 
       return ObsSet;
 
-    })();
+    })(ObsBase);
     SrcSet = rx.SrcSet = (function(superClass) {
       extend(SrcSet, superClass);
 
@@ -1654,7 +1654,7 @@
           })) {
             continue;
           }
-          type = _.isFunction(val) ? null : _.isArray(val) ? 'array' : val instanceof Map ? 'map' : val instanceof Set ? 'set' : 'cell';
+          type = _.isFunction(val) ? null : _.isArray(val) ? 'array' : val instanceof Set ? 'set' : val instanceof Map ? 'map' : 'cell';
           results.push([
             name, {
               type: type,
@@ -1666,51 +1666,26 @@
       })());
     };
     rx.lift = function(x, fieldspec) {
-      var c, name, spec;
       if (fieldspec == null) {
         fieldspec = rx.liftSpec(x);
       }
-      for (name in fieldspec) {
-        spec = fieldspec[name];
-        if (!_.some((function() {
-          var j, len1, ref, results;
-          ref = [ObsCell, ObsArray, ObsMap];
-          results = [];
-          for (j = 0, len1 = ref.length; j < len1; j++) {
-            c = ref[j];
-            results.push(x[name] instanceof c);
-          }
-          return results;
-        })())) {
-          x[name] = (function() {
-            switch (spec.type) {
-              case 'cell':
-                return rx.cell(x[name]);
-              case 'array':
-                return rx.array(x[name]);
-              case 'map':
-                return rx.map(x[name]);
-              case 'set':
-                return rx.set(x[name]);
-              default:
-                return x[name];
-            }
-          })();
+      return _.mapObject(fieldspec, function(arg, name) {
+        var type;
+        type = arg.type;
+        if (!(x[name] instanceof ObsBase) && type in rx.types) {
+          return rx[type](x[name]);
         }
-      }
-      return x;
+        return x[name];
+      });
     };
     rx.unlift = function(x) {
-      var k, v;
-      return _.object((function() {
-        var results;
-        results = [];
-        for (k in x) {
-          v = x[k];
-          results.push([k, v instanceof rx.ObsCell ? v.get() : v instanceof rx.ObsArray ? v.all() : v]);
+      return _.mapObject(x, function(v) {
+        if (v instanceof rx.ObsBase) {
+          return v.all();
+        } else {
+          return v;
         }
-        return results;
-      })());
+      });
     };
     rx.reactify = function(obj, fieldspec) {
       var arr, methName, name, spec;
@@ -1819,31 +1794,80 @@
         return results;
       })()));
     };
-    _.extend(rx, {
-      cell: function(x) {
-        return new SrcCell(x);
-      },
-      array: function(xs, diff) {
-        return new SrcArray((xs != null ? xs : []).map(rx.cell), diff);
-      },
-      map: function(x) {
-        return new SrcMap(x);
-      },
-      set: function(x) {
-        return new SrcSet(x);
+    rx.cell = function(value) {
+      return new SrcCell(value);
+    };
+    rx.cell.from = function(value) {
+      if (value instanceof ObsCell) {
+        return value;
+      } else if (value instanceof ObsBase) {
+        return bind(function() {
+          return value.all();
+        });
+      } else {
+        return bind(function() {
+          return value;
+        });
       }
-    });
+    };
+    rx.array = function(xs, diff) {
+      return new SrcArray((xs != null ? xs : []).map(rx.cell), diff);
+    };
+    rx.array.from = function(value, diff) {
+      var f;
+      if (value instanceof rx.ObsArray) {
+        return value;
+      } else if (_.isArray(value)) {
+        f = function() {
+          return value;
+        };
+      } else if (value instanceof ObsBase) {
+        f = function() {
+          return value.all();
+        };
+      } else {
+        throw new Error("Cannot cast " + value.constructor.name + " to array!");
+      }
+      return new DepArray(f, diff);
+    };
+    rx.map = function(value) {
+      return new SrcMap(value);
+    };
+    rx.map.from = function(value) {
+      if (value instanceof rx.ObsMap) {
+        return value;
+      } else if (value instanceof ObsBase) {
+        return new DepMap(function() {
+          return value.get();
+        });
+      } else {
+        return new DepMap(function() {
+          return value;
+        });
+      }
+    };
+    rx.set = function(value) {
+      return new SrcSet(value);
+    };
+    rx.set.from = function(value) {
+      if (value instanceof rx.ObsSet) {
+        return value;
+      } else if (value instanceof rx.ObsBase) {
+        return new DepSet(function() {
+          return value.all();
+        });
+      } else {
+        return new DepSet(function() {
+          return value;
+        });
+      }
+    };
     rx.flatten = function(xs) {
-      return rx.cellToArray(bind(function() {
-        var xsArray;
-        xsArray = rxt.cast([xs], 'array');
-        if (!xsArray.length()) {
-          return [];
-        }
-        return _.chain(xsArray.all()).map(flattenHelper).flatten().filter(function(x) {
+      return new DepArray(function() {
+        return _.chain(flattenHelper([xs])).flatten().filter(function(x) {
           return x != null;
         }).value();
-      }));
+      });
     };
     flattenHelper = function(x) {
       if (x instanceof ObsArray) {
@@ -2383,72 +2407,44 @@
         };
       })(this);
       rxt.cast = function(value, type) {
-        var key, opts, types;
+        var opts, realType, types, x;
         if (type == null) {
           type = "cell";
         }
-        if (_.isString(type)) {
+        if (type === ObsCell || type === ObsArray || type === ObsMap || type === ObsSet) {
+          realType = null;
           switch (type) {
-            case 'set':
-              if (value instanceof rx.ObsSet) {
-                return value;
-              } else if (value instanceof rx.ObsArray) {
-                return new rx.DepSet(function() {
-                  return value.all();
-                });
-              } else if (value instanceof rx.ObsCell) {
-                return new rx.DepSet(function() {
-                  return value.get();
-                });
-              } else {
-                return new rx.DepSet(function() {
-                  return value;
-                });
-              }
+            case ObsCell:
+              realType = 'cell';
               break;
-            case 'array':
-              if (value instanceof rx.ObsArray) {
-                return value;
-              } else if (_.isArray(value)) {
-                return new rx.DepArray(function() {
-                  return value;
-                });
-              } else if (value instanceof rx.ObsSet) {
-                return new rx.DepArray(function() {
-                  return Array.from(value.values());
-                });
-              } else if (value instanceof rx.ObsCell) {
-                return new rx.DepArray(function() {
-                  return value.get();
-                });
-              } else {
-                throw new Error('Cannot cast to array: ' + value.constructor.name);
-              }
+            case ObsArray:
+              realType = 'array';
               break;
-            case 'cell':
-              if (value instanceof rx.ObsCell) {
-                return value;
-              } else {
-                return bind(function() {
-                  return value;
-                });
-              }
+            case ObsMap:
+              realType = 'map';
               break;
-            default:
-              return value;
+            case ObsSet:
+              realType = 'set';
+          }
+          type = realType;
+        }
+        if (_.isString(type)) {
+          if (type in rx.types) {
+            return rx[type].from(value);
+          } else {
+            return value;
           }
         } else {
           opts = value;
           types = type;
-          return _.object((function() {
-            var results;
-            results = [];
-            for (key in opts) {
-              value = opts[key];
-              results.push([key, types[key] ? rxt.cast(value, types[key]) : value]);
+          x = _.mapObject(opts, function(value, key) {
+            if (types[key]) {
+              return rxt.cast(value, types[key]);
+            } else {
+              return value;
             }
-            return results;
-          })());
+          });
+          return x;
         }
       };
       rxt.trim = $.trim;

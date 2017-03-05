@@ -171,6 +171,8 @@ rxFactory = (_, $) ->
       try f()
       finally @isIgnoring = wasIgnoring
 
+  rx.types = {'cell', 'array', 'map', 'set'}
+
   rx._recorder = recorder = new Recorder()
 
   rx.hideMutationWarnings = (f) -> recorder.hideMutationWarnings f
@@ -212,13 +214,28 @@ rxFactory = (_, $) ->
     rx.onDispose -> ev.unsub(subid)
     subid
 
-  ObsCell = class rx.ObsCell
+  ObsBase = class rx.ObsBase
+    constructor: (@events...) ->
+    to: {
+      cell: => rx.cell.from @
+      array: => rx.array.from @
+      map: => rx.map.from @
+      set: => rx.set.from @
+    }
+    flatten: -> rx.flatten @
+    subAll: (targetFn) -> @events.forEach (ev) -> recorder.sub (target) -> rx.autoSub ev, (result) ->
+      targetFn target, result
+
+
+  ObsCell = class rx.ObsCell extends ObsBase
     constructor: (@x) ->
       @x = @x ? null
       @onSet = new Ev => [null, @x] # [old, new]
-    get: ->
-      recorder.sub (target) => rx.autoSub @onSet, -> target.refresh()
+      super @onSet
+    all: ->
+      @subAll (target) -> target.refresh()
       @x
+    get: -> @all()
 
   SrcCell = class rx.SrcCell extends ObsCell
     set: (x) -> recorder.mutating => if @x != x
@@ -292,11 +309,12 @@ rxFactory = (_, $) ->
     addCleanup: (cleanup) ->
       @cleanups.push(cleanup)
 
-  ObsArray = class rx.ObsArray
+  ObsArray = class rx.ObsArray extends ObsBase
     constructor: (@cells = [], @diff = rx.basicDiff()) ->
       @onChange = new Ev => [0, [], rx.snap => @cells.map (c) -> c.get()] # [index, removed, added]
       @onChangeCells = new Ev => [0, [], @cells] # [index, removed, added]
       @indexed_ = null
+      super @onChange, @onChangeCells
     all: ->
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
       (x1.get() for x1 in @cells)
@@ -313,6 +331,7 @@ rxFactory = (_, $) ->
       recorder.sub (target) => rx.autoSub @onChangeCells, ([index, removed, added]) ->
         target.refresh() if removed.length != added.length
       @cells.length
+    size: -> @length()
     map: (f) ->
       ys = new MappedDepArray()
       rx.autoSub @onChangeCells, ([index, removed, added]) =>
@@ -465,7 +484,7 @@ rxFactory = (_, $) ->
   DepArray = class rx.DepArray extends ObsArray
     constructor: (@f, diff) ->
       super([], diff)
-      rx.autoSub (bind => @f()).onSet, ([old, val]) => @_update(val)
+      rx.autoSub (bind => Array.from @f()).onSet, ([old, val]) => @_update(val)
 
   IndexedArray = class rx.IndexedArray extends DepArray
     constructor: (@xs) ->
@@ -495,26 +514,22 @@ rxFactory = (_, $) ->
   intersection = (first, second) -> new Set Array.from(first).filter (item) -> second.has item
   difference = (first, second) -> new Set Array.from(first).filter (item) -> not second.has item
 
-  ObsMap = class rx.ObsMap
+  ObsMap = class rx.ObsMap extends ObsBase
     constructor: (@x = new Map()) ->
       @x = objToJSMap @x
       @onAdd = new Ev => new Map @x # {key: new...}
       @onRemove = new Ev => new Map() # {key: old...}
       @onChange = new Ev => new Map() # {key: [old, new]...}
+      super @onAdd, @onRemove, @onChange
     get: (key) ->
-      recorder.sub (target) => rx.autoSub @onAdd, (additions) -> if additions.has key then target.refresh()
-      recorder.sub (target) => rx.autoSub @onChange, (changes) -> if changes.has key then target.refresh()
-      recorder.sub (target) => rx.autoSub @onRemove, (removals) -> if removals.has key then target.refresh()
+      @subAll (target, result) -> if result.has key then target.refresh()
       @x.get key
     has: (key) ->
       recorder.sub (target) => rx.autoSub @onAdd, (additions) -> if additions.has key then target.refresh()
-      recorder.sub (target) => rx.autoSub @onChange, (changes) -> if changes.has key then target.refresh()
       recorder.sub (target) => rx.autoSub @onRemove, (removals) -> if removals.has key then target.refresh()
       @x.has key
     all: ->
-      recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
-      recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
-      recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
+      @subAll (target) -> target.refresh()
       new Map @x
     size: -> recorder.sub (target) =>
       recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
@@ -605,21 +620,22 @@ rxFactory = (_, $) ->
     if other instanceof ObsCell then other = other.get()
     new Set other
 
-  ObsSet = class rx.ObsSet
+  ObsSet = class rx.ObsSet extends ObsBase
     constructor: (@_x = new Set()) ->
       @_x = objToJSSet @_x
       @onChange = new Ev => [@_x, new Set()]  # additions, removals
+      super @onChange
     has: (key) ->
-      recorder.sub (target) => rx.autoSub @onChange, ([additions, removals]) ->
+      @subAll (target, [additions, removals]) ->
         if additions.has(key) or removals.has(key) then target.refresh()
       @_x.has key
     all: ->
-      recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
+      @subAll (target) -> target.refresh()
       new Set @_x
     values: -> @all()
     entries: -> @all()
     size: ->
-      recorder.sub (target) => rx.autoSub @onChange, ([additions, removals]) ->
+      @subAll (target, [additions, removals]) ->
         if additions.size != removals.size then target.refresh()
       @_x.size
     union: (other) -> new DepSet => union @all(), _castOther other
@@ -698,41 +714,18 @@ rxFactory = (_, $) ->
         type =
           if _.isFunction(val) then null
           else if _.isArray(val) then 'array'
-          else if val instanceof Map then 'map'
           else if val instanceof Set then 'set'
+          else if val instanceof Map then 'map'
           else 'cell'
         [name, {type, val}]
     )
 
-  rx.lift = (x, fieldspec = rx.liftSpec(x)) ->
-    for name, spec of fieldspec
-      if not _.some(x[name] instanceof c for c in [ObsCell, ObsArray, ObsMap])
-        x[name] = switch spec.type
-          when 'cell'
-            rx.cell(x[name])
-          when 'array'
-            rx.array(x[name])
-          when 'map'
-            rx.map(x[name])
-          when 'set'
-            rx.set(x[name])
-          else
-            x[name]
-    x
+  rx.lift = (x, fieldspec = rx.liftSpec x) ->
+    _.mapObject fieldspec, ({type}, name) ->
+      if x[name] not instanceof ObsBase and type of rx.types then return rx[type] x[name]
+      return x[name]
 
-  rx.unlift = (x) ->
-    _.object(
-      for k,v of x
-        [
-          k
-          if v instanceof rx.ObsCell
-            v.get()
-          else if v instanceof rx.ObsArray
-            v.all()
-          else
-            v
-        ]
-    )
+  rx.unlift = (x) -> _.mapObject x, (v) -> if v instanceof rx.ObsBase then v.all() else v
 
   #
   # Implicitly reactive objects
@@ -797,22 +790,41 @@ rxFactory = (_, $) ->
         [name, {type, val}]
     )
 
-  _.extend(rx, {
-    cell: (x) -> new SrcCell x
-    array: (xs, diff) -> new SrcArray (xs ? []).map(rx.cell), diff
-    map: (x) -> new SrcMap x
-    set: (x) -> new SrcSet x
-  })
+  rx.cell = (value) -> new SrcCell value
+  rx.cell.from = (value) ->
+    if value instanceof ObsCell then value
+    else if value instanceof ObsBase then bind -> value.all()
+    else bind -> value
+
+  rx.array = (xs, diff) -> new SrcArray (xs ? []).map(rx.cell), diff
+  rx.array.from = (value, diff) ->
+    if value instanceof rx.ObsArray then return value
+    else if _.isArray(value) then f = -> value
+    else if value instanceof ObsBase then f = -> value.all()
+    else throw new Error "Cannot cast #{value.constructor.name} to array!"
+
+    return new DepArray f, diff
+
+  rx.map = (value) -> new SrcMap value
+  rx.map.from = (value) ->
+    if value instanceof rx.ObsMap then value
+    else if value instanceof ObsBase then new DepMap -> value.get()
+    else new DepMap -> value
+
+
+  rx.set = (value) -> new SrcSet value
+  rx.set.from = (value) ->
+    if value instanceof rx.ObsSet then value
+    else if value instanceof rx.ObsBase then new DepSet -> value.all()
+    else new DepSet -> value
+
 
   #
   # Reactive utilities
   #
 
-  rx.flatten = (xs) -> rx.cellToArray bind ->
-    xsArray = rxt.cast([xs], 'array')
-    if not xsArray.length() then return []
-    _.chain xsArray.all()
-     .map flattenHelper
+  rx.flatten = (xs) -> new DepArray ->
+    _.chain flattenHelper [xs]
      .flatten()
      .filter (x) -> x?
      .value()
@@ -1184,36 +1196,22 @@ rxFactory = (_, $) ->
     #
 
     rxt.cast = (value, type = "cell") ->
-      if _.isString(type)
+      if type in [ObsCell, ObsArray, ObsMap, ObsSet]
+        realType = null
         switch type
-          when 'set'
-            if value instanceof rx.ObsSet then value
-            else if value instanceof rx.ObsArray then new rx.DepSet -> value.all()
-            else if value instanceof rx.ObsCell then new rx.DepSet -> value.get()
-            else new rx.DepSet -> value
-          when 'array'
-            if value instanceof rx.ObsArray then value
-            else if _.isArray(value)
-              new rx.DepArray(-> value)
-            else if value instanceof rx.ObsSet then new rx.DepArray -> Array.from value.values()
-            else if value instanceof rx.ObsCell
-              new rx.DepArray(-> value.get())
-            else
-              throw new Error('Cannot cast to array: ' + value.constructor.name)
-          when 'cell'
-            if value instanceof rx.ObsCell
-              value
-            else
-              bind -> value
-          else
-            value
+          when ObsCell then realType = 'cell'
+          when ObsArray then realType = 'array'
+          when ObsMap then realType = 'map'
+          when ObsSet then realType = 'set'
+        type = realType
+      if _.isString type
+        if type of rx.types then rx[type].from value
+        else value
       else
         opts  = value
         types = type
-        _.object(
-          for key, value of opts
-            [key, if types[key] then rxt.cast(value, types[key]) else value]
-        )
+        x = _.mapObject opts, (value, key) -> if types[key] then rxt.cast(value, types[key]) else value
+        x
 
     # a little underscore-string inlining
     rxt.trim = $.trim
