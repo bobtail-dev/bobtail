@@ -225,6 +225,7 @@ rxFactory = (_, $) ->
     flatten: -> rx.flatten @
     subAll: (targetFn) -> @events.forEach (ev) -> recorder.sub (target) -> rx.autoSub ev, (result) ->
       targetFn target, result
+    raw: -> @_base
 
 
   ObsCell = class rx.ObsCell extends ObsBase
@@ -311,14 +312,14 @@ rxFactory = (_, $) ->
 
   ObsArray = class rx.ObsArray extends ObsBase
     constructor: (@_cells = [], @diff = rx.basicDiff()) ->
-      @onChange = new Ev => [0, [], rx.snap => @_cells.map (c) -> c.get()] # [index, removed, added]
+      @onChange = new Ev => [0, [], @_cells.map (c) -> c.raw()] # [index, removed, added]
       @onChangeCells = new Ev => [0, [], @_cells] # [index, removed, added]
       @_indexed = null
       super @onChange, @onChangeCells
     all: ->
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
-      (x1.get() for x1 in @_cells)
-    raw: -> @all()
+      @_cells.map (c) -> c.get()
+    raw: -> @_cells.map (c) -> c.raw()
     rawCells: -> @_cells
     at: (i) ->
       recorder.sub (target) => rx.autoSub @onChange, ([index, removed, added]) ->
