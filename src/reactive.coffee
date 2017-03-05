@@ -492,6 +492,9 @@ rxFactory = (_, $) ->
     else if _.isArray obj then new Map obj
     else new Map _.pairs obj
 
+  union = (first, second) -> new Set [first..., second...]
+  intersection = (first, second) -> new Set Array.from(first).filter (item) -> second.has item
+  difference = (first, second) -> new Set Array.from(first).filter (item) -> not second.has item
 
   ObsMap = class rx.ObsMap
     constructor: (@x = new Map()) ->
@@ -594,14 +597,110 @@ rxFactory = (_, $) ->
   # Converting POJO attributes to reactive ones.
   #
 
+  objToJSSet = (obj) -> if obj instanceof Set then obj else new Set obj
+  _castOther = (other) ->
+    if other instanceof Set then other
+    else if other instanceof ObsSet then other = other.all()
+
+    if other instanceof ObsArray then other = other.all()
+    if other instanceof ObsCell then other = other.get()
+    new Set other
+
+  ObsSet = class rx.ObsSet
+    constructor: (@_x = new Set()) ->
+      @_x = objToJSSet @_x
+      @onChange = new Ev => [[@_x, new Set()]]
+    has: (key) ->
+      recorder.sub (target) => rx.autoSub @onChange, ([additions, removals]) ->
+        if additions.has(key) or removals.has(key) then target.refresh()
+      @_x.has key
+    all: ->
+      recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
+      @_x
+    values: -> @all()
+    entries: -> @all()
+    size: ->
+      recorder.sub (target) => rx.autoSub @onChange, ([additions, removals]) ->
+        if additions.size != removals.size then target.refresh()
+      @_x.size
+    union: (other) -> new DepSet => union @all(), _castOther other
+    intersection: (other) -> new DepSet => intersection @all(), _castOther other
+    difference: (other) -> new DepSet => difference @all(), _castOther other
+    symmetricDifference: (other) ->
+      new DepSet =>
+        me = @all()
+        other = _castOther other
+        new Set Array.from(union(me, other)).filter (item) -> not me.has(item) or not other.has(item)
+    _update: (y) -> rx.transaction =>
+      old_ = new Set @_x
+      new_ = objToJSSet y
+
+      additions = new Set()
+      removals = new Set()
+
+      # JS sets don't come with subtraction :(
+      old_.forEach (item) -> if not new_.has item then removals.add item
+      new_.forEach (item) -> if not old_.has item then additions.add item
+
+      old_.forEach (item) => @_x.delete item
+      new_.forEach (item) => @_x.add item
+
+      @onChange.pub [
+        additions
+        removals
+      ]
+      old_
+
+
+  SrcSet = class rx.SrcSet extends ObsSet
+    add: (item) -> recorder.mutating =>
+      if not @_x.has item
+        @_x.add item
+        @onChange.pub [
+          new Set [item]
+          new Set()
+        ]
+      item
+    put: (item) -> @add item
+    delete: (item) -> recorder.mutating =>
+      if @_x.has item
+        @_x.delete item
+        @onChange.pub [
+          new Set()
+          new Set [item]
+        ]
+      item
+    remove: (item) -> @delete item
+    clear: -> recorder.mutating =>
+      removals = new Set @_x
+      if @_x.size
+        @_x.clear()
+        @onChange.pub [
+          new Set()
+          removals
+        ]
+      removals
+    update: (y) -> recorder.mutating => @_update y
+
+  DepSet = class rx.DepSet extends ObsSet
+    constructor: (@f) ->
+      super()
+      c = new DepCell(@f)
+      c.refresh()
+      rx.autoSub c.onSet, ([old, val]) => @_update objToJSSet val
+
+  rx.cellToSet = (c) -> new rx.DepSet -> @done @record -> c.get()
+
   rx.liftSpec = (obj) ->
     _.object(
       for name in Object.getOwnPropertyNames(obj)
         val = obj[name]
-        continue if val? and (val instanceof rx.ObsMap or val instanceof rx.ObsCell or val instanceof rx.ObsArray)
+        continue if val? and [rx.ObsMap, rx.ObsCell, rx.ObsArray, rx.ObsSet].some (cls) -> val instanceof cls
         type =
           if _.isFunction(val) then null
           else if _.isArray(val) then 'array'
+          else if val instanceof Map then 'map'
+          else if val instanceof Set then 'set'
           else 'cell'
         [name, {type, val}]
     )
@@ -616,6 +715,8 @@ rxFactory = (_, $) ->
             rx.array(x[name])
           when 'map'
             rx.map(x[name])
+          when 'set'
+            rx.set(x[name])
           else
             x[name]
     x
@@ -693,15 +794,15 @@ rxFactory = (_, $) ->
         type =
           if _.isFunction(val) then null
           else if _.isArray(val) then 'array'
-          else if val instanceof Map then 'map'
           else 'cell'
         [name, {type, val}]
     )
 
   _.extend(rx, {
-    cell: (x) -> new SrcCell(x)
-    array: (xs, diff) -> new SrcArray((xs ? []).map(rx.cell), diff)
-    map: (x) -> new SrcMap(x)
+    cell: (x) -> new SrcCell x
+    array: (xs, diff) -> new SrcArray (xs ? []).map(rx.cell), diff
+    map: (x) -> new SrcMap x
+    set: (x) -> new SrcSet x
   })
 
   #
@@ -709,7 +810,7 @@ rxFactory = (_, $) ->
   #
 
   rx.flatten = (xs) -> rx.cellToArray bind ->
-    xsArray = rxt.cast(xs, 'array')
+    xsArray = rxt.cast([xs], 'array')
     if not xsArray.length() then return []
     _.chain xsArray.all()
      .map flattenHelper
@@ -718,8 +819,10 @@ rxFactory = (_, $) ->
      .value()
 
   flattenHelper = (x) ->
-    if x instanceof ObsArray then flattenHelper x.raw()
+    if x instanceof ObsArray then flattenHelper x.all()
+    else if x instanceof ObsSet then flattenHelper Array.from x.values()
     else if x instanceof ObsCell then flattenHelper x.get()
+    else if x instanceof Set then flattenHelper Array.from x
     else if _.isArray x then x.map (x_k) -> flattenHelper x_k
     else x
 
@@ -901,7 +1004,8 @@ rxFactory = (_, $) ->
           arg1 instanceof $ or
           _.isArray(arg1) or
           arg1 instanceof ObsCell or
-          arg1 instanceof ObsArray
+          arg1 instanceof ObsArray or
+          arg1 instanceof ObsSet
         [{}, arg1]
       else
         [arg1, null]
@@ -1083,11 +1187,16 @@ rxFactory = (_, $) ->
     rxt.cast = (value, type = "cell") ->
       if _.isString(type)
         switch type
+          when 'set'
+            if value instanceof rx.ObsSet then value
+            else if value instanceof rx.ObsArray then new rx.DepSet -> value.all()
+            else if value instanceof rx.ObsCell then new rx.DepSet -> value.get()
+            else new rx.DepSet -> value
           when 'array'
-            if value instanceof rx.ObsArray
-              value
+            if value instanceof rx.ObsArray then value
             else if _.isArray(value)
               new rx.DepArray(-> value)
+            else if value instanceof rx.ObsSet then new rx.DepArray -> Array.from value.values()
             else if value instanceof rx.ObsCell
               new rx.DepArray(-> value.get())
             else
