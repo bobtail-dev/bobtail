@@ -374,13 +374,13 @@
     ObsCell = rx.ObsCell = (function(superClass) {
       extend(ObsCell, superClass);
 
-      function ObsCell(x4) {
+      function ObsCell(_base) {
         var ref;
-        this.x = x4;
-        this.x = (ref = this.x) != null ? ref : null;
+        this._base = _base;
+        this._base = (ref = this._base) != null ? ref : null;
         this.onSet = new Ev((function(_this) {
           return function() {
-            return [null, _this.x];
+            return [null, _this._base];
           };
         })(this));
         ObsCell.__super__.constructor.call(this, this.onSet);
@@ -390,7 +390,7 @@
         this.subAll(function(target) {
           return target.refresh();
         });
-        return this.x;
+        return this._base;
       };
 
       ObsCell.prototype.get = function() {
@@ -411,9 +411,9 @@
         return recorder.mutating((function(_this) {
           return function() {
             var old;
-            if (_this.x !== x) {
-              old = _this.x;
-              _this.x = x;
+            if (_this._base !== x) {
+              old = _this._base;
+              _this._base = x;
               _this.onSet.pub([old, x]);
               return old;
             }
@@ -438,11 +438,11 @@
       DepCell.prototype.refresh = function() {
         var env, isSynchronous, old, realDone, recorded, syncResult;
         if (!this.refreshing) {
-          old = this.x;
+          old = this._base;
           realDone = (function(_this) {
-            return function(x4) {
-              _this.x = x4;
-              return _this.onSet.pub([old, _this.x]);
+            return function(_base) {
+              _this._base = _base;
+              return _this.onSet.pub([old, _this._base]);
             };
           })(this);
           recorded = false;
@@ -520,14 +520,14 @@
     ObsArray = rx.ObsArray = (function(superClass) {
       extend(ObsArray, superClass);
 
-      function ObsArray(cells, diff1) {
-        this.cells = cells != null ? cells : [];
+      function ObsArray(_cells, diff1) {
+        this._cells = _cells != null ? _cells : [];
         this.diff = diff1 != null ? diff1 : rx.basicDiff();
         this.onChange = new Ev((function(_this) {
           return function() {
             return [
               0, [], rx.snap(function() {
-                return _this.cells.map(function(c) {
+                return _this._cells.map(function(c) {
                   return c.get();
                 });
               })
@@ -536,10 +536,10 @@
         })(this));
         this.onChangeCells = new Ev((function(_this) {
           return function() {
-            return [0, [], _this.cells];
+            return [0, [], _this._cells];
           };
         })(this));
-        this.indexed_ = null;
+        this._indexed = null;
         ObsArray.__super__.constructor.call(this, this.onChange, this.onChangeCells);
       }
 
@@ -552,7 +552,7 @@
             });
           };
         })(this));
-        ref = this.cells;
+        ref = this._cells;
         results = [];
         for (j = 0, len1 = ref.length; j < len1; j++) {
           x1 = ref[j];
@@ -566,7 +566,7 @@
       };
 
       ObsArray.prototype.rawCells = function() {
-        return this.cells;
+        return this._cells;
       };
 
       ObsArray.prototype.at = function(i) {
@@ -585,7 +585,7 @@
             });
           };
         })(this));
-        return (ref = this.cells[i]) != null ? ref.get() : void 0;
+        return (ref = this._cells[i]) != null ? ref.get() : void 0;
       };
 
       ObsArray.prototype.length = function() {
@@ -600,7 +600,7 @@
             });
           };
         })(this));
-        return this.cells.length;
+        return this._cells.length;
       };
 
       ObsArray.prototype.size = function() {
@@ -614,7 +614,7 @@
           return function(arg) {
             var added, cell, index, j, len1, newCells, ref, removed;
             index = arg[0], removed = arg[1], added = arg[2];
-            ref = ys.cells.slice(index, index + removed.length);
+            ref = ys._cells.slice(index, index + removed.length);
             for (j = 0, len1 = ref.length; j < len1; j++) {
               cell = ref[j];
               cell.disconnect();
@@ -696,17 +696,17 @@
       };
 
       ObsArray.prototype.indexed = function() {
-        if (this.indexed_ == null) {
-          this.indexed_ = new IndexedDepArray();
+        if (this._indexed == null) {
+          this._indexed = new IndexedDepArray();
           rx.autoSub(this.onChangeCells, (function(_this) {
             return function(arg) {
               var added, index, removed;
               index = arg[0], removed = arg[1], added = arg[2];
-              return _this.indexed_.realSpliceCells(index, removed.length, added);
+              return _this._indexed.realSpliceCells(index, removed.length, added);
             };
           })(this));
         }
-        return this.indexed_;
+        return this._indexed;
       };
 
       ObsArray.prototype.concat = function() {
@@ -717,7 +717,7 @@
 
       ObsArray.prototype.realSpliceCells = function(index, count, additions) {
         var addedElems, removed, removedElems;
-        removed = this.cells.splice.apply(this.cells, [index, count].concat(additions));
+        removed = this._cells.splice.apply(this._cells, [index, count].concat(additions));
         removedElems = rx.snap(function() {
           var j, len1, results, x2;
           results = [];
@@ -752,7 +752,7 @@
         old = rx.snap((function(_this) {
           return function() {
             var j, len1, ref, results, x;
-            ref = _this.cells;
+            ref = _this._cells;
             results = [];
             for (j = 0, len1 = ref.length; j < len1; j++) {
               x = ref[j];
@@ -971,7 +971,7 @@
         IndexedDepArray.__super__.constructor.call(this, xs, diff);
         this.is = (function() {
           var j, len1, ref, results;
-          ref = this.cells;
+          ref = this._cells;
           results = [];
           for (i = j = 0, len1 = ref.length; j < len1; i = ++j) {
             x = ref[i];
@@ -981,7 +981,7 @@
         }).call(this);
         this.onChangeCells = new Ev((function(_this) {
           return function() {
-            return [0, [], _.zip(_this.cells, _this.is)];
+            return [0, [], _.zip(_this._cells, _this.is)];
           };
         })(this));
         this.onChange = new Ev((function(_this) {
@@ -1002,7 +1002,7 @@
           return function(arg) {
             var added, cell, icell, index, item, j, len1, newCells, ref, removed;
             index = arg[0], removed = arg[1], added = arg[2];
-            ref = ys.cells.slice(index, index + removed.length);
+            ref = ys._cells.slice(index, index + removed.length);
             for (j = 0, len1 = ref.length; j < len1; j++) {
               cell = ref[j];
               cell.disconnect();
@@ -1026,7 +1026,7 @@
 
       IndexedDepArray.prototype.realSpliceCells = function(index, count, additions) {
         var addedElems, i, j, len1, newIs, offset, ref, ref1, removed, removedElems;
-        removed = this.cells.splice.apply(this.cells, [index, count].concat(additions));
+        removed = this._cells.splice.apply(this._cells, [index, count].concat(additions));
         removedElems = rx.snap(function() {
           var j, len1, results, x2;
           results = [];
@@ -1101,14 +1101,14 @@
     IndexedArray = rx.IndexedArray = (function(superClass) {
       extend(IndexedArray, superClass);
 
-      function IndexedArray(xs1) {
-        this.xs = xs1;
+      function IndexedArray(_bases) {
+        this._bases = _bases;
       }
 
       IndexedArray.prototype.map = function(f) {
         var ys;
         ys = new MappedDepArray();
-        rx.autoSub(this.xs.onChange, function(arg) {
+        rx.autoSub(this._bases.onChange, function(arg) {
           var added, index, removed;
           index = arg[0], removed = arg[1], added = arg[2];
           return ys.realSplice(index, removed.length, added.map(f));
@@ -1171,12 +1171,12 @@
     ObsMap = rx.ObsMap = (function(superClass) {
       extend(ObsMap, superClass);
 
-      function ObsMap(x4) {
-        this.x = x4 != null ? x4 : new Map();
-        this.x = objToJSMap(this.x);
+      function ObsMap(_base) {
+        this._base = _base != null ? _base : new Map();
+        this._base = objToJSMap(this._base);
         this.onAdd = new Ev((function(_this) {
           return function() {
-            return new Map(_this.x);
+            return new Map(_this._base);
           };
         })(this));
         this.onRemove = new Ev((function(_this) {
@@ -1198,7 +1198,7 @@
             return target.refresh();
           }
         });
-        return this.x.get(key);
+        return this._base.get(key);
       };
 
       ObsMap.prototype.has = function(key) {
@@ -1220,14 +1220,14 @@
             });
           };
         })(this));
-        return this.x.has(key);
+        return this._base.has(key);
       };
 
       ObsMap.prototype.all = function() {
         this.subAll(function(target) {
           return target.refresh();
         });
-        return new Map(this.x);
+        return new Map(this._base);
       };
 
       ObsMap.prototype.size = function() {
@@ -1243,22 +1243,22 @@
                 return target.refresh();
               });
             });
-            return _this.x.size;
+            return _this._base.size;
           };
         })(this));
       };
 
       ObsMap.prototype.realPut = function(key, val) {
         var old;
-        if (this.x.has(key)) {
-          old = this.x.get(key);
+        if (this._base.has(key)) {
+          old = this._base.get(key);
           if (old !== val) {
-            this.x.set(key, val);
+            this._base.set(key, val);
             this.onChange.pub(new Map([[key, [old, val]]]));
           }
           return old;
         } else {
-          this.x.set(key, val);
+          this._base.set(key, val);
           this.onAdd.pub(new Map([[key, val]]));
           return void 0;
         }
@@ -1266,7 +1266,7 @@
 
       ObsMap.prototype.realRemove = function(key) {
         var val;
-        val = mapPop(this.x, key);
+        val = mapPop(this._base, key);
         this.onRemove.pub(new Map([[key, val]]));
         return val;
       };
@@ -1274,20 +1274,20 @@
       ObsMap.prototype._update = function(other) {
         var additions, changes, otherMap, removals, ret;
         otherMap = objToJSMap(other);
-        ret = new Map(this.x);
+        ret = new Map(this._base);
         removals = (function(_this) {
           return function() {
-            return _.chain(Array.from(_this.x.keys())).difference(Array.from(otherMap.keys())).map(function(k) {
-              return [k, mapPop(_this.x, k)];
+            return _.chain(Array.from(_this._base.keys())).difference(Array.from(otherMap.keys())).map(function(k) {
+              return [k, mapPop(_this._base, k)];
             }).value();
           };
         })(this)();
         additions = (function(_this) {
           return function() {
-            return _.chain(Array.from(otherMap.keys())).difference(Array.from(_this.x.keys())).map(function(k) {
+            return _.chain(Array.from(otherMap.keys())).difference(Array.from(_this._base.keys())).map(function(k) {
               var val;
               val = otherMap.get(k);
-              _this.x.set(k, val);
+              _this._base.set(k, val);
               return [k, val];
             }).value();
           };
@@ -1297,12 +1297,12 @@
             return _.chain(Array.from(otherMap)).filter(function(arg) {
               var k, val;
               k = arg[0], val = arg[1];
-              return _this.x.has(k) && _this.x.get(k) !== val;
+              return _this._base.has(k) && _this._base.get(k) !== val;
             }).map(function(arg) {
               var k, old, val;
               k = arg[0], val = arg[1];
-              old = _this.x.get(k);
-              _this.x.set(k, val);
+              old = _this._base.get(k);
+              _this._base.set(k, val);
               return [k, [old, val]];
             }).value();
           };
@@ -1346,7 +1346,7 @@
           return function() {
             var val;
             val = void 0;
-            if (_this.x.has(key)) {
+            if (_this._base.has(key)) {
               val = _this.realRemove(key);
               _this.onRemove.pub(new Map([[key, val]]));
             }
@@ -1363,8 +1363,8 @@
         return recorder.mutating((function(_this) {
           return function() {
             var removals;
-            removals = new Map(_this.x);
-            _this.x.clear();
+            removals = new Map(_this._base);
+            _this._base.clear();
             if (removals.size) {
               _this.onRemove.pub(removals);
             }
@@ -1429,12 +1429,12 @@
     ObsSet = rx.ObsSet = (function(superClass) {
       extend(ObsSet, superClass);
 
-      function ObsSet(_x) {
-        this._x = _x != null ? _x : new Set();
-        this._x = objToJSSet(this._x);
+      function ObsSet(_base) {
+        this._base = _base != null ? _base : new Set();
+        this._base = objToJSSet(this._base);
         this.onChange = new Ev((function(_this) {
           return function() {
-            return [_this._x, new Set()];
+            return [_this._base, new Set()];
           };
         })(this));
         ObsSet.__super__.constructor.call(this, this.onChange);
@@ -1448,14 +1448,14 @@
             return target.refresh();
           }
         });
-        return this._x.has(key);
+        return this._base.has(key);
       };
 
       ObsSet.prototype.all = function() {
         this.subAll(function(target) {
           return target.refresh();
         });
-        return new Set(this._x);
+        return new Set(this._base);
       };
 
       ObsSet.prototype.values = function() {
@@ -1474,7 +1474,7 @@
             return target.refresh();
           }
         });
-        return this._x.size;
+        return this._base.size;
       };
 
       ObsSet.prototype.union = function(other) {
@@ -1515,33 +1515,33 @@
       };
 
       ObsSet.prototype._update = function(y) {
-        var additions, new_, old_, removals;
-        old_ = new Set(this._x);
-        new_ = objToJSSet(y);
-        additions = new Set();
-        removals = new Set();
-        old_.forEach(function(item) {
-          if (!new_.has(item)) {
-            return removals.add(item);
-          }
-        });
-        new_.forEach(function(item) {
-          if (!old_.has(item)) {
-            return additions.add(item);
-          }
-        });
-        old_.forEach((function(_this) {
-          return function(item) {
-            return _this._x["delete"](item);
+        return rx.transaction((function(_this) {
+          return function() {
+            var additions, new_, old_, removals;
+            old_ = new Set(_this._base);
+            new_ = objToJSSet(y);
+            additions = new Set();
+            removals = new Set();
+            old_.forEach(function(item) {
+              if (!new_.has(item)) {
+                return removals.add(item);
+              }
+            });
+            new_.forEach(function(item) {
+              if (!old_.has(item)) {
+                return additions.add(item);
+              }
+            });
+            old_.forEach(function(item) {
+              return _this._base["delete"](item);
+            });
+            new_.forEach(function(item) {
+              return _this._base.add(item);
+            });
+            _this.onChange.pub([additions, removals]);
+            return old_;
           };
         })(this));
-        new_.forEach((function(_this) {
-          return function(item) {
-            return _this._x.add(item);
-          };
-        })(this));
-        this.onChange.pub([additions, removals]);
-        return old_;
       };
 
       return ObsSet;
@@ -1557,8 +1557,8 @@
       SrcSet.prototype.add = function(item) {
         return recorder.mutating((function(_this) {
           return function() {
-            if (!_this._x.has(item)) {
-              _this._x.add(item);
+            if (!_this._base.has(item)) {
+              _this._base.add(item);
               _this.onChange.pub([new Set([item]), new Set()]);
             }
             return item;
@@ -1573,8 +1573,8 @@
       SrcSet.prototype["delete"] = function(item) {
         return recorder.mutating((function(_this) {
           return function() {
-            if (_this._x.has(item)) {
-              _this._x["delete"](item);
+            if (_this._base.has(item)) {
+              _this._base["delete"](item);
               _this.onChange.pub([new Set(), new Set([item])]);
             }
             return item;
@@ -1590,9 +1590,9 @@
         return recorder.mutating((function(_this) {
           return function() {
             var removals;
-            removals = new Set(_this._x);
-            if (_this._x.size) {
-              _this._x.clear();
+            removals = new Set(_this._base);
+            if (_this._base.size) {
+              _this._base.clear();
               _this.onChange.pub([new Set(), removals]);
             }
             return removals;
@@ -2328,7 +2328,7 @@
       };
       rxt.svg_mktag = mktag = function(tag) {
         return function(arg1, arg2) {
-          var attrs, contents, elt, first, key, name, ref, ref1, value;
+          var attrs, contents, elt, key, name, ref, ref1, value;
           ref = normalizeTagArgs(arg1, arg2), attrs = ref[0], contents = ref[1];
           elt = document.createElementNS('http://www.w3.org/2000/svg', tag);
           ref1 = _.omit(attrs, _.keys(specialAttrs));
@@ -2362,7 +2362,6 @@
                 }
               });
             } else if (contents instanceof ObsCell) {
-              first = contents.x[0];
               contents.onSet.sub(function(arg) {
                 var old, val;
                 old = arg[0], val = arg[1];
