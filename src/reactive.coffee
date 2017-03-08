@@ -426,8 +426,9 @@ rxFactory = (_, $) ->
       removed = @_cells.splice.apply(@_cells, [index, count].concat(additions))
       removedElems = rx.snap -> (x2.get() for x2 in removed)
       addedElems = rx.snap -> (x3.get() for x3 in additions)
-      @onChangeCells.pub([index, removed, additions])
-      @onChange.pub([index, removedElems, addedElems])
+      rx.transaction =>
+        @onChangeCells.pub([index, removed, additions])
+        @onChange.pub([index, removedElems, addedElems])
     realSplice: (index, count, additions) ->
       @realSpliceCells(index, count, additions.map(rx.cell))
     _update: (val, diff = @diff) ->
@@ -537,8 +538,9 @@ rxFactory = (_, $) ->
       @is.splice(index, count, newIs...)
 
       addedElems = rx.snap -> (x3.get() for x3 in additions)
-      @onChangeCells.pub([index, removed, _.zip(additions, newIs)])
-      @onChange.pub([index, removedElems, _.zip(addedElems, newIs)])
+      rx.transaction =>
+        @onChangeCells.pub([index, removed, _.zip(additions, newIs)])
+        @onChange.pub([index, removedElems, _.zip(addedElems, newIs)])
   IndexedMappedDepArray = class rx.IndexedMappedDepArray extends IndexedDepArray
 
   DepArray = class rx.DepArray extends ObsArray
@@ -634,9 +636,10 @@ rxFactory = (_, $) ->
            return [k, [old, val]]
          .value()
 
-      if removals.length then @onRemove.pub new Map removals
-      if additions.length then @onAdd.pub new Map additions
-      if changes.length then @onChange.pub new Map changes
+      rx.transaction =>
+        if removals.length then @onRemove.pub new Map removals
+        if additions.length then @onAdd.pub new Map additions
+        if changes.length then @onChange.pub new Map changes
 
       return ret
 
