@@ -12,6 +12,19 @@
     mkuid = function() {
       return nextUid += 1;
     };
+    union = function(first, second) {
+      return new Set(slice.call(first).concat(slice.call(second)));
+    };
+    intersection = function(first, second) {
+      return new Set(Array.from(first).filter(function(item) {
+        return second.has(item);
+      }));
+    };
+    difference = function(first, second) {
+      return new Set(Array.from(first).filter(function(item) {
+        return !second.has(item);
+      }));
+    };
     popKey = function(x, k) {
       var v;
       if (!(k in x)) {
@@ -334,9 +347,7 @@
     };
     ObsBase = rx.ObsBase = (function() {
       function ObsBase() {
-        var events1;
-        events1 = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        this.events = events1;
+        this.events = [];
       }
 
       ObsBase.prototype.to = {
@@ -368,6 +379,17 @@
         });
       };
 
+      ObsBase.prototype.raw = function() {
+        return this._base;
+      };
+
+      ObsBase.prototype._mkEv = function(f) {
+        var ev;
+        ev = new Ev(f, this);
+        this.events.push(ev);
+        return ev;
+      };
+
       return ObsBase;
 
     })();
@@ -377,13 +399,13 @@
       function ObsCell(_base) {
         var ref;
         this._base = _base;
+        ObsCell.__super__.constructor.call(this);
         this._base = (ref = this._base) != null ? ref : null;
-        this.onSet = new Ev((function(_this) {
+        this.onSet = this._mkEv((function(_this) {
           return function() {
             return [null, _this._base];
           };
         })(this));
-        ObsCell.__super__.constructor.call(this, this.onSet);
       }
 
       ObsCell.prototype.all = function() {
@@ -523,18 +545,17 @@
       function ObsArray(_cells, diff1) {
         this._cells = _cells != null ? _cells : [];
         this.diff = diff1 != null ? diff1 : rx.basicDiff();
-        this.onChange = new Ev((function(_this) {
+        ObsArray.__super__.constructor.call(this);
+        this.onChange = this._mkEv((function(_this) {
           return function() {
             return [
-              0, [], rx.snap(function() {
-                return _this._cells.map(function(c) {
-                  return c.get();
-                });
+              0, [], _this._cells.map(function(c) {
+                return c.raw();
               })
             ];
           };
         })(this));
-        this.onChangeCells = new Ev((function(_this) {
+        this.onChangeCells = this._mkEv((function(_this) {
           return function() {
             return [0, [], _this._cells];
           };
@@ -544,7 +565,6 @@
       }
 
       ObsArray.prototype.all = function() {
-        var j, len1, ref, results, x1;
         recorder.sub((function(_this) {
           return function(target) {
             return rx.autoSub(_this.onChange, function() {
@@ -552,17 +572,15 @@
             });
           };
         })(this));
-        ref = this._cells;
-        results = [];
-        for (j = 0, len1 = ref.length; j < len1; j++) {
-          x1 = ref[j];
-          results.push(x1.get());
-        }
-        return results;
+        return this._cells.map(function(c) {
+          return c.get();
+        });
       };
 
       ObsArray.prototype.raw = function() {
-        return this.all();
+        return this._cells.map(function(c) {
+          return c.raw();
+        });
       };
 
       ObsArray.prototype.rawCells = function() {
@@ -954,7 +972,7 @@
       extend(MappedDepArray, superClass);
 
       function MappedDepArray() {
-        return MappedDepArray.__super__.constructor.apply(this, arguments);
+        MappedDepArray.__super__.constructor.call(this);
       }
 
       return MappedDepArray;
@@ -979,12 +997,12 @@
           }
           return results;
         }).call(this);
-        this.onChangeCells = new Ev((function(_this) {
+        this.onChangeCells = this._mkEv((function(_this) {
           return function() {
             return [0, [], _.zip(_this._cells, _this.is)];
           };
         })(this));
-        this.onChange = new Ev((function(_this) {
+        this.onChange = this._mkEv((function(_this) {
           return function() {
             return [
               0, [], _.zip(_this.is, rx.snap(function() {
@@ -1101,14 +1119,14 @@
     IndexedArray = rx.IndexedArray = (function(superClass) {
       extend(IndexedArray, superClass);
 
-      function IndexedArray(_bases) {
-        this._bases = _bases;
+      function IndexedArray(_cells) {
+        this._cells = _cells;
       }
 
       IndexedArray.prototype.map = function(f) {
         var ys;
         ys = new MappedDepArray();
-        rx.autoSub(this._bases.onChange, function(arg) {
+        rx.autoSub(this._cells.onChange, function(arg) {
           var added, index, removed;
           index = arg[0], removed = arg[1], added = arg[2];
           return ys.realSplice(index, removed.length, added.map(f));
@@ -1155,41 +1173,28 @@
         return new Map(_.pairs(obj));
       }
     };
-    union = function(first, second) {
-      return new Set(slice.call(first).concat(slice.call(second)));
-    };
-    intersection = function(first, second) {
-      return new Set(Array.from(first).filter(function(item) {
-        return second.has(item);
-      }));
-    };
-    difference = function(first, second) {
-      return new Set(Array.from(first).filter(function(item) {
-        return !second.has(item);
-      }));
-    };
     ObsMap = rx.ObsMap = (function(superClass) {
       extend(ObsMap, superClass);
 
       function ObsMap(_base) {
         this._base = _base != null ? _base : new Map();
+        ObsMap.__super__.constructor.call(this);
         this._base = objToJSMap(this._base);
-        this.onAdd = new Ev((function(_this) {
+        this.onAdd = this._mkEv((function(_this) {
           return function() {
             return new Map(_this._base);
           };
         })(this));
-        this.onRemove = new Ev((function(_this) {
+        this.onRemove = this._mkEv((function(_this) {
           return function() {
             return new Map();
           };
         })(this));
-        this.onChange = new Ev((function(_this) {
+        this.onChange = this._mkEv((function(_this) {
           return function() {
             return new Map();
           };
         })(this));
-        ObsMap.__super__.constructor.call(this, this.onAdd, this.onRemove, this.onChange);
       }
 
       ObsMap.prototype.get = function(key) {
@@ -1391,8 +1396,7 @@
         var c;
         this.f = f1;
         DepMap.__super__.constructor.call(this);
-        c = new DepCell(this.f);
-        c.refresh();
+        c = bind(this.f);
         rx.autoSub(c.onSet, (function(_this) {
           return function(arg) {
             var old, val;
@@ -1431,13 +1435,13 @@
 
       function ObsSet(_base) {
         this._base = _base != null ? _base : new Set();
+        ObsSet.__super__.constructor.call(this);
         this._base = objToJSSet(this._base);
-        this.onChange = new Ev((function(_this) {
+        this.onChange = this._mkEv((function(_this) {
           return function() {
             return [_this._base, new Set()];
           };
         })(this));
-        ObsSet.__super__.constructor.call(this, this.onChange);
       }
 
       ObsSet.prototype.has = function(key) {
@@ -1618,11 +1622,7 @@
         var c;
         this.f = f1;
         DepSet.__super__.constructor.call(this);
-        c = bind((function(_this) {
-          return function() {
-            return _this.f();
-          };
-        })(this));
+        c = bind(this.f);
         rx.autoSub(c.onSet, (function(_this) {
           return function(arg) {
             var old, val;
@@ -1752,7 +1752,7 @@
                     configurable: true,
                     enumerable: true,
                     get: function() {
-                      view.raw();
+                      view.all();
                       return view;
                     },
                     set: function(x) {
@@ -1900,9 +1900,12 @@
     };
     rx.cellToMap = function(cell) {
       return new rx.DepMap(function() {
-        return this.done(this.record(function() {
-          return cell.get();
-        }));
+        return cell.get();
+      });
+    };
+    rx.cellToSet = function(c) {
+      return new rx.DepSet(function() {
+        return c.get();
       });
     };
     rx.basicDiff = function(key) {

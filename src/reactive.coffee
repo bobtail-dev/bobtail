@@ -3,6 +3,10 @@ rxFactory = (_, $) ->
   nextUid = 0
   mkuid = -> nextUid += 1
 
+  union = (first, second) -> new Set [first..., second...]
+  intersection = (first, second) -> new Set Array.from(first).filter (item) -> second.has item
+  difference = (first, second) -> new Set Array.from(first).filter (item) -> not second.has item
+
   popKey = (x, k) ->
     if k not of x
       throw new Error('object has no key ' + k)
@@ -215,7 +219,8 @@ rxFactory = (_, $) ->
     subid
 
   ObsBase = class rx.ObsBase
-    constructor: (@events...) ->
+    constructor: ->
+      @events = []
     to: {
       cell: => rx.cell.from @
       array: => rx.array.from @
@@ -226,13 +231,17 @@ rxFactory = (_, $) ->
     subAll: (targetFn) -> @events.forEach (ev) -> recorder.sub (target) -> rx.autoSub ev, (result) ->
       targetFn target, result
     raw: -> @_base
+    _mkEv: (f) ->
+      ev = new Ev f, @
+      @events.push ev
+      ev
 
 
   ObsCell = class rx.ObsCell extends ObsBase
     constructor: (@_base) ->
+      super()
       @_base = @_base ? null
-      @onSet = new Ev => [null, @_base] # [old, new]
-      super @onSet
+      @onSet = @_mkEv => [null, @_base] # [old, new]
     all: ->
       @subAll (target) -> target.refresh()
       @_base
@@ -312,8 +321,9 @@ rxFactory = (_, $) ->
 
   ObsArray = class rx.ObsArray extends ObsBase
     constructor: (@_cells = [], @diff = rx.basicDiff()) ->
-      @onChange = new Ev => [0, [], @_cells.map (c) -> c.raw()] # [index, removed, added]
-      @onChangeCells = new Ev => [0, [], @_cells] # [index, removed, added]
+      super()
+      @onChange = @_mkEv => [0, [], @_cells.map (c) -> c.raw()] # [index, removed, added]
+      @onChangeCells = @_mkEv => [0, [], @_cells] # [index, removed, added]
       @_indexed = null
       super @onChange, @onChangeCells
     all: ->
@@ -451,12 +461,13 @@ rxFactory = (_, $) ->
       return rx.snap => @all()
 
   MappedDepArray = class rx.MappedDepArray extends ObsArray
+    constructor: -> super()
   IndexedDepArray = class rx.IndexedDepArray extends ObsArray
     constructor: (xs = [], diff) ->
       super(xs, diff)
       @is = (rx.cell(i) for x,i in @_cells)
-      @onChangeCells = new Ev => [0, [], _.zip(@_cells, @is)] # [index, removed, added]
-      @onChange = new Ev => [0, [], _.zip(@is, rx.snap => @all())]
+      @onChangeCells = @_mkEv => [0, [], _.zip(@_cells, @is)] # [index, removed, added]
+      @onChange = @_mkEv => [0, [], _.zip(@is, rx.snap => @all())]
     # TODO duplicate code with ObsArray
     map: (f) ->
       ys = new MappedDepArray()
@@ -488,10 +499,10 @@ rxFactory = (_, $) ->
       rx.autoSub (bind => Array.from @f()).onSet, ([old, val]) => @_update(val)
 
   IndexedArray = class rx.IndexedArray extends DepArray
-    constructor: (@_bases) ->
+    constructor: (@_cells) ->
     map: (f) ->
       ys = new MappedDepArray()
-      rx.autoSub @_bases.onChange, ([index, removed, added]) ->
+      rx.autoSub @_cells.onChange, ([index, removed, added]) ->
         ys.realSplice(index, removed.length, added.map(f))
       ys
 
@@ -511,17 +522,13 @@ rxFactory = (_, $) ->
     else if _.isArray obj then new Map obj
     else new Map _.pairs obj
 
-  union = (first, second) -> new Set [first..., second...]
-  intersection = (first, second) -> new Set Array.from(first).filter (item) -> second.has item
-  difference = (first, second) -> new Set Array.from(first).filter (item) -> not second.has item
-
   ObsMap = class rx.ObsMap extends ObsBase
     constructor: (@_base = new Map()) ->
+      super()
       @_base = objToJSMap @_base
-      @onAdd = new Ev => new Map @_base # {key: new...}
-      @onRemove = new Ev => new Map() # {key: old...}
-      @onChange = new Ev => new Map() # {key: [old, new]...}
-      super @onAdd, @onRemove, @onChange
+      @onAdd = @_mkEv => new Map @_base # {key: new...}
+      @onRemove = @_mkEv => new Map() # {key: old...}
+      @onChange = @_mkEv => new Map() # {key: [old, new]...}
     get: (key) ->
       @subAll (target, result) -> if result.has key then target.refresh()
       @_base.get key
@@ -604,8 +611,7 @@ rxFactory = (_, $) ->
   DepMap = class rx.DepMap extends ObsMap
     constructor: (@f) ->
       super()
-      c = new DepCell(@f)
-      c.refresh()
+      c = bind @f
       rx.autoSub c.onSet, ([old, val]) => @_update val
 
   #
@@ -623,9 +629,9 @@ rxFactory = (_, $) ->
 
   ObsSet = class rx.ObsSet extends ObsBase
     constructor: (@_base = new Set()) ->
+      super()
       @_base = objToJSSet @_base
-      @onChange = new Ev => [@_base, new Set()]  # additions, removals
-      super @onChange
+      @onChange = @_mkEv => [@_base, new Set()]  # additions, removals
     has: (key) ->
       @subAll (target, [additions, removals]) ->
         if additions.has(key) or removals.has(key) then target.refresh()
@@ -701,7 +707,7 @@ rxFactory = (_, $) ->
   DepSet = class rx.DepSet extends ObsSet
     constructor: (@f) ->
       super()
-      c = bind => @f()
+      c = bind @f
       rx.autoSub c.onSet, ([old, val]) => @_update val
 
   rx.cellToSet = (c) ->
@@ -770,7 +776,7 @@ rxFactory = (_, $) ->
                   configurable: true
                   enumerable: true
                   get: ->
-                    view.raw()
+                    view.all()
                     view
                   set: (x) ->
                     view.splice(0, view.length, x...)
@@ -842,11 +848,9 @@ rxFactory = (_, $) ->
     xs = _.flatten(xss)
     rx.cellToArray bind -> _.flatten(xss)
 
-  rx.cellToArray = (cell, diff) ->
-    new DepArray((-> cell.get()), diff)
-
-  rx.cellToMap = (cell) ->
-    new rx.DepMap -> @done @record -> cell.get()
+  rx.cellToArray = (cell, diff) -> new DepArray (-> cell.get()), diff
+  rx.cellToMap = (cell) -> new rx.DepMap -> cell.get()
+  rx.cellToSet = (c) -> new rx.DepSet -> c.get()
 
   # O(n) using hash key
   rx.basicDiff = (key = rx.smartUidify) -> (oldXs, newXs) ->
