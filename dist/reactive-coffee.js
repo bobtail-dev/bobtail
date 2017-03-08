@@ -853,8 +853,12 @@
           }
           return results;
         });
-        this.onChangeCells.pub([index, removed, additions]);
-        return this.onChange.pub([index, removedElems, addedElems]);
+        return rx.transaction((function(_this) {
+          return function() {
+            _this.onChangeCells.pub([index, removed, additions]);
+            return _this.onChange.pub([index, removedElems, addedElems]);
+          };
+        })(this));
       };
 
       ObsArray.prototype.realSplice = function(index, count, additions) {
@@ -1176,8 +1180,12 @@
           }
           return results;
         });
-        this.onChangeCells.pub([index, removed, _.zip(additions, newIs)]);
-        return this.onChange.pub([index, removedElems, _.zip(addedElems, newIs)]);
+        return rx.transaction((function(_this) {
+          return function() {
+            _this.onChangeCells.pub([index, removed, _.zip(additions, newIs)]);
+            return _this.onChange.pub([index, removedElems, _.zip(addedElems, newIs)]);
+          };
+        })(this));
       };
 
       return IndexedDepArray;
@@ -1391,15 +1399,19 @@
             }).value();
           };
         })(this)();
-        if (removals.length) {
-          this.onRemove.pub(new Map(removals));
-        }
-        if (additions.length) {
-          this.onAdd.pub(new Map(additions));
-        }
-        if (changes.length) {
-          this.onChange.pub(new Map(changes));
-        }
+        rx.transaction((function(_this) {
+          return function() {
+            if (removals.length) {
+              _this.onRemove.pub(new Map(removals));
+            }
+            if (additions.length) {
+              _this.onAdd.pub(new Map(additions));
+            }
+            if (changes.length) {
+              return _this.onChange.pub(new Map(changes));
+            }
+          };
+        })(this));
         return ret;
       };
 
