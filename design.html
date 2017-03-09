@@ -5,13 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
-    <title>Motivation and Design Rationale - reactive.coffee</title>
+    <title>Motivation and Design Rationale - bobtail</title>
   </head>
   <body>
     <header>
       <div class="overlay"></div>
       <div class="inner">
-        <h1 class="smaller-title"><a href="/reactive-coffee/">reactive.coffee</a></h1>
+        <h1 class="smaller-title"><a href="/reactive-coffee/">bobtail</a></h1>
         <nav class="top-nav">
           <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
         </nav>
@@ -37,7 +37,7 @@ applications</li>
 <li>minimizing &quot;magic&quot;</li>
 <li>enabling declarative expressiveness even for complex data-bound views</li>
 </ul>
-<p>Reactive actually consists of two layers.  At its core, it provides reactive
+<p>Bobtail actually consists of two layers.  At its core, it provides reactive
 programming primitives that allow users to declaratively specify arbitrary
 dataflow DAGs, where data structures are automatically updated in response to
 updates in their dependencies.  This is in lieu of the heftier first-class-event
@@ -45,7 +45,7 @@ systems like <a href="http://backbonejs.org/">Backbone</a>.  The idea is that al
 dependencies, including high-level business logic and domain-specific concepts,
 are conveniently represented by (potentially complex) data types built out of
 observable cells.</p>
-<p>The second layer in Reactive is that of the &quot;template language,&quot; the DSL for
+<p>The second layer in Bobtail is that of the &quot;template language,&quot; the DSL for
 constructing UIs out of not only DOM elements but arbitrary user-defined
 components as well.</p>
 <p>A major benefit of embedding into a host language that is a full-fledged
@@ -54,7 +54,7 @@ the system now inherits the abstractions and expressive power of the host
 language for free.  For instance, defining reusable component abstractions is
 as simple as.  The ability to define reusable components, and the manner in
 which they are assembled together, is at the core of what makes for scalable
-architecture, and this is an aspect that Reactive makes very simple/natural.  Plus, we
+architecture, and this is an aspect that Bobtail makes very simple/natural.  Plus, we
 inherit all the expressivity of the host language, control flow (loops and
 conditionals), variables, expressions, and so forth.</p>
 <p>Furthermore, by avoiding the creation of a new language (even simple syntactic
@@ -72,11 +72,11 @@ power of a declarative HTML-ish template language:</p>
 <p>At the same time, because we are simply writing CoffeeScript, we have all the
 flexibility and code which that brings to the table, useful for shaping data
 for the views as well as for specifying component behavior.</p>
-<p>Reactive is designed for rich application development.  This is a
+<p>Bobtail is designed for rich application development.  This is a
 developer-centric framework that does not pretend to be something that is used
 by designers or tools (which is not to say it does not fit in a workflow
 involving both developers and designers).  Rather than focusing on the division
-between markup and logic, Reactive focuses on separating models from views,
+between markup and logic, Bobtail focuses on separating models from views,
 enabling complex UIs (such as recursively structured DOMs), and on the
 component abstraction.  Components must encapsulate not just markup, but
 also coupled with behavior, which should be <em>frictionless</em> to add,
@@ -92,13 +92,13 @@ the visualizations</li>
 </ul>
 <p>This is achieved by enabling large/deep model dependencies to be built out
 of the reactive programming primitives, as well as allowing for precise
-control over the binding and re-rendering of the DOM templates.  Reactive
+control over the binding and re-rendering of the DOM templates.  Bobtail
 avoids relying on computing diffs between models or between generated
 views, so as to minimize latency for UI updates even for large, complex
 applications.</p>
-<p>Finally, Reactive also aims to be a compact framework.  The
+<p>Finally, Bobtail also aims to be a compact framework.  The
 documentation/website you&#39;re now reading is significantly longer than the
-code.  Reactive focuses only on bindings and templates, and nothing else.
+code.  Bobtail focuses only on bindings and templates, and nothing else.
 This is the &quot;Flask-over-Django&quot; approach of choosing best-of-breed
 libraries for different concerns.  For instance, certain frameworks also
 include a routing subsystem; we recommend using instead <a href="http://stackoverflow.com/questions/6315505/preferred-client-side-routing-solution">stand-alone,
@@ -117,12 +117,12 @@ Work</a>.</p>
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-41900480-1', 'yang.github.io');
       ga('send', 'pageview');
     </script>
     <footer>
-      <div class="inner"><p>Copyright 2016 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+      <div class="inner"><p>Copyright 2017 Bobtail/Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/inferinc/bobtail/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
 
       </div>
     </footer>

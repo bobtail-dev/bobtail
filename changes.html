@@ -5,13 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
-    <title>Change Log - reactive.coffee</title>
+    <title>Change Log - bobtail</title>
   </head>
   <body>
     <header>
       <div class="overlay"></div>
       <div class="inner">
-        <h1 class="smaller-title"><a href="/reactive-coffee/">reactive.coffee</a></h1>
+        <h1 class="smaller-title"><a href="/reactive-coffee/">bobtail</a></h1>
         <nav class="top-nav">
           <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
         </nav>
@@ -33,7 +33,20 @@
 noteworthiness.</p>
 <p><strong>v2.0.0 – under development</strong></p>
 <ul>
-<li>Add SVG support (<a href="https://github.com/yang/reactive-coffee/issues/14">#14</a>; contributed by <a href="https://github.com/eizenberg">@eizenberg</a> and <a href="https://github.com/drernie">@drernie</a>).</li>
+<li>Add SVG support (<a href="https://github.com/inferinc/bobtail/issues/14">#14</a>; contributed by <a href="https://github.com/eizenberg">@eizenberg</a> and <a href="https://github.com/drernie">@drernie</a>).</li>
+</ul>
+<p><strong>v1.4.2 – 2017-03-01</strong></p>
+<ul>
+<li>Renamed package to <strong>Bobtail</strong>--stay tuned for more info!</li>
+<li>
+  Fixed refresh condition for <code>ObsArray.at</code>--previously it would only refresh if a change started on its
+  index. We now refresh if there is a net addition or removal of elements before or at i, or if the value at i is
+  changed.
+</li>
+<li>Fixed issue where <code>SrcArray.push</code> and <code>SrcArray.replace</code> triggered a subscription.</li>
+<li>Added <code>hideMutationWarnings</code> utility function, which does what it says on the tin.</li>
+<li>Fixed <code>bower.json</code> main field to have a single file, per more recent bower syntax.</li>
+<li>Upgraded bower JQuery dependency to 2.1.1, consistent with package.json</li>
 </ul>
 <p><strong>v1.3.0 – 2016-03-10</strong></p>
 <ul>
@@ -49,10 +62,10 @@ empty.</li>
 </ul>
 <p><strong>v1.2.4 – 2015-08-25</strong></p>
 <ul>
-<li>Fix <code>ObsArray.map</code> to behave like proper reactive bindings (<a href="https://github.com/yang/reactive-coffee/issues/58">#58</a>; found
+<li>Fix <code>ObsArray.map</code> to behave like proper reactive bindings (<a href="https://github.com/inferinc/bobtail/issues/58">#58</a>; found
 by <a href="https://github.com/marcschneider">@marcschneider</a>).</li>
-<li>Build and distribute source maps (<a href="https://github.com/yang/reactive-coffee/issues/52">#52</a>; contributed by <a href="https://github.com/chicagogrooves">@chicagogrooves</a>).</li>
-<li>Fix syntax bug (<a href="https://github.com/yang/reactive-coffee/issues/49">#49</a>; found by <a href="https://github.com/shreeve">@shreeve</a>).</li>
+<li>Build and distribute source maps (<a href="https://github.com/inferinc/bobtail/issues/52">#52</a>; contributed by <a href="https://github.com/chicagogrooves">@chicagogrooves</a>).</li>
+<li>Fix syntax bug (<a href="https://github.com/inferinc/bobtail/issues/49">#49</a>; found by <a href="https://github.com/shreeve">@shreeve</a>).</li>
 </ul>
 <p><strong>v1.2.2 – 2014-05-23</strong></p>
 <ul>
@@ -154,12 +167,12 @@ built-in special attributes.</li>
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-41900480-1', 'yang.github.io');
       ga('send', 'pageview');
     </script>
     <footer>
-      <div class="inner"><p>Copyright 2016 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+      <div class="inner"><p>Copyright 2017 Bobtail/Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/inferinc/bobtail/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
 
       </div>
     </footer>

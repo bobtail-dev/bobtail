@@ -5,13 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
-    <title>Related Work and Comparisons - reactive.coffee</title>
+    <title>Related Work and Comparisons - bobtail</title>
   </head>
   <body>
     <header>
       <div class="overlay"></div>
       <div class="inner">
-        <h1 class="smaller-title"><a href="/reactive-coffee/">reactive.coffee</a></h1>
+        <h1 class="smaller-title"><a href="/reactive-coffee/">bobtail</a></h1>
         <nav class="top-nav">
           <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
         </nav>
@@ -32,7 +32,7 @@ This section will mainly focus on trade-offs and differences; to be clear,
 these are all just opinions of the original author, who has deep respect
 for the work of these other library authors, and liberally draws
 inspiration from them.  Ideally, there wouldn&#39;t have been a need to create
-Reactive.</p>
+Bobtail.</p>
 <ul>
 <li><p>Any of the multitude of declarative UI toolkits based on reactive
 programming, especially FRP in the Haskell universe, but also <a href="https://bling.codeplex.com/">Bling</a>,
@@ -40,7 +40,7 @@ programming, especially FRP in the Haskell universe, but also <a href="https://b
 </li>
 <li><p>Specifically in JS land: <a href="http://knockoutjs.com">Knockout</a> in terms of the mechanics behind
 observables and computed observables, but with fewer moving parts and API
-surface (no read/write interception, context management, etc.).  Reactive
+surface (no read/write interception, context management, etc.).  Bobtail
 originally tried simply reusing KO, but ultimately divorced itself since
 there are both desired features that are missing (differences in array event
 propagation, topologically ordered batch propagations, etc.) and features
@@ -52,7 +52,8 @@ attributes to bind to element properties to expressions.</p>
 <a href="http://www.reactjs.com/">React.js</a>, <a href="https://github.com/fynyky/reactor.js">Reactor</a>, <a href="http://reactive-extensions.github.io/RxJS/">RxJS</a> and <a href="https://github.com/raimohanska/bacon.js">bacon.js</a>.  Some of these libraries
 also aren&#39;t quite the same in that they still require you to explicitly
 specify the subscriptions and use combinators to merge different streams.</p>
-<p>Reactive is more similar to <a href="http://knockoutjs.com">Knockout</a> than it is to <a href="http://backbonejs.org">Backbone</a> (see <a href="http://stackoverflow.com/a/6340870/43118">this
+<p>Bobtail is more similar to <a href="http://knockoutjs.com">Knockout</a> than it is to
+<a href="http://backbonejs.org">Backbone</a> (see <a href="http://stackoverflow.com/a/6340870/43118">this
 Stack Overflow answer</a> for more).</p>
 </li>
 <li><p><a href="http://angularjs.org">Angular</a> is a popular framework that emphasizes testability.  The
@@ -114,7 +115,7 @@ properties, refs, state, &quot;classes&quot;, mixins, lifecycle management
 property transfer, controlling update propagation (<code>shouldComponentUpdate</code>,
 <code>componentWillReceiveProps</code>, etc.), and more.  React also requires its own
 way of doing things such as low-level DOM manipulation—something that
-Reactive intentionally delegates to jQuery.</p>
+Bobtail intentionally delegates to jQuery.</p>
 <p>React, like <a href="https://github.com/drcode/webfui">WebFUI</a>, re-constructs a lightweight representation of the
 entire updated DOM and computes diffs to determine what actual DOM
 operations to execute.  Programmability-wise, this is not as
@@ -135,7 +136,7 @@ full DOM diff algorithm per frame.</p>
 </li>
 <li><p><a href="http://code.google.com/p/visage">Visage</a>, formerly known as JavaFX, introduces incremental evaluation in a
 statically typed scripting language for the JVM.  It focuses on building
-Swing UIs.  Reactive was actually originally inspired by its approach, which
+Swing UIs.  Bobtail was actually originally inspired by its approach, which
 is also one of using a full programming language to host the declarative UI
 construction, along with its intuitive syntax for creating bindings.  JavaFX
 used compile-time transforms to implement incremental evaluation.</p>
@@ -154,12 +155,12 @@ DOMs</p>
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-41900480-1', 'yang.github.io');
       ga('send', 'pageview');
     </script>
     <footer>
-      <div class="inner"><p>Copyright 2016 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+      <div class="inner"><p>Copyright 2017 Bobtail/Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/inferinc/bobtail/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
 
       </div>
     </footer>

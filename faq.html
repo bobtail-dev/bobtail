@@ -5,13 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
-    <title>FAQ - reactive.coffee</title>
+    <title>FAQ - bobtail</title>
   </head>
   <body>
     <header>
       <div class="overlay"></div>
       <div class="inner">
-        <h1 class="smaller-title"><a href="/reactive-coffee/">reactive.coffee</a></h1>
+        <h1 class="smaller-title"><a href="/reactive-coffee/">bobtail</a></h1>
         <nav class="top-nav">
           <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
         </nav>
@@ -27,27 +27,36 @@
           </ul>
         </nav>
         <section id="main-content"><h1 id="faq">FAQ</h1>
+<p><strong>Why did you guys rename Reactive Coffee to Bobtail?</strong></p>
+<p>There were a few reasons. First, the name Reactive Coffee is rather uncomfortably close to
+<a href="https://facebook.github.io/react/">React</a>, which, while a wonderful framework, is completely
+unrelated. There's also the implication in the name "Reactive Coffee" that this is a CoffeeScript framework. While it's
+true that this was originally developed in CoffeeScript, and CoffeeScript's terse syntax lends many advantages, there's
+absolutely no reason you can't use JavaScript or TypeScript with Bobtail. So why Bobtail? We decided to rename it for
+the Kurilian Bobtail, a <a href="http://www.animalplanet.com/tv-shows/cats-101/videos/kurilian-bobtail/">
+particularly adorable breed of cat</a> native to the Kuril islands. And if any animal in nature can be described as
+"reactive", felines definitely qualify.</p>
+<p>Also the name bobtail was free on NPM and Bower, so yeah... there's that too.</p>
 <p><strong>Why yet another client-side framework?</strong></p>
 <p>See <a href="design.html">Motivation and Design Rationale</a>.</p>
-<p><strong>How does Reactive stack up against the many other client-side frameworks?</strong></p>
+<p><strong>How does Bobtail stack up against the many other client-side frameworks?</strong></p>
 <p>See <a href="related.html">Related Work</a>.</p>
 <p><strong>Isn&#39;t this approach just reverting back to the PHP days of mixing markup
 and logic?</strong></p>
-<p>Reactive is designed for rich application development.  Rather than focusing on
-the division between markup and logic, Reactive focuses on separating models
+<p>Bobtail is designed for rich application development.  Rather than focusing on
+the division between markup and logic, Bobtail focuses on separating models
 from views and on the component abstraction.  Components must encapsulate not
 just markup, but also behavior.  The two should be coupled, not separated.</p>
 <p>This library also takes the stance that logic-less is generally a counter-productive
 endeavor---the logic-less-ness and associated gains are primarily superficial, readability can be <em>adversely</em>
 affected, and it does not separate concerns.  Others have <a href="http://boronine.com/2012/09/07/Cult-Of-Logic-less-Templates/">written</a> <a href="http://www.ebaytechblog.com/2012/10/01/the-case-against-logic-less-templates/">more</a>
 on this.</p>
-<p><strong>Why jQuery / what is the relationship between Reactive Coffee and jQuery?</strong></p>
+<p><strong>Why jQuery / what is the relationship between Bobtail and jQuery?</strong></p>
 <p>The library just uses jQuery as a cross-browser interface to the DOM for its
 own operations.  All tags are wrapped in jQuery objects.  You don&#39;t need to use
 jQuery, but jQuery excels as a cross-platform API and is probably the most
 popular of managing low-level DOM operations.  Although jQuery is known to not
-scale very well, higher-level application structure is where Reactive Coffee
-steps in.</p>
+scale very well, higher-level application structure is where Bobtail steps in.</p>
 <p><strong>Why the syntax noise in the template language?</strong></p>
 <p>This is actually not set in stone.  The framework could handle a more concise
 template syntax.  For instance, it&#39;s certainly feasible to support a language
@@ -77,7 +86,7 @@ in which one of the above examples could be rewritten as:</p>
 <p>However, the project currently errs on the side of more conservatively adding
 syntax to the DSL, and defaulting to strictness.</p>
 <p><strong>Why not use Knockout observables?</strong></p>
-<p>Reactive originally tried simply reusing KO, but ultimately divorced itself
+<p>Bobtail originally tried simply reusing KO, but ultimately divorced itself
 since there are both desired features that are missing (differences in array
 event propagation, topologically ordered batch propagations, etc.) and features
 that are unwanted (mis-matched programming model, larger API surface area,
@@ -86,7 +95,7 @@ etc.).</p>
 Extensions, right?</strong></p>
 <p>Yes, it&#39;s cited in the list of <a href="related.html">Related Work</a>.  We chose <code>rx</code> because short
 namespaces are convenient and it&#39;s unlikely you&#39;re using RxJS if you&#39;re
-using reactive.coffee, but please correct us if we&#39;re wrong.</p>
+using Bobtail, but please correct us if we&#39;re wrong.</p>
 <p><strong>Do I need to sprinkle <code>rx.cell()</code> everywhere in my model?</strong></p>
 <p>You actually don&#39;t.  At one extreme, you can always fall back to just wrapping
 your entire model in a single cell, and re-render everything on changes, which
@@ -107,9 +116,13 @@ worlds—take a look at <code>Object.observe</code>.  For more on these directio
 <a href="ideas.html">Ideas</a>.</p>
 <p><strong>Can I use this from JavaScript?</strong></p>
 <p>Yes, you can.  The main benefit of using CoffeeScript here is that it has a
-very DSL-friendly syntax for Reactive&#39;s declarative UIs, and particularly
+very DSL-friendly syntax for Bobtail&#39;s declarative UIs, and particularly
 for the terse anonymous function syntax to represent the incrementally
-recomputable bindings.  Otherwise, it&#39;s pretty similar.</p>
+recomputable bindings.  Otherwise, it&#39;s pretty similar. With the addition of arrow
+functions to ES6, this is now considerably easier, though note that all ES6 arrow functions
+bind to the external <code>this</code>. This is a particular issue when writing event handlers, where
+overwriting the default <code>this</code> (which refers to the element on which the event was triggered)
+is often undesirable.</p>
 <p>It&#39;s worth showing a quick example of what that would look like:</p>
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">$sidebar</span> <span class="o">=</span> <span class="nx">rx</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span>
   <span class="nx">div</span><span class="p">({</span><span class="kr">class</span><span class="o">:</span> <span class="s1">&#39;sidebar&#39;</span><span class="p">},</span> <span class="p">[</span>
@@ -123,6 +136,9 @@ recomputable bindings.  Otherwise, it&#39;s pretty similar.</p>
   <span class="p">])</span>
 <span class="p">});</span>
 </pre></div>
+<p><strong>What about TypeScript?</strong></p>
+<p>We've not had the chance to experiment too much with TypeScript, but we are hope to add support and
+a TypeScript definition file for the framework. Like ES6, TypeScript comes with fat arrow functions.</p>
 
 
         </section>
@@ -134,12 +150,12 @@ recomputable bindings.  Otherwise, it&#39;s pretty similar.</p>
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-41900480-1', 'yang.github.io');
       ga('send', 'pageview');
     </script>
     <footer>
-      <div class="inner"><p>Copyright 2016 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+      <div class="inner"><p>Copyright 2017 Bobtail/Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/inferinc/bobtail/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
 
       </div>
     </footer>

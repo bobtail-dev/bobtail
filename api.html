@@ -5,13 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
-    <title>API Reference - reactive.coffee</title>
+    <title>API Reference - bobtail</title>
   </head>
   <body>
     <header>
       <div class="overlay"></div>
       <div class="inner">
-        <h1 class="smaller-title"><a href="/reactive-coffee/">reactive.coffee</a></h1>
+        <h1 class="smaller-title"><a href="/reactive-coffee/">bobtail</a></h1>
         <nav class="top-nav">
           <div class="inner-inner"><a href="quickstart.html">Documentation</a><a href="support.html">Community/Support</a><a href="design.html">Rationale</a><a href="dev-setup.html">Development</a></div>
         </nav>
@@ -149,6 +149,9 @@ updates to observables will not emit change events to their subscribers.
 Only once the transaction ends will all events be fired (at which time the
 state of the source cells will no longer be in flux, and thus a
 consistent view of the universe can always be maintained).</li>
+<li><code>hideMutationWarnings(f)</code>: Run the given function, but suppress console logging
+  of mutation warnings and firing of the <code>onMutationWarnings</code> event. This is useful when
+  need to mutate a cell when already within a bind context, but you know that doing so is safe.</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>
@@ -388,12 +391,12 @@ forwards to the jQuery <code>[jdragdrop]</code> plug-in:</p>
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-41900480-1', 'yang.github.io');
       ga('send', 'pageview');
     </script>
     <footer>
-      <div class="inner"><p>Copyright 2016 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+      <div class="inner"><p>Copyright 2017 Bobtail/Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/inferinc/bobtail/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
 
       </div>
     </footer>

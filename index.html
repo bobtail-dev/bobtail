@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="styles/9981d504.main.css" media="screen">
     <title>
-      Reactive Coffee - A lightweight CoffeeScript library/DSL for reactive
+      Bobtail - A lightweight CoffeeScript library/DSL for reactive
       programming and for declaratively building scalable web UIs</title>
   </head>
   <body>
     <header>
       <div class="overlay"></div>
       <div class="inner">
-        <h1><a href="/reactive-coffee/">reactive.coffee</a></h1>
-        <h2>A lightweight CoffeeScript library/DSL for reactive programming and for declaratively building scalable web UIs</h2><a href="https://github.com/yang/reactive-coffee" class="button"><small>View project on</small>GitHub</a>
+        <h1><a href="/reactive-coffee/">bobtail</a></h1>
+        <h2>A lightweight CoffeeScript library/DSL for reactive programming and for declaratively building scalable web UIs</h2><a href="https://github.com/inferinc/bobtail" class="button"><small>View project on</small>GitHub</a>
       </div>
       <nav class="top-nav">
         <div class="inner">
@@ -36,7 +36,7 @@
 <li>Scalable in both performance and application architecture</li>
 <li>Simple, no magic, no new template language, all CoffeeScript</li>
 <li>Tested with Chrome, Firefox, Safari, and IE10</li>
-<li>Available via <a href="http://bower.io/">Bower</a> and <a href="http://cdnjs.com/">cdnjs</a></li>
+<li>Available via <a href="https://www.npmjs.com">NPMJS</a>, <a href="http://bower.io/">Bower</a> and <a href="http://cdnjs.com/">cdnjs</a></li>
 <li>Works with jQuery</li>
 <li>MIT license</li>
 </ul>
@@ -46,8 +46,8 @@
 overview.</em>
 </div>
 
-<p>Get a quick taste of reactive.coffee.  You can <a href="http://jsfiddle.net/yang/SGvuy/">play with this example on
-jsFiddle</a>, see a <a href="https://github.com/yang/reactive-coffee/blob/master/examples/todomvc/index.jade">complete TodoMVC example</a>, or head
+<p>Get a quick taste of bobtail.  You can <a href="http://jsfiddle.net/yang/SGvuy/">play with this example on
+jsFiddle</a>, see a <a href="https://github.com/inferinc/bobtail/blob/master/examples/todomvc/index.jade">complete TodoMVC example</a>, or head
 directly to the <a href="tutorial.html">tutorial</a>.</p>
 <div class="highlight"><pre><span class="c1"># This is our application&#39;s core data model, an array of Task objects.</span>
 <span class="c1"># `cell` and `array` are our primitive reactive data structures.  You can</span>
@@ -61,8 +61,8 @@ directly to the <a href="tutorial.html">tutorial</a>.</p>
 
 <span class="nv">tasks = </span><span class="nx">rx</span><span class="p">.</span><span class="nx">array</span><span class="p">([</span>
   <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Get milk&#39;</span><span class="p">,</span> <span class="s">&#39;important&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
-  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Play with Reactive Coffee&#39;</span><span class="p">,</span> <span class="s">&#39;critical&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
-  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Walk the dog&#39;</span><span class="p">,</span> <span class="s">&#39;meh&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Play with Bobtail&#39;</span><span class="p">,</span> <span class="s">&#39;critical&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">Task</span><span class="p">(</span><span class="s">&#39;Walk the cat&#39;</span><span class="p">,</span> <span class="s">&#39;meh&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
 <span class="p">])</span>
 
 <span class="c1"># Our main view: a checklist of tasks, a button to add a new task, and a</span>
@@ -134,7 +134,7 @@ directly to the <a href="tutorial.html">tutorial</a>.</p>
 rationale</a>.</p>
 <h2 id="contributors">Contributors</h2>
 <p>The individuals who through their time, effort, and feedback have made
-reactive.coffee possible:</p>
+bobtail possible:</p>
 <ul>
 <li><a href="https://github.com/tathougies">Travis Athougies</a></li>
 <li>Cassie Doll</li>
@@ -152,7 +152,7 @@ reactive.coffee possible:</p>
 </ul>
 
         </section>
-        <aside id="sidebar"><a href="https://github.com/yang/reactive-coffee/zipball/1.3.0" class="button"><small>Download version 1.3.0</small> .zip file</a><a href="https://github.com/yang/reactive-coffee/tarball/1.3.0" class="button"><small>Download version 1.3.0</small> .tar.gz file</a>
+        <aside id="sidebar"><a href="https://github.com/inferinc/bobtail/zipball/1.3.0" class="button"><small>Download version 1.3.0</small> .zip file</a><a href="https://github.com/inferinc/bobtail/tarball/1.3.0" class="button"><small>Download version 1.3.0</small> .tar.gz file</a>
           <p class="repo-owner">Released 2016-03-10. <a href="changes.html">Changes</a>.</p><p>Minified: 29KB. Gzip: 9KB.</p>
 <p>Stay updated on <a href="https://twitter.com/reactivecoffee">Twitter</a>.</p>
 
@@ -165,12 +165,12 @@ reactive.coffee possible:</p>
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-41900480-1', 'yang.github.io');
       ga('send', 'pageview');
     </script>
     <footer>
-      <div class="inner"><p>Copyright 2016 Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/yang/reactive-coffee/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+      <div class="inner"><p>Copyright 2017 Bobtail/Reactive Coffee Authors.<br>Code licensed under <a href="https://github.com/inferinc/bobtail/blob/master/LICENSE">MIT License</a>.  Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.<br>Website design based on Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
 
       </div>
     </footer>
