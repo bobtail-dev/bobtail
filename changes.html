@@ -35,6 +35,19 @@ noteworthiness.</p>
 <ul>
 <li>Add SVG support (<a href="https://github.com/yang/reactive-coffee/issues/14">#14</a>; contributed by <a href="https://github.com/eizenberg">@eizenberg</a> and <a href="https://github.com/drernie">@drernie</a>).</li>
 </ul>
+<p><strong>v1.4.2 – 2017-03-01</strong></p>
+<ul>
+<li>Renamed package to <strong>Bobtail</strong>--stay tuned for more info!</li>
+<li>
+  Fixed refresh condition for <code>ObsArray.at</code>--previously it would only refresh if a change started on its
+  index. We now refresh if there is a net addition or removal of elements before or at i, or if the value at i is
+  changed.
+</li>
+<li>Fixed issue where <code>SrcArray.push</code> and <code>SrcArray.replace</code> triggered a subscription.</li>
+<li>Added <code>hideMutationWarnings</code> utility function, which does what it says on the tin.</li>
+<li>Fixed <code>bower.json</code> main field to have a single file, per more recent bower syntax.</li>
+<li>Upgraded bower JQuery dependency to 2.1.1, consistent with package.json</li>
+</ul>
 <p><strong>v1.3.0 – 2016-03-10</strong></p>
 <ul>
 <li>(Breaking change) Change map event handlers to take multiple keys at a
@@ -154,7 +167,7 @@ built-in special attributes.</li>
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-41900480-1', 'yang.github.io');
       ga('send', 'pageview');
     </script>
