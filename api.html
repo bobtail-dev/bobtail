@@ -149,6 +149,9 @@ updates to observables will not emit change events to their subscribers.
 Only once the transaction ends will all events be fired (at which time the
 state of the source cells will no longer be in flux, and thus a
 consistent view of the universe can always be maintained).</li>
+<li><code>hideMutationWarnings(f)</code>: Run the given function, but suppress console logging
+  of mutation warnings and firing of the <code>onMutationWarnings</code> event. This is useful when
+  need to mutate a cell when already within a bind context, but you know that doing so is safe.</li>
 </ul>
 <p><strong><code>ObsCell</code> members</strong></p>
 <ul>
@@ -388,7 +391,7 @@ forwards to the jQuery <code>[jdragdrop]</code> plug-in:</p>
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-41900480-1', 'yang.github.io');
       ga('send', 'pageview');
     </script>
