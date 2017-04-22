@@ -1,8 +1,9 @@
-{bind, Ev, rxt, rxv} = rx
+{snap, bind, Ev, rxt, rxv} = rx
 div = rxt.tags.div
 outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
 jasmine.CATCH_EXCEPTIONS = false
+{}
 
 describe 'source cell', ->
   src = null
@@ -115,16 +116,6 @@ describe 'tag', ->
       kids = elt.childNodes
       expect(kids.length).toBe(1)
       expect(kids[0] instanceof SVGElement).toBe(true)
-
-  describe 'attribute id and class parsing', ->
-    it 'should be creatable with #id', ->
-      elt = div '#zip', 'text'
-      expect(elt.prop('id')).toBe('zip')
-    it 'should be creatable with #id.cls1.cls2', ->
-      elt = div '#zip.zap.zop', 'text'
-      expect(elt.prop('id')).toBe('zip')
-      expect(elt.hasClass('zap')).toBe(true)
-      expect(elt.hasClass('zop')).toBe(true)
 
 describe 'rxt of observable array', ->
   xs = elt = null
@@ -479,7 +470,7 @@ describe 'mutating', ->
     expect(rx.snap -> c.get()).toBe 4
     expect(warnSpy).not.toHaveBeenCalled()
     rx._recorder.fireMutationWarning = oldWarningFn
-    
+
   it 'should otherwise fire a warning', ->
     warnSpy = jasmine.createSpy('warn2')
     oldWarningFn = rx._recorder.fireMutationWarning
@@ -490,12 +481,12 @@ describe 'mutating', ->
     c = bind ->
       b.set rx.snap -> b.get() + 1
       a.get() * 2
-    expect(warnSpy.calls.length).toBe 1
+    expect(warnSpy.calls.count()).toBe 1
     expect(rx.snap -> c.get()).toBe 0
     expect(rx.snap -> b.get()).toBe 3
     a.set 2
     expect(rx.snap -> c.get()).toBe 4
-    expect(warnSpy.calls.length).toBe 2
+    expect(warnSpy.calls.count()).toBe 2
     rx._recorder.fireMutationWarning = oldWarningFn
 
 
@@ -541,62 +532,69 @@ describe 'skipFirst', ->
     expect(xs[1]).toBe(false)
 
 describe 'asyncBind', ->
-  it 'should work synchronously as well', ->
-    x = rx.cell(0)
-    y = rx.asyncBind 'none', -> @done(@record -> x.get())
-    expect(y.get()).toBe(0)
-    x.set(1)
-    expect(y.get()).toBe(1)
-  it 'should work asynchronously', ->
-    x = rx.cell(0)
-    y = rx.asyncBind 'none', ->
-      _.defer => @done(x.get())
-    runs ->
+  describe 'synchronous tests', ->
+    it 'should work synchronously as well', ->
+      x = rx.cell(0)
+      y = rx.asyncBind 'none', -> @done(@record -> x.get())
+      expect(y.get()).toBe(0)
+      x.set(1)
+      expect(y.get()).toBe(1)
+    it 'should not be a SrcCell', ->
+      x = rx.cell(0)
+      y = rx.asyncBind 'none', -> @done(x.get())
+      expect(-> y.set(0)).toThrow()
+    it 'should enforce one-time record', ->
+      x = rx.cell(0)
+      rx.asyncBind 'none', ->
+        @record => x.get()
+        _.defer => expect(=> @done(@record => x.get())).toThrow()
+
+  describe 'asynchronous tests', ->
+    # _.defer essentially enqueues a new task for the JS VM to run.
+    # Because we're not using AJAX requests, we can thus use _.defer instead
+    # of callback handlers, which would be very tricky to work with here.
+
+    it 'should work asynchronously', ->
+      x = rx.cell(0)
+      y = rx.asyncBind 'none', ->
+        _.defer => @done(x.get())
       expect(y.get()).toBe('none')
       x.set(1)
       expect(y.get()).toBe('none')
-    waitsFor (-> y.get() == 1), 'The async should have fired', 1
-  it 'should work asynchronously with recording at the end', ->
-    x = rx.cell(0)
-    y = rx.asyncBind 'none', ->
-      _.defer => @done(@record => x.get())
-    runs ->
+      _.defer -> expect(y.get()).toBe(1)
+    it 'should work asynchronously with recording at the end', ->
+      x = rx.cell(0)
+      y = rx.asyncBind 'none', ->
+        _.defer => @done(@record => x.get())
       expect(y.get()).toBe('none')
       x.set(1)
       expect(y.get()).toBe('none')
-    waitsFor (-> y.get() == 1), 'The async should have fired', 1
-  it 'should work asynchronously with recording at the beginning', ->
-    x = rx.cell(0)
-    y = rx.asyncBind 'none', ->
-      xx = @record => x.get()
-      _.defer => @done(xx)
-    runs ->
+      _.defer -> expect(y.get()).toBe(1)
+    it 'should work asynchronously with recording at the beginning', ->
+      x = rx.cell(0)
+      y = rx.asyncBind 'none', ->
+        xx = @record => x.get()
+        _.defer => @done(xx)
       expect(y.get()).toBe('none')
       x.set(1)
       expect(y.get()).toBe('none')
-    waitsFor (-> y.get() == 1), 'The async should have fired', 1
-  it 'should enforce one-time record', ->
-    x = rx.cell(0)
-    y = rx.asyncBind 'none', ->
-      xx = @record => x.get()
-      _.defer => expect(=> @done(@record => x.get())).toThrow()
-  it 'should not be a SrcCell', ->
-    x = rx.cell(0)
-    y = rx.asyncBind 'none', -> @done(x.get())
-    expect(-> y.set(0)).toThrow()
-  it 'should support @done called from within @record', ->
-    x = rx.cell()
-    y = rx.cell(1)
-    z = rx.asyncBind 'none', -> @record =>
-      return @done(0) if not x.get()?
-      sum = x.get() + y.get()
-      _.defer => @done(sum)
-    w = bind -> z.get()
-    expect(w.get()).toBe(0)
-    runs -> x.set(2)
-    waitsFor (-> w.get() == 3), 'The async should have fired', 1
-    runs -> x.set(5)
-    waitsFor (-> w.get() == 6), 'The async should have fired', 1
+      _.defer -> expect(y.get()).toBe 1
+    it 'should support @done called from within @record', ->
+      x = rx.cell()
+      y = rx.cell(1)
+      z = rx.asyncBind 'none', -> @record =>
+        return @done(0) if not x.get()?
+        sum = x.get() + y.get()
+        _.defer => @done(sum)
+      w = bind -> z.get()
+      expect(w.get()).toBe(0)
+      _.defer ->
+        x.set(2)
+        _.defer ->
+          expect(w.get()).toBe 3
+          x.set(5)
+          _.defer ->
+            expect(w.get()).toBe 6
 
 describe 'promiseBind', ->
   it 'should work', ->
@@ -608,84 +606,102 @@ describe 'promiseBind', ->
       )
       deferred.promise()
     waitTime = rx.cell(10)
-    secretToLife = rx.promiseBind null, -> sleep(waitTime.get())
-    runs -> expect(secretToLife.get()).toBe(null)
-    waitsFor (-> secretToLife.get() == 52), 'promiseBind should have fired', 11
-    runs -> waitTime.set(5)
-    waitsFor (-> secretToLife.get() == 47), 'promiseBind should have fired', 6
+    closure = {}
+    secretToLife = rx.promiseBind null, ->
+      c = sleep(waitTime.get())
+      closure.callback = c
+      c
+    expect(secretToLife.get()).toBe(null)
+    closure.callback.done ->
+      expect(secretToLife.get()).toBe == 52
+      waitTime.set(5)
+      closure.callback.done ->
+        expect(secretToLife.get()).toBe 47
 
 describe 'lagBind', ->
-  x = y = evaled = null
+  x = y = evaled = start = null
   beforeEach ->
-    x = rx.cell(0)
-    evaled = false
-    y = rx.lagBind 20, 'none', ->
-      evaled = true
+    x = rx.cell 0
+    rx.autoSub x.onSet, ->
+      evaled = $.Deferred()
+    y = rx.lagBind 30, 'none', ->
+      _.defer -> evaled.resolve true
       x.get()
   it 'should remain at init value until the given lag', ->
-    runs ->
-      expect(y.get()).toBe('none')
-      setTimeout (->
-        expect(evaled).toBe(false)
-        expect(y.get()).toBe('none')
-      ), 10
-    waitsFor (-> evaled), 21
-    runs ->
-      expect(y.get()).toBe(0)
-  it 'should (after init) update on upstream set by (and not before) the given lag', ->
-    waitsFor (-> evaled), 21
-    runs ->
-      evaled = false
+    expect(y.get()).toBe 'none'
+    setTimeout (->
+      expect(evaled.state()).toBe 'pending'
+      expect(y.get()).toBe 'none'
+    ), 10
+    evaled.done -> expect(y.get()).toBe 0
+  it 'should (after init) update on upstream set by (and not before) the given lag', (done) ->
+    evaled.done ->
       x.set(1)
-      setTimeout (->
-        expect(evaled).toBe(false)
-        expect(y.get()).toBe(0)
-      ), 10
-    waitsFor (-> evaled), 21
-    runs ->
-      expect(y.get()).toBe(1)
+      setTimeout(
+        ->
+          expect(y.get()).toBe 0
+          setTimeout(
+            ->
+              expect(y.get()).toBe 1
+              done()
+            20
+          )
+        10
+      )
   it 'should not evaluate as long as new refresh keeps getting scheduled', ->
-    start = new Date().getTime()
-    y = rx.lagBind 20, 'none', ->
-      evaled = true
-      x.get()
-    waitsFor (-> evaled), 21 # nothing we can do before first evaluation
-    runs ->
-      evaled = false
-      for snooze in [10, 20, 30, 40]
-        do (snooze) ->
-          setTimeout (->
-            expect(evaled).toBe(false)
-            x.set(snooze)
-          ), snooze
-    waitsFor (-> evaled), 61
+    # potentially flaky test :(
+    expect(y.get()).toBe 'none'
+    setTimeout(
+      -> # nothing we can do before first evaluation
+        for snooze in [5, 10, 15, 20]
+          do (snooze) ->
+            setTimeout (->
+              expect(y.get()).toBe 0
+              x.set(snooze)
+            ), snooze
+        setTimeout(
+          -> expect(y.get()).toBe 20
+          60
+        )
+      30
+    )
 
 describe 'postLagBind', ->
   x = y = evaled = null
   beforeEach ->
     x = rx.cell(20)
-    evaled = false
     y = rx.postLagBind 'none', ->
-      evaled = true
-      val: x.get(), ms: x.get()
-  it 'should evaluate immediately but not update value', ->
-    expect(evaled).toBe(true)
-    expect(y.get()).toBe('none')
-  it 'should evaluate by (and not before) the given lag', ->
-    runs ->
+      r = val: x.get(), ms: x.get()
+      return r
+  it 'should evaluate immediately but not update value', (done) ->
+    _.defer ->
       expect(y.get()).toBe('none')
-      x.set(15)
-      setTimeout (-> expect(y.get()).toBe('none')), 5
-    waitsFor (-> y.get() == 15), 16
-  it 'should not update as long as new refresh keeps getting scheduled', ->
-    runs ->
-      for snooze in [5, 10, 15, 20]
-        do (snooze) ->
-          setTimeout (->
-            expect(y.get()).toBe('none')
-            x.set(snooze)
-          ), snooze
-    waitsFor (-> y.get() == 20), 41
+      done()
+  it 'should evaluate by (and not before) the given lag', (done) ->
+    expect(snap -> y.get()).toBe('none')
+    x.set(15)
+    setTimeout (-> expect(snap -> y.get()).toBe('none')), 5
+    setTimeout(
+      ->
+        expect(y.get()).toBe(15)
+        done()
+      25
+    )
+  it 'should not update as long as new refresh keeps getting scheduled', (done) ->
+    for snooze in [5, 10, 15, 20]
+      do (snooze) ->
+        setTimeout (->
+          expect(y.get()).toBe('none')
+          x.set(snooze)
+        ), snooze
+    setTimeout(
+      ->
+        expect(y.get()).toBe(20)
+        done()
+      60
+    )
+
+
 
 describe 'cast', ->
   it 'should work', ->
@@ -910,18 +926,18 @@ describe 'onElementAttrsChanged', ->
       otherThing: "yes"
     }
 
-    expect(handler.calls.length).toBe(2)
+    expect(handler.calls.count()).toBe(2)
     expect(handler).toHaveBeenCalledWith({$element: $div, attr: "class"})
     expect(handler).toHaveBeenCalledWith({$element: $div, attr: "style"})
 
-    handler.calls.splice(0, handler.calls.length)
+    handler.calls.reset()
     stateCell.set("danger")
-    expect(handler.calls.length).toBe(1)
+    expect(handler.calls.count()).toBe(1)
     expect(handler).toHaveBeenCalledWith({$element: $div, attr: "class"})
 
-    handler.calls.splice(0, handler.calls.length)
+    handler.calls.reset()
     offsetCell.set(10)
-    expect(handler.calls.length).toBe(1)
+    expect(handler.calls.count()).toBe(1)
     expect(handler).toHaveBeenCalledWith({$element: $div, attr: "style"})
 
 describe 'onElementChildrenChanged', ->
@@ -934,12 +950,12 @@ describe 'onElementChildrenChanged', ->
     offsetCell = rx.cell(0)
     $div = rxt.tags.div bind -> stateCell.get()
 
-    expect(handler.calls.length).toBe(1)
+    expect(handler.calls.count()).toBe(1)
     expect(handler).toHaveBeenCalledWith({$element: $div, type: "rerendered"})
 
-    handler.calls.splice(0, handler.calls.length)
+    handler.calls.reset()
     stateCell.set("danger")
-    expect(handler.calls.length).toBe(1)
+    expect(handler.calls.count()).toBe(1)
     expect(handler).toHaveBeenCalledWith({$element: $div, type: "rerendered"})
 
   it "should work for reactive array body", ->
@@ -951,48 +967,48 @@ describe 'onElementChildrenChanged', ->
 
     $ul = rxt.tags.ul items.map (item) -> rxt.tags.li item
 
-    expect(handler.calls.length).toBe(1)
-    expect(handler.calls[0].args[0].$element).toBe($ul)
-    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].removed.length).toBe(0)
-    expect(handler.calls[0].args[0].added.length).toBe(1)
-    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
+    expect(handler.calls.count()).toBe(1)
+    expect(handler.calls.first().args[0].$element).toBe($ul)
+    expect(handler.calls.first().args[0].type).toBe("childrenUpdated")
+    expect(handler.calls.first().args[0].removed.length).toBe(0)
+    expect(handler.calls.first().args[0].added.length).toBe(1)
+    expect(handler.calls.first().args[0].added[0]).toBe($("li", $ul)[0])
 
-    handler.calls.splice(0, handler.calls.length)
+    handler.calls.reset()
     items.push({name: "Intestines", price: 5})
-    expect(handler.calls.length).toBe(1)
-    expect(handler.calls[0].args[0].$element).toBe($ul)
-    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].removed.length).toBe(0)
-    expect(handler.calls[0].args[0].added.length).toBe(1)
-    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[1])
+    expect(handler.calls.count()).toBe(1)
+    expect(handler.calls.first().args[0].$element).toBe($ul)
+    expect(handler.calls.first().args[0].type).toBe("childrenUpdated")
+    expect(handler.calls.first().args[0].removed.length).toBe(0)
+    expect(handler.calls.first().args[0].added.length).toBe(1)
+    expect(handler.calls.first().args[0].added[0]).toBe($("li", $ul)[1])
 
-    handler.calls.splice(0, handler.calls.length)
+    handler.calls.reset()
     items.insert({name: "Intestines", price: 5}, 0)
-    expect(handler.calls.length).toBe(1)
-    expect(handler.calls[0].args[0].$element).toBe($ul)
-    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].removed.length).toBe(0)
-    expect(handler.calls[0].args[0].added.length).toBe(1)
-    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
+    expect(handler.calls.count()).toBe(1)
+    expect(handler.calls.first().args[0].$element).toBe($ul)
+    expect(handler.calls.first().args[0].type).toBe("childrenUpdated")
+    expect(handler.calls.first().args[0].removed.length).toBe(0)
+    expect(handler.calls.first().args[0].added.length).toBe(1)
+    expect(handler.calls.first().args[0].added[0]).toBe($("li", $ul)[0])
 
-    handler.calls.splice(0, handler.calls.length)
+    handler.calls.reset()
     items.removeAt(0)
-    expect(handler.calls.length).toBe(1)
-    expect(handler.calls[0].args[0].$element).toBe($ul)
-    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].added.length).toBe(0)
-    expect(handler.calls[0].args[0].removed.length).toBe(1)
+    expect(handler.calls.count()).toBe(1)
+    expect(handler.calls.first().args[0].$element).toBe($ul)
+    expect(handler.calls.first().args[0].type).toBe("childrenUpdated")
+    expect(handler.calls.first().args[0].added.length).toBe(0)
+    expect(handler.calls.first().args[0].removed.length).toBe(1)
 
-    handler.calls.splice(0, handler.calls.length)
+    handler.calls.reset()
     items.replace([{name: "Wonton"}, {name: "smelly tofu"}])
-    expect(handler.calls.length).toBe(1)
-    expect(handler.calls[0].args[0].$element).toBe($ul)
-    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].added.length).toBe(2)
-    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
-    expect(handler.calls[0].args[0].added[1]).toBe($("li", $ul)[1])
-    expect(handler.calls[0].args[0].removed.length).toBe(2)
+    expect(handler.calls.count()).toBe(1)
+    expect(handler.calls.first().args[0].$element).toBe($ul)
+    expect(handler.calls.first().args[0].type).toBe("childrenUpdated")
+    expect(handler.calls.first().args[0].added.length).toBe(2)
+    expect(handler.calls.first().args[0].added[0]).toBe($("li", $ul)[0])
+    expect(handler.calls.first().args[0].added[1]).toBe($("li", $ul)[1])
+    expect(handler.calls.first().args[0].removed.length).toBe(2)
 
   it "should work with reactive map function", ->
     rxt.events.enabled = true
@@ -1005,27 +1021,27 @@ describe 'onElementChildrenChanged', ->
     $ul = rxt.tags.ul items.map (item) ->
       rxt.tags.li if onSaleCell.get() then item.price * 0.1 else item.price
 
-    expect(handler.calls.length).toEqual(1)
-    expect(handler.calls[0].args[0].$element).toBe($ul)
-    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].added.length).toBe(2)
-    expect(handler.calls[0].args[0].added[0]).toBe($("li", $ul)[0])
-    expect(handler.calls[0].args[0].added[1]).toBe($("li", $ul)[1])
-    expect(handler.calls[0].args[0].removed.length).toBe(0)
+    expect(handler.calls.count()).toEqual(1)
+    expect(handler.calls.first().args[0].$element).toBe($ul)
+    expect(handler.calls.first().args[0].type).toBe("childrenUpdated")
+    expect(handler.calls.first().args[0].added.length).toBe(2)
+    expect(handler.calls.first().args[0].added[0]).toBe($("li", $ul)[0])
+    expect(handler.calls.first().args[0].added[1]).toBe($("li", $ul)[1])
+    expect(handler.calls.first().args[0].removed.length).toBe(0)
 
-    handler.calls.splice(0, handler.calls.length)
+    handler.calls.reset()
     onSaleCell.set(true)
-    expect(handler.calls.length).toEqual(2)
-    expect(handler.calls[0].args[0].$element).toBe($ul)
-    expect(handler.calls[0].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[0].args[0].added).toBe(undefined)
-    expect(handler.calls[0].args[0].removed).toBe(undefined)
-    expect(handler.calls[0].args[0].updated.length).toBe(1)
-    expect(handler.calls[0].args[0].updated[0]).toBe($("li", $ul)[0])
+    expect(handler.calls.count()).toEqual(2)
+    expect(handler.calls.first().args[0].$element).toBe($ul)
+    expect(handler.calls.first().args[0].type).toBe("childrenUpdated")
+    expect(handler.calls.first().args[0].added).toBe(undefined)
+    expect(handler.calls.first().args[0].removed).toBe(undefined)
+    expect(handler.calls.first().args[0].updated.length).toBe(1)
+    expect(handler.calls.first().args[0].updated[0]).toBe($("li", $ul)[0])
 
-    expect(handler.calls[1].args[0].$element).toBe($ul)
-    expect(handler.calls[1].args[0].type).toBe("childrenUpdated")
-    expect(handler.calls[1].args[0].added).toBe(undefined)
-    expect(handler.calls[1].args[0].removed).toBe(undefined)
-    expect(handler.calls[1].args[0].updated.length).toBe(1)
-    expect(handler.calls[1].args[0].updated[0]).toBe($("li", $ul)[1])
+    expect(handler.calls.mostRecent().args[0].$element).toBe($ul)
+    expect(handler.calls.mostRecent().args[0].type).toBe("childrenUpdated")
+    expect(handler.calls.mostRecent().args[0].added).toBe(undefined)
+    expect(handler.calls.mostRecent().args[0].removed).toBe(undefined)
+    expect(handler.calls.mostRecent().args[0].updated.length).toBe(1)
+    expect(handler.calls.mostRecent().args[0].updated[0]).toBe($("li", $ul)[1])

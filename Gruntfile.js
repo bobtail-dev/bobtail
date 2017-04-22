@@ -1,13 +1,12 @@
 'use strict';
-var lrSnippet = require('grunt-contrib-livereload/lib/utils').livereloadSnippet;
-var mountFolder = function (connect, dir) {
-  return connect.static(require('path').resolve(dir));
-};
-
 module.exports = function (grunt) {
   // load all grunt tasks
   require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
-
+  var serveStatic = require('serve-static');
+  var path = require('path');
+  var mountFolder = function (connect, dir) {
+    return serveStatic(path.resolve(dir));
+  };
   // configurable paths
   var yeomanConfig = {
     name: 'reactive-coffee',
@@ -40,17 +39,6 @@ module.exports = function (grunt) {
         port: 9000,
         // Change this to '0.0.0.0' to access the server from outside.
         hostname: 'localhost'
-      },
-      livereload: {
-        options: {
-          middleware: function (connect) {
-            return [
-              lrSnippet,
-              mountFolder(connect, '.tmp'),
-              mountFolder(connect, yeomanConfig.src)
-            ];
-          }
-        }
       },
       test: {
         options: {
@@ -126,14 +114,31 @@ module.exports = function (grunt) {
         }
       }
     },
+    ts: {
+      options: {
+        compile: true,         // perform compilation. [true (default) | false]
+        comments: false,       // same as !removeComments. [true | false (default)]
+        target: 'es5',         // target javascript language. [es3 | es5 (grunt-ts default) | es6]
+        noImplicitAny: false,  // set to true to pass --noImplicitAny to the compiler. [true | false (default)]
+        strictNullChecks: true,
+        alwaysStrict: false
+      },
+      dev: {
+        src: ["src/**/*.ts"],  // The source typescript files, http://gruntjs.com/configuring-tasks#files
+        options: {
+          module: 'commonjs'
+        }
+      }
+    }
   });
 
   grunt.renameTask('regarde', 'watch');
 
   grunt.registerTask('test', [
     'clean:server',
-    // 'bower:install', // slows down build a bit and puts things in ./lib
+    'ts:dev',
     'coffee',
+    // 'bower:install', // slows down build a bit and puts things in ./lib
     'connect:test',
     'karma'
   ]);
