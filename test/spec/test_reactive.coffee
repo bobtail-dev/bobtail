@@ -152,6 +152,295 @@ describe 'rxt of observable array', ->
     multiplierCell.set(10)
     expect($(x).text() for x in $("li", $ul)).toEqual(["10", "20", "30"])
 
+describe 'ObsArray', ->
+  describe 'all', ->
+    it 'should return all items in the ObsArray', ->
+      xs = rx.array []
+      ys = rx.cellToArray bind -> xs.all()
+      expect(snap -> ys.all()).toEqual []
+      xs.push 1
+      expect(snap -> ys.all()).toEqual [1]
+      xs.push 2
+      expect(snap -> ys.all()).toEqual [1, 2]
+      xs.push 3
+      expect(snap -> ys.all()).toEqual [1, 2, 3]
+      xs.push 4
+      expect(snap -> ys.all()).toEqual [1, 2, 3, 4]
+      xs.update []
+      expect(snap -> ys.all()).toEqual []
+      xs.update []
+      expect(snap -> ys.all()).toEqual []
+
+  describe 'at', ->
+    it 'should return the value of the array at a given index', ->
+      arr = rx.array [4, 3, 2, 1, 0]
+      expect(snap -> arr.at 0).toBe 4
+      expect(snap -> arr.at 4).toBe 0
+    it 'should update if the value of the array at that index changes', ->
+      arr = rx.array [1, 2]
+
+    it 'should return undefined if the index is invalid', ->
+      arr = rx.array [0, 1, 2, 3, 4, 5]
+      expect(snap -> arr.at -1).toBeUndefined()
+      expect(snap -> arr.at 42).toBeUndefined()
+      expect(snap -> arr.at undefined).toBeUndefined()
+      expect(snap -> arr.at "foo").toBeUndefined()
+
+  describe 'length', ->
+    it 'should track the length of the array, and update only when the array length changes', ->
+      count = 0
+      arr = rx.array()
+      len = bind -> arr.length()
+      rx.autoSub len.onSet, rx.skipFirst -> count += 1
+      expect(count).toBe 0
+      expect(snap -> len.get()).toBe 0
+      arr.push 1
+      expect(snap -> len.get()).toBe 1
+      expect(count).toBe 1
+      arr.update [4]
+      expect(snap -> len.get()).toBe 1
+      expect(count).toBe 1
+      arr.push 6
+      expect(snap -> len.get()).toBe 2
+      expect(count).toBe 2
+      arr.pop()
+      expect(snap -> len.get()).toBe 1
+      expect(count).toBe 3
+      arr.pop()
+      expect(snap -> len.get()).toBe 0
+      expect(count).toBe 4
+      arr.pop()
+      expect(snap -> len.get()).toBe 0
+      expect(count).toBe 4
+  describe 'transform', ->
+    it 'should allow arbitrary transformation of an array, and track changes', ->
+      arr = rx.array [1, 2, 3, 4, 5, 6]
+      squaredEvens = arr.transform (array) -> array.filter((e) -> e % 2 == 0).map (e) -> e**2
+      expect(snap -> squaredEvens.all()).toEqual [4, 16, 36]
+      arr.push 8
+      expect(snap -> squaredEvens.all()).toEqual [4, 16, 36, 64]
+      arr.update []
+      expect(snap -> squaredEvens.all()).toEqual []
+  describe 'map', ->
+    it '', -> # TODO
+  describe 'filter', ->
+    it 'should keep only elements that pass the provided test', ->
+      arr = rx.array [1, 2, 3, 4, 5, 6]
+      expect(snap -> arr.filter((e) -> e % 2 == 0).all()).toEqual [2, 4, 6]
+      expect(snap -> arr.filter((e) -> e % 2 == 1).all()).toEqual [1, 3, 5]
+    it 'should update when the array changes', ->
+
+  describe 'slice', ->
+    it 'should work like its analagous ES method', ->
+      arr = rx.array [1, 2, 3, 4, 5, 6]
+      expect(snap -> arr.slice(2, 4).all()).toEqual [3, 4]
+      expect(snap -> arr.slice(0, 4).all()).toEqual [1, 2, 3, 4]
+      expect(snap -> arr.slice(0, -1).all()).toEqual [1, 2, 3, 4, 5]
+      expect(snap -> arr.slice(1, -2).all()).toEqual [2, 3, 4]
+      expect(snap -> arr.slice(1).all()).toEqual [2, 3, 4, 5, 6]
+      expect(snap -> arr.slice(-2).all()).toEqual [5, 6]
+    it 'should correctly handle invalid indices', ->
+      arr = rx.array [1, 2, 3, 4, 5, 6]
+      expect(snap -> arr.slice(12, 28).all()).toEqual []
+      expect(snap -> arr.slice(1, 0).all()).toEqual []
+      expect(snap -> arr.slice(0, 12).all()).toEqual [1, 2, 3, 4, 5, 6]
+      expect(snap -> arr.slice(-8, -1).all()).toEqual [1, 2, 3, 4, 5]
+    it 'should track changes', ->
+      arr = rx.array [1, 2, 3, 4, 5, 6]
+      x = arr.slice 1, -1
+      expect(snap -> x.all()).toEqual [2, 3, 4, 5]
+      arr.push 7
+      expect(snap -> x.all()).toEqual [2, 3, 4, 5, 6]
+      arr.pop()
+      expect(snap -> x.all()).toEqual [2, 3, 4, 5]
+      arr.update([8, 9, 10])
+      expect(snap -> x.all()).toEqual [9]
+  describe 'reduce', ->
+    it 'should work like its analagous ES method', ->
+      xs = rx.array []
+      y = bind -> xs.reduce(
+        (accum, curr, i) ->
+          return (accum - curr) * (-1) ** i
+        0
+      )
+      z = bind -> xs.reduce(
+        (accum, curr, i) -> accum + curr * (2 ** i)
+        1
+      )
+      a = bind -> xs.reduce(
+        (accum, curr, i, arr) -> accum + curr + i + arr.length
+        0
+      )
+      expect(y.get()).toBe 0
+      expect(z.get()).toBe 1
+      expect(a.get()).toBe 0
+      xs.replace [16, 8, 4, 2, 1]
+      expect(y.get()).toBe -19
+      expect(z.get()).toBe 81
+      expect(a.get()).toBe 66
+  describe 'reduceRight', ->
+    it 'should work like its analagous ES method', ->
+      xs = rx.array []
+      y = bind -> xs.reduceRight(
+        (accum, curr, i) ->
+          return (accum - curr) * (-1) ** i
+        0
+      )
+      z = bind -> xs.reduceRight(
+        (accum, curr, i, arr) -> accum + curr * (2 ** (arr.length - i - 1))
+        1
+      )
+      a = bind -> xs.reduceRight(
+        (accum, curr, i, arr) -> accum + curr + i + arr.length
+        0
+      )
+      expect(y.get()).toBe 0
+      expect(z.get()).toBe 1
+      expect(a.get()).toBe 0
+      xs.replace [1, 2, 4, 8, 16]
+      expect(y.get()).toBe -19
+      expect(z.get()).toBe 81
+      expect(a.get()).toBe 66
+  describe 'every', ->
+    it 'should return true if every element in the array passes the test', -> # TODO
+      truthy = rx.array [1, 1, 1]
+      falsy = rx.array [1, 1, 0]
+      expect(snap -> truthy.every _.identity).toBe true
+      expect(snap -> falsy.every _.identity).toBe false
+    it 'should short circuit as soon as one element in the array fails', -> # TODO
+      count = 0
+      arr = rx.array [1, 1, 0, 1, 1]
+      soma = bind -> arr.every (e) ->
+        count += 1
+        return e
+      expect(count).toBe 3
+      expect(snap -> soma.get()).toBe false
+    it 'should recalculate whenever the array changes', -> # TODO
+      test = rx.array [1, 1, 1]
+      soma = bind -> test.every _.identity
+      expect(snap -> soma.get()).toBe true
+      test.push 0
+      expect(snap -> soma.get()).toBe false
+      test.pop()
+      expect(snap -> soma.get()).toBe true
+      test.put 1, 0
+      expect(snap -> soma.get()).toBe false
+  describe 'some', ->
+    it 'should return true if any element in the array passes the test', -> # TODO
+      truthy = rx.array [0, 0, 0, 0, 1, 0]
+      falsy = rx.array [0, 0, 0]
+      expect(snap -> truthy.some _.identity).toBe true
+      expect(snap -> falsy.some _.identity).toBe false
+    it 'should short circuit as soon as one element in the array succeeds', ->
+      count = 0
+      arr = rx.array [0, 0, 1, 0]
+      soma = bind -> arr.some (e) ->
+        count += 1
+        return e
+      expect(count).toBe 3
+      expect(snap -> soma.get()).toBe true
+    it 'should recalculate whenever the array changes', ->
+      test = rx.array [0, 0, 0]
+      soma = bind -> test.some _.identity
+      expect(snap -> soma.get()).toBe false
+      test.push 1
+      expect(snap -> soma.get()).toBe true
+      test.pop()
+      expect(snap -> soma.get()).toBe false
+      test.put 1, 1
+      expect(snap -> soma.get()).toBe true
+  describe 'indexOf', ->
+    it 'should return -1 if not found', ->
+      expect(snap -> rx.array([1,2,3]).indexOf 0).toBe -1
+    it 'should return the index where the element is otherwise', ->
+      expect(snap -> rx.array([1,2,3]).indexOf 3).toBe 2
+      expect(snap -> rx.array([1,0,1,2,3]).indexOf 1, 2).toBe 2
+    it 'should update when the underlying array changes', ->
+      arr = rx.array([1,2,3])
+      i = bind -> arr.indexOf 4
+      expect(snap -> i.get()).toBe -1
+      arr.push 4
+      expect(snap -> i.get()).toBe 3
+
+  describe 'lastIndexOf', ->
+    it 'should return -1 if not found', ->
+      expect(snap -> rx.array([1,2,3]).lastIndexOf 0).toBe -1
+    it 'should return the index where the element is otherwise', ->
+      expect(snap -> rx.array([1,2,3]).lastIndexOf 3).toBe 2
+      expect(snap -> rx.array([1,2,3,0,3,0]).lastIndexOf 3, 3).toBe 2
+    it 'should update when the underlying array changes', ->
+      arr = rx.array [1,2,3]
+      i = bind -> arr.lastIndexOf 4
+      expect(snap -> i.get()).toBe -1
+      arr.unshift 4
+      expect(snap -> i.get()).toBe 0
+      arr.push 4
+      expect(snap -> i.get()).toBe 4
+  describe 'join', ->
+    it 'should return the empty string for empty arrays', ->
+      expect(snap -> rx.array().join "abc").toEqual ''
+    it 'should behave like ES join', ->
+      expect(snap -> rx.array([1,2,3,4,5]).join ", ").toEqual '1, 2, 3, 4, 5'
+    it 'should update when the source array changes', ->
+      arr = rx.array []
+      expect(snap -> arr.join ", ").toEqual ''
+      arr.update [1,2,3,4,5]
+      expect(snap -> arr.join ", ").toEqual '1, 2, 3, 4, 5'
+      arr.put(2, 10)
+      expect(snap -> arr.join ", ").toEqual '1, 2, 10, 4, 5'
+      arr.pop()
+      expect(snap -> arr.join ", ").toEqual '1, 2, 10, 4'
+  describe 'first', ->
+    it 'should be undefined for an empty array', ->
+      xs = rx.array()
+      expect(snap -> xs.first()).toBeUndefined()
+    it 'should return the first element of the array', ->
+      xs = rx.array [1,2,3,4]
+      expect(snap -> xs.first()).toBe 1
+    it 'should update as the array changes', ->
+      xs = rx.array []
+      expect(snap -> xs.first()).toBeUndefined()
+      xs.unshift 1
+      expect(snap -> xs.first()).toBe 1
+      xs.unshift 2
+      expect(snap -> xs.first()).toBe 2
+      xs.push 3
+      expect(snap -> xs.first()).toBe 2
+  describe 'last', ->
+    it 'should be undefined for an empty array', ->
+      xs = rx.array()
+      expect(snap -> xs.last()).toBeUndefined()
+    it 'should return the last element of the array', ->
+      xs = rx.array [1,2,3,4]
+      expect(snap -> xs.last()).toBe 4
+    it 'should update as the array changes', ->
+      xs = rx.array []
+      expect(snap -> xs.last()).toBeUndefined()
+      xs.push 1
+      expect(snap -> xs.last()).toBe 1
+      xs.push 2
+      expect(snap -> xs.last()).toBe 2
+      xs.unshift 3
+      expect(snap -> xs.last()).toBe 2
+  describe 'indexed', ->
+    it '', -> # TODO
+  describe 'concat', ->
+    it 'should form a single array out of many', ->
+      expect(snap -> rx.array([1,2,3]).concat([4,5,6], rx.array([7, 8, 9]), rx.array([10])).all()).toEqual [1..10]
+    it 'should update whenever any of its parent arrays change', ->
+      arr1 = rx.array [1,2,3]
+      arr2 = rx.array [4,5,6]
+      arr3 = rx.array [7,8,9]
+
+      concat = arr1.concat arr2, arr3
+      expect(snap -> concat.all()).toEqual [1..9]
+      arr1.update []
+      expect(snap -> concat.all()).toEqual [4..9]
+      arr2.unshift 3
+      expect(snap -> concat.all()).toEqual [3..9]
+      arr3.push 10
+      expect(snap -> concat.all()).toEqual [3..10]
+
 describe 'SrcArray', ->
   describe 'insert', ->
     it 'should insert elements before their target index', ->

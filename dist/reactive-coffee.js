@@ -581,6 +581,71 @@
         return ys;
       };
 
+      ObsArray.prototype.transform = function(f, diff) {
+        return new DepArray(((function(_this) {
+          return function() {
+            return f(_this.all());
+          };
+        })(this)), diff);
+      };
+
+      ObsArray.prototype.filter = function(f) {
+        return this.transform(function(arr) {
+          return arr.filter(f);
+        });
+      };
+
+      ObsArray.prototype.slice = function(x, y) {
+        return this.transform(function(arr) {
+          return arr.slice(x, y);
+        });
+      };
+
+      ObsArray.prototype.reduce = function(f, init) {
+        return this.all().reduce(f, init != null ? init : this.at(0));
+      };
+
+      ObsArray.prototype.reduceRight = function(f, init) {
+        return this.all().reduceRight(f, init != null ? init : this.at(0));
+      };
+
+      ObsArray.prototype.every = function(f) {
+        return this.all().every(f);
+      };
+
+      ObsArray.prototype.some = function(f) {
+        return this.all().some(f);
+      };
+
+      ObsArray.prototype.indexOf = function(val, from) {
+        if (from == null) {
+          from = 0;
+        }
+        return this.all().indexOf(val, from);
+      };
+
+      ObsArray.prototype.lastIndexOf = function(val, from) {
+        if (from == null) {
+          from = this.length() - 1;
+        }
+        return this.all().lastIndexOf(val, from);
+      };
+
+      ObsArray.prototype.join = function(separator) {
+        if (separator == null) {
+          separator = ',';
+        }
+        return this.all().join(separator);
+      };
+
+      ObsArray.prototype.first = function() {
+        return this.at(0);
+      };
+
+      ObsArray.prototype.last = function() {
+        return this.at(this.length() - 1);
+      };
+
       ObsArray.prototype.indexed = function() {
         if (this.indexed_ == null) {
           this.indexed_ = new IndexedDepArray();
@@ -595,8 +660,10 @@
         return this.indexed_;
       };
 
-      ObsArray.prototype.concat = function(that) {
-        return rx.concat(this, that);
+      ObsArray.prototype.concat = function() {
+        var those;
+        those = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        return rx.concat.apply(rx, [this].concat(slice.call(those)));
       };
 
       ObsArray.prototype.realSpliceCells = function(index, count, additions) {
@@ -1006,9 +1073,12 @@
 
     })(DepArray);
     rx.concat = function() {
-      var repLens, xs, xss, ys;
+      var casted, repLens, xs, xss, ys;
       xss = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       ys = new MappedDepArray();
+      casted = xss.map(function(xs) {
+        return rxt.cast(xs, 'array');
+      });
       repLens = (function() {
         var j, len1, results;
         results = [];
@@ -1018,7 +1088,7 @@
         }
         return results;
       })();
-      xss.map(function(xs, i) {
+      casted.forEach(function(xs, i) {
         return rx.autoSub(xs.onChange, function(arg) {
           var added, index, removed, xsOffset;
           index = arg[0], removed = arg[1], added = arg[2];
