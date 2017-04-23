@@ -660,8 +660,10 @@
         return this.indexed_;
       };
 
-      ObsArray.prototype.concat = function(that) {
-        return rx.concat(this, that);
+      ObsArray.prototype.concat = function() {
+        var those;
+        those = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        return rx.concat.apply(rx, [this].concat(slice.call(those)));
       };
 
       ObsArray.prototype.realSpliceCells = function(index, count, additions) {
@@ -1071,9 +1073,12 @@
 
     })(DepArray);
     rx.concat = function() {
-      var repLens, xs, xss, ys;
+      var casted, repLens, xs, xss, ys;
       xss = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       ys = new MappedDepArray();
+      casted = xss.map(function(xs) {
+        return rxt.cast(xs, 'array');
+      });
       repLens = (function() {
         var j, len1, results;
         results = [];
@@ -1083,7 +1088,7 @@
         }
         return results;
       })();
-      xss.map(function(xs, i) {
+      casted.forEach(function(xs, i) {
         return rx.autoSub(xs.onChange, function(arg) {
           var added, index, removed, xsOffset;
           index = arg[0], removed = arg[1], added = arg[2];

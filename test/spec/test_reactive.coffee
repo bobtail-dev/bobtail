@@ -393,17 +393,53 @@ describe 'ObsArray', ->
   describe 'first', ->
     it 'should be undefined for an empty array', ->
       xs = rx.array()
-      z = bind -> xs.first()
-      expect(z.get()).toBeUndefined()
+      expect(snap -> xs.first()).toBeUndefined()
+    it 'should return the first element of the array', ->
+      xs = rx.array [1,2,3,4]
+      expect(snap -> xs.first()).toBe 1
+    it 'should update as the array changes', ->
+      xs = rx.array []
+      expect(snap -> xs.first()).toBeUndefined()
+      xs.unshift 1
+      expect(snap -> xs.first()).toBe 1
+      xs.unshift 2
+      expect(snap -> xs.first()).toBe 2
+      xs.push 3
+      expect(snap -> xs.first()).toBe 2
   describe 'last', ->
     it 'should be undefined for an empty array', ->
       xs = rx.array()
-      z = bind -> xs.last()
-      expect(z.get()).toBeUndefined()
+      expect(snap -> xs.last()).toBeUndefined()
+    it 'should return the last element of the array', ->
+      xs = rx.array [1,2,3,4]
+      expect(snap -> xs.last()).toBe 4
+    it 'should update as the array changes', ->
+      xs = rx.array []
+      expect(snap -> xs.last()).toBeUndefined()
+      xs.push 1
+      expect(snap -> xs.last()).toBe 1
+      xs.push 2
+      expect(snap -> xs.last()).toBe 2
+      xs.unshift 3
+      expect(snap -> xs.last()).toBe 2
   describe 'indexed', ->
     it '', -> # TODO
   describe 'concat', ->
-    it '', -> # TODO
+    it 'should form a single array out of many', ->
+      expect(snap -> rx.array([1,2,3]).concat([4,5,6], rx.array([7, 8, 9]), rx.array([10])).all()).toEqual [1..10]
+    it 'should update whenever any of its parent arrays change', ->
+      arr1 = rx.array [1,2,3]
+      arr2 = rx.array [4,5,6]
+      arr3 = rx.array [7,8,9]
+
+      concat = arr1.concat arr2, arr3
+      expect(snap -> concat.all()).toEqual [1..9]
+      arr1.update []
+      expect(snap -> concat.all()).toEqual [4..9]
+      arr2.unshift 3
+      expect(snap -> concat.all()).toEqual [3..9]
+      arr3.push 10
+      expect(snap -> concat.all()).toEqual [3..10]
 
 describe 'SrcArray', ->
   describe 'insert', ->
