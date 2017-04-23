@@ -10,6 +10,11 @@ rxFactory = (_, $) ->
     delete x[k]
     v
 
+  mapPop = (x, k) ->
+    v = x.get k
+    x.delete k
+    return v
+
   nthWhere = (xs, n, f) ->
     for x,i in xs
       if f(x) and (n -= 1) < 0
@@ -467,125 +472,220 @@ rxFactory = (_, $) ->
         ys.realSplice(xsOffset + index, removed.length, added)
     ys
 
-  FakeSrcCell = class rx.FakeSrcCell extends SrcCell
-    constructor: (@_getter, @_setter) ->
-    get: -> @_getter()
-    set: (x) -> @_setter(x)
+  objToJSMap = (obj) ->
+    if obj instanceof Map then obj
+    else if _.isArray obj then new Map obj
+    else new Map _.pairs obj
 
-  FakeObsCell = class rx.FakeObsCell extends ObsCell
-    constructor: (@_getter) ->
-    get: -> @_getter()
-
-  SrcMapEntryCell = class rx.MapEntryCell extends FakeSrcCell
-    constructor: (@_map, @_key) ->
-    get: -> @_map.get(@_key)
-    set: (x) -> @_map.put(@_key, x)
-
-  ObsMapEntryCell = class rx.ObsMapEntryCell extends FakeObsCell
-    constructor: (@_map, @_key) ->
-    get: -> @_map.get(@_key)
-
+  union = (first, second) -> new Set [first..., second...]
+  intersection = (first, second) -> new Set Array.from(first).filter (item) -> second.has item
+  difference = (first, second) -> new Set Array.from(first).filter (item) -> not second.has item
 
   ObsMap = class rx.ObsMap
-    constructor: (@x = {}) ->
-      @onAdd = new Ev(=> @x) # {key: new...}
-      @onRemove = new Ev() # {key: old...}
-      @onChange = new Ev() # {key: [old, new]...}
+    constructor: (@x = new Map()) ->
+      @x = objToJSMap @x
+      @onAdd = new Ev => [new Map @x] # {key: new...}
+      @onRemove = new Ev => [new Map()] # {key: old...}
+      @onChange = new Ev => [new Map()] # {key: [old, new]...}
     get: (key) ->
-      recorder.sub (target) => rx.autoSub @onAdd, (additions) ->
-        target.refresh() if key of additions
-      recorder.sub (target) => rx.autoSub @onChange, (changes) ->
-        target.refresh() if key of changes
-      recorder.sub (target) => rx.autoSub @onRemove, (removals) ->
-        target.refresh() if key of removals
-      @x[key]
+      recorder.sub (target) => rx.autoSub @onAdd, (additions) -> if additions.has key then target.refresh()
+      recorder.sub (target) => rx.autoSub @onChange, (changes) -> if changes.has key then target.refresh()
+      recorder.sub (target) => rx.autoSub @onRemove, (removals) -> if removals.has key then target.refresh()
+      @x.get key
     has: (key) ->
-      @x[key]?
+      recorder.sub (target) => rx.autoSub @onAdd, (additions) -> if additions.has key then target.refresh()
+      recorder.sub (target) => rx.autoSub @onChange, (changes) -> if changes.has key then target.refresh()
+      recorder.sub (target) => rx.autoSub @onRemove, (removals) -> if removals.has key then target.refresh()
+      @x.has key
     all: ->
       recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
-      _.clone(@x)
+      @x
+    size: -> recorder.sub (target) =>
+      recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
+      recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
+      @x.size
     realPut: (key, val) ->
-      if key of @x
-        old = @x[key]
-        @x[key] = val
-        @onChange.pub _.object [[key, [old, val]]]
-        old
+      if @x.has key
+        old = @x.get key
+        if old != val
+          @x.set key, val
+          @onChange.pub new Map [[key, [old, val]]]
+        return old
       else
-        @x[key] = val
-        @onAdd.pub _.object [[key, val]]
+        @x.set key, val
+        @onAdd.pub new Map [[key, val]]
         undefined
     realRemove: (key) ->
-      val = popKey(@x, key)
-      @onRemove.pub _.object [[key, val]]
+      val = mapPop @x, key
+      @onRemove.pub new Map [[key, val]]
       val
-    cell: (key) ->
-      new ObsMapEntryCell(@, key)
     _update: (other) ->
-      removals = (
-        _.chain @x
-         .keys()
-         .difference _.keys other
-         .map (k) => [k, popKey(@x, k)]
-         .object()
+      otherMap = objToJSMap other
+      ret = new Map @x
+      removals = do =>
+        _.chain Array.from @x.keys()
+         .difference Array.from otherMap.keys()
+         .map (k) => [k, mapPop @x, k]
          .value()
-      )
-      additions = (
-        _.chain other
-         .keys()
-         .difference _.keys @x
-         .map (k) =>
-           val = other[k]
-           @x[k] = val
-           return [k, val]
-         .object()
-         .value()
-      )
-      changes = (
-        _.chain other
-         .pairs()
-         .filter ([k, val]) => k of @x and @x[k] != val
-         .map ([k, val]) =>
-           old = @x[k]
-           @x[k] = val
-           return [k, [old, val]]
-         .object()
-         .value()
-      )
 
-      if _.keys(removals).length then @onRemove.pub removals
-      if _.keys(additions).length then @onAdd.pub additions
-      if _.keys(changes).length then @onChange.pub changes
+      additions = do =>
+        _.chain Array.from otherMap.keys()
+         .difference Array.from @x.keys()
+         .map (k) =>
+           val = otherMap.get k
+           @x.set k, val
+           return [k, val]
+         .value()
+
+      changes = do =>
+        _.chain Array.from otherMap
+         .filter ([k, val]) => @x.has(k) and @x.get(k) != val
+         .map ([k, val]) =>
+           old = @x.get k
+           @x.set k, val
+           return [k, [old, val]]
+         .value()
+
+      if removals.length then @onRemove.pub new Map removals
+      if additions.length then @onAdd.pub new Map additions
+      if changes.length then @onChange.pub new Map changes
+
+      return ret
 
   SrcMap = class rx.SrcMap extends ObsMap
-    put: (key, val) ->
-      recorder.mutating => @realPut(key, val)
-    remove: (key) ->
-      recorder.mutating => @realRemove(key)
-    cell: (key) ->
-      new SrcMapEntryCell(@, key)
-    update: (x) -> recorder.mutating => @_update(x)
+    put: (key, val) -> recorder.mutating => @realPut key, val
+    set: (key, val) -> @put key, val
+    delete: (key) -> recorder.mutating =>
+      val = undefined
+      if @x.has key
+        val = @realRemove key
+        @onRemove.pub new Map [[key, val]]
+      val
+    remove: (key) -> @delete key
+    clear: -> recorder.mutating =>
+      removals = new Map @x
+      @x.clear()
+      if removals.size then @onRemove.pub removals
+      removals
+    update: (x) -> recorder.mutating => @_update x
 
   DepMap = class rx.DepMap extends ObsMap
     constructor: (@f) ->
       super()
       c = new DepCell(@f)
       c.refresh()
-      rx.autoSub c.onSet, ([old, val]) => @_update val
+      rx.autoSub c.onSet, ([old, val]) => @_update objToJSMap val
 
   #
   # Converting POJO attributes to reactive ones.
   #
 
+  objToJSSet = (obj) -> if obj instanceof Set then obj else new Set obj
+  _castOther = (other) ->
+    if other instanceof Set then other
+    else if other instanceof ObsSet then other = other.all()
+
+    if other instanceof ObsArray then other = other.all()
+    if other instanceof ObsCell then other = other.get()
+    new Set other
+
+  ObsSet = class rx.ObsSet
+    constructor: (@_x = new Set()) ->
+      @_x = objToJSSet @_x
+      @onChange = new Ev => [[@_x, new Set()]]
+    has: (key) ->
+      recorder.sub (target) => rx.autoSub @onChange, ([additions, removals]) ->
+        if additions.has(key) or removals.has(key) then target.refresh()
+      @_x.has key
+    all: ->
+      recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
+      @_x
+    values: -> @all()
+    entries: -> @all()
+    size: ->
+      recorder.sub (target) => rx.autoSub @onChange, ([additions, removals]) ->
+        if additions.size != removals.size then target.refresh()
+      @_x.size
+    union: (other) -> new DepSet => union @all(), _castOther other
+    intersection: (other) -> new DepSet => intersection @all(), _castOther other
+    difference: (other) -> new DepSet => difference @all(), _castOther other
+    symmetricDifference: (other) ->
+      new DepSet =>
+        me = @all()
+        other = _castOther other
+        new Set Array.from(union(me, other)).filter (item) -> not me.has(item) or not other.has(item)
+    _update: (y) -> rx.transaction =>
+      old_ = new Set @_x
+      new_ = objToJSSet y
+
+      additions = new Set()
+      removals = new Set()
+
+      # JS sets don't come with subtraction :(
+      old_.forEach (item) -> if not new_.has item then removals.add item
+      new_.forEach (item) -> if not old_.has item then additions.add item
+
+      old_.forEach (item) => @_x.delete item
+      new_.forEach (item) => @_x.add item
+
+      @onChange.pub [
+        additions
+        removals
+      ]
+      old_
+
+
+  SrcSet = class rx.SrcSet extends ObsSet
+    add: (item) -> recorder.mutating =>
+      if not @_x.has item
+        @_x.add item
+        @onChange.pub [
+          new Set [item]
+          new Set()
+        ]
+      item
+    put: (item) -> @add item
+    delete: (item) -> recorder.mutating =>
+      if @_x.has item
+        @_x.delete item
+        @onChange.pub [
+          new Set()
+          new Set [item]
+        ]
+      item
+    remove: (item) -> @delete item
+    clear: -> recorder.mutating =>
+      removals = new Set @_x
+      if @_x.size
+        @_x.clear()
+        @onChange.pub [
+          new Set()
+          removals
+        ]
+      removals
+    update: (y) -> recorder.mutating => @_update y
+
+  DepSet = class rx.DepSet extends ObsSet
+    constructor: (@f) ->
+      super()
+      c = new DepCell(@f)
+      c.refresh()
+      rx.autoSub c.onSet, ([old, val]) => @_update objToJSSet val
+
+  rx.cellToSet = (c) -> new rx.DepSet -> @done @record -> c.get()
+
   rx.liftSpec = (obj) ->
     _.object(
       for name in Object.getOwnPropertyNames(obj)
         val = obj[name]
-        continue if val? and (val instanceof rx.ObsMap or val instanceof rx.ObsCell or val instanceof rx.ObsArray)
+        continue if val? and [rx.ObsMap, rx.ObsCell, rx.ObsArray, rx.ObsSet].some (cls) -> val instanceof cls
         type =
           if _.isFunction(val) then null
           else if _.isArray(val) then 'array'
+          else if val instanceof Map then 'map'
+          else if val instanceof Set then 'set'
           else 'cell'
         [name, {type, val}]
     )
@@ -600,6 +700,8 @@ rxFactory = (_, $) ->
             rx.array(x[name])
           when 'map'
             rx.map(x[name])
+          when 'set'
+            rx.set(x[name])
           else
             x[name]
     x
@@ -682,9 +784,10 @@ rxFactory = (_, $) ->
     )
 
   _.extend(rx, {
-    cell: (x) -> new SrcCell(x)
-    array: (xs, diff) -> new SrcArray((xs ? []).map(rx.cell), diff)
-    map: (x) -> new SrcMap(x)
+    cell: (x) -> new SrcCell x
+    array: (xs, diff) -> new SrcArray (xs ? []).map(rx.cell), diff
+    map: (x) -> new SrcMap x
+    set: (x) -> new SrcSet x
   })
 
   #
@@ -692,7 +795,7 @@ rxFactory = (_, $) ->
   #
 
   rx.flatten = (xs) -> rx.cellToArray bind ->
-    xsArray = rxt.cast(xs, 'array')
+    xsArray = rxt.cast([xs], 'array')
     if not xsArray.length() then return []
     _.chain xsArray.all()
      .map flattenHelper
@@ -701,8 +804,10 @@ rxFactory = (_, $) ->
      .value()
 
   flattenHelper = (x) ->
-    if x instanceof ObsArray then flattenHelper x.raw()
+    if x instanceof ObsArray then flattenHelper x.all()
+    else if x instanceof ObsSet then flattenHelper Array.from x.values()
     else if x instanceof ObsCell then flattenHelper x.get()
+    else if x instanceof Set then flattenHelper Array.from x
     else if _.isArray x then x.map (x_k) -> flattenHelper x_k
     else x
 
@@ -884,7 +989,8 @@ rxFactory = (_, $) ->
           arg1 instanceof $ or
           _.isArray(arg1) or
           arg1 instanceof ObsCell or
-          arg1 instanceof ObsArray
+          arg1 instanceof ObsArray or
+          arg1 instanceof ObsSet
         [{}, arg1]
       else
         [arg1, null]
@@ -1066,11 +1172,16 @@ rxFactory = (_, $) ->
     rxt.cast = (value, type = "cell") ->
       if _.isString(type)
         switch type
+          when 'set'
+            if value instanceof rx.ObsSet then value
+            else if value instanceof rx.ObsArray then new rx.DepSet -> value.all()
+            else if value instanceof rx.ObsCell then new rx.DepSet -> value.get()
+            else new rx.DepSet -> value
           when 'array'
-            if value instanceof rx.ObsArray
-              value
+            if value instanceof rx.ObsArray then value
             else if _.isArray(value)
               new rx.DepArray(-> value)
+            else if value instanceof rx.ObsSet then new rx.DepArray -> Array.from value.values()
             else if value instanceof rx.ObsCell
               new rx.DepArray(-> value.get())
             else
@@ -1134,6 +1245,8 @@ do(root = this, factory = rxFactory) ->
   else if module?.exports?
     $ = if is_browser then require('jquery')
     _ = require 'underscore'
+    require 'es5-shim'
+    require 'es6-shim'
     rx = factory(_, $)
     module.exports = rx
   else if root._? and root.$?

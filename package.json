@@ -1,6 +1,6 @@
 {
   "name": "bobtail",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/yang/reactive-coffee.git"
@@ -30,7 +30,8 @@
     "karma-jasmine": "^1.1.0",
     "karma-phantomjs-launcher": "^1.0.2",
     "matchdep": "^1.0.1",
-    "phantomjs": "~1.9.7-1",
+    "phantomjs": "^2.1.1",
+    "phantomjs-prebuilt": "^2.1.14",
     "serve-static": "^1.11.2",
     "typescript": "^2.1.6"
   },
@@ -41,7 +42,9 @@
     "node": ">=0.8.0"
   },
   "dependencies": {
-    "underscore": "~1.6.0",
-    "jquery": ">=2.1.1"
+    "es5-shim": "^4.5.9",
+    "es6-shim": "^0.35.3",
+    "jquery": ">=2.1.1",
+    "underscore": "~1.6.0"
   }
 }
