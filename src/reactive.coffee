@@ -339,7 +339,7 @@ rxFactory = (_, $) ->
         rx.autoSub @onChangeCells, ([index, removed, added]) =>
           @indexed_.realSpliceCells(index, removed.length, added)
       @indexed_
-    concat: (that) -> rx.concat(this, that)
+    concat: (those...) -> rx.concat(this, those...)
     realSpliceCells: (index, count, additions) ->
       removed = @cells.splice.apply(@cells, [index, count].concat(additions))
       removedElems = rx.snap -> (x2.get() for x2 in removed)
@@ -473,10 +473,11 @@ rxFactory = (_, $) ->
 
   rx.concat = (xss...) ->
     ys = new MappedDepArray()
+    casted = xss.map (xs) -> rxt.cast xs, 'array'
     repLens = (0 for xs in xss)
-    xss.map (xs, i) ->
+    casted.forEach (xs, i) ->
       rx.autoSub xs.onChange, ([index, removed, added]) ->
-        xsOffset = sum(repLens[...i])
+        xsOffset = sum repLens[...i]
         repLens[i] += added.length - removed.length
         ys.realSplice(xsOffset + index, removed.length, added)
     ys
