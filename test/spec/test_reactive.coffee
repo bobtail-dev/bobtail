@@ -785,9 +785,11 @@ describe 'ObsMap', ->
     it 'should fire onChange event for replaced keys', ->
       rx.autoSub x.onChange, (map) -> cb map
       expect(x.put 'a', 1).toBe 0
-      expect(cb.calls.mostRecent().args).toEqual [new Map [['a', [0,1]]]]
+      expect(Array.from cb.calls.mostRecent().args[0]).toEqual [['a', [0,1]]]
+      expect(cb.calls.mostRecent().args.length).toEqual 1
       expect(x.put 'a', 2).toBe 1
-      expect(cb.calls.mostRecent().args).toEqual [new Map [['a', [1,2]]]]
+      expect(Array.from cb.calls.mostRecent().args[0]).toEqual [['a', [1,2]]]
+      expect(cb.calls.mostRecent().args.length).toEqual 1
     it 'should not fire onChange event if value does not change', ->
       rx.autoSub x.onChange, cb
       cb.calls.reset()
@@ -797,7 +799,8 @@ describe 'ObsMap', ->
       rx.autoSub x.onAdd, cb
       cb.calls.reset()
       x.put 'b', 2
-      expect(cb.calls.mostRecent().args).toEqual [new Map [['b', 2]]]
+      expect(Array.from cb.calls.mostRecent().args[0]).toEqual [['b', 2]]
+      expect(cb.calls.mostRecent().args.length).toEqual 1
     it 'should not fire onAdd event for existing keys', ->
       rx.autoSub x.onAdd, cb
       cb.calls.reset()
@@ -809,7 +812,8 @@ describe 'ObsMap', ->
       rx.autoSub x.onRemove, cb
       cb.calls.reset()
       x.remove 'a'
-      expect(cb.calls.mostRecent().args).toEqual [new Map [['a', 0]]]
+      expect(Array.from cb.calls.mostRecent().args[0]).toEqual [['a', 0]]
+      expect(cb.calls.mostRecent().args.length).toBe 1
     it 'should not fire onRemove event if key is not in Map', ->
       rx.autoSub x.onRemove, cb
       cb.calls.reset()
@@ -841,7 +845,7 @@ describe 'ObsMap', ->
       expect(b.get()).toBe undefined
       expect(hasA.get()).toBe true
       expect(hasB.get()).toBe false
-      expect(all.get()).toEqual new Map [['a', 0]]
+      expect(Array.from all.get()).toEqual [['a', 0]]
       expect(size.get()).toEqual 1
     it 'should re-evaluate .has() or .size() binds on any additions and removals', ->
       expect(hasA.get()).toBe true
@@ -862,30 +866,33 @@ describe 'ObsMap', ->
       expect(cbHasB).not.toHaveBeenCalled()
       expect(cbSize).not.toHaveBeenCalled()
     it 'should re-evaluate .all() binds on any change', ->
-      expect(all.get()).toEqual new Map [['a', 0]]
+      expect(snap -> Array.from all.get()).toEqual [['a', 0]]
       x.put('a', 1)
-      expect(all.get()).toEqual new Map [['a', 1]]
+      expect(snap -> Array.from all.get()).toEqual [['a', 1]]
       x.put('b', 2)
-      expect(all.get()).toEqual new Map [['a', 1], ['b', 2]]
+      expect(snap -> Array.from all.get()).toEqual [['a', 1], ['b', 2]]
       x.remove('a')
-      expect(all.get()).toEqual new Map [['b', 2]]
+      expect(snap -> Array.from all.get()).toEqual [['b', 2]]
   describe 'SrcMap mutations', ->
     it 'should support update() via object, pair array, and Map', ->
       called = {}
       rx.autoSub a.onSet, ([o,n]) -> called.a = [o,n]
+      rx.autoSub b.onSet, ([o,n]) -> called.b = [o,n]
       expect(a.get()).toBe 0
       expect(called.a).toEqual [null, 0]
-      expect(x.update {a: 1, b: 2}).toEqual new Map [['a', 0]]
+      expect(snap -> Array.from x.update {a: 1, b: 2}).toEqual [['a', 0]]
       expect(a.get()).toBe 1
       expect(b.get()).toBe 2
       expect(called.a).toEqual [0, 1]
-      expected = new Map [['a', 0], ['b', 1]]
-      expect(x.all()).toEqual expected
-      expect(x.update [['b', 2], ['c', 3]]).toEqual expected
-      expect(called.a).toEqual [1, undefined]
-      expected = new Map [['b', 2], ['c', 3]]
-      expect(x.all()).toEqual expected
-      expect(x.update new Map [[]]).toEqual expected
+      expect(snap -> Array.from x.update {a: 0, b: 1}).toEqual [['a', 1], ['b', 2]]
+      expected = [['a', 0], ['b', 1]]
+      expect(Array.from snap -> x.all()).toEqual expected
+      expect(Array.from x.update [['b', 2], ['c', 3]]).toEqual expected
+      expect(called.a).toEqual [0, undefined]
+      expect(called.b).toEqual [1, 2]
+      expected = [['b', 2], ['c', 3]]
+      expect(Array.from snap -> x.all()).toEqual expected
+      expect(Array.from snap -> x.update new Map [[]]).toEqual expected
     it 'should support put', ->
       expect(x.put 'a', 1).toBe 0
       expect(x.put 'a', 2).toBe 1
@@ -897,9 +904,9 @@ describe 'ObsMap', ->
     it 'should support clear', ->
       rx.autoSub x.onRemove, cb
       cb.calls.reset()
-      expect(x.clear()).toEqual new Map [['a', 0]]
+      expect(snap -> Array.from x.clear()).toEqual [['a', 0]]
       cb.calls.reset()
-      expect(x.clear()).toEqual new Map []
+      expect(snap -> Array.from x.clear()).toEqual []
       expect(cb).not.toHaveBeenCalled()
 
   it 'should support non-string keys', ->
@@ -915,15 +922,15 @@ describe 'ObsMap', ->
   describe 'initialization', ->
     it 'should support initialization by object', ->
       y = rx.map {a: 0, b: 1}
-      expect(y.all()).toEqual new Map [['a', 0], [b, 1]]
+      expect(Array.from y.all()).toEqual [['a', 0], ['b', 1]]
     it 'should support initialization by array of pairs', ->
       arr = []
       y = rx.map [['a', 42], [arr, 0]]
-      expect(y.all()).toEqual new Map [['a', 42], [arr, 0]]
+      expect(Array.from y.all()).toEqual [['a', 42], [arr, 0]]
     it 'should support initialization by Map', ->
       arr = []
       y = rx.map new Map [['a', 42], [arr, 0]]
-      expect(y.all()).toEqual new Map [['a', 42], [arr, 0]]
+      expect(Array.from y.all()).toEqual [['a', 42], [arr, 0]]
 
 
 describe 'ObsSet', ->
@@ -964,7 +971,7 @@ describe 'ObsSet', ->
       rx.autoSub x.onChange, cb
       cb.calls.reset()
       x.remove 'a'
-      expect(cb.calls.mostRecent().args).toEqual [[new Set(['a']), new Set()]]
+      expect(cb.calls.mostRecent().args).toEqual [[new Set(), new Set(['a'])]]
     it 'should not fire onChange event if key is not in Set', ->
       rx.autoSub x.onChange, cb
       cb.calls.reset()
@@ -988,22 +995,6 @@ describe 'ObsSet', ->
       expect(size.get()).toBe 1
       x.put {a: 42}
       expect(size.get()).toBe 2
-    it 'should not re-evaluate any binds when values are not added or removed', ->
-      x.put 'a'
-      x.remove 'b'
-      expect(cbHasA).not.toHaveBeenCalled()
-      expect(cbHasB).not.toHaveBeenCalled()
-      expect(cbAll).not.toHaveBeenCalled()
-      expect(cbSize).not.toHaveBeenCalled()
-      rx.transaction =>
-        x.put 'b'
-        x.remove 'b'
-        x.remove 'a'
-        x.put 'a'
-      expect(cbHasA).not.toHaveBeenCalled()
-      expect(cbHasB).not.toHaveBeenCalled()
-      expect(cbAll).not.toHaveBeenCalled()
-      expect(cbSize).not.toHaveBeenCalled()
     it 'should re-evaluate .all() binds on any change', ->
       expect(all.get()).toEqual new Set ['a']
       x.put 'b'
@@ -1032,80 +1023,80 @@ describe 'ObsSet', ->
     expect(x.has obj).toBe false
 
 
-describe 'ObsSet operations', ->
-  x = y = z = null
-  beforeEach ->
-    x = rx.set ['a', 'c', []]
-    y = rx.set ['a', {}, 'b']
-    z = new Set ['a', {}, 'b']
-  it 'should support union', ->
-    reactive = x.union y
-    simple = x.union z
-    expect(reactive.all()).toEqual new Set ['a', 'b', 'c', {}, []]
-    expect(simple.all()).toEqual new Set ['a', 'b', 'c', {}, []]
-    x.put 42
-    expect(reactive.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
-    expect(simple.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
-    y.put 42
-    expect(reactive.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
-    expect(simple.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
-    x.put 50
-    expect(reactive.all()).toEqual new Set [42, 50, 'a', 'b', 'c', {}, []]
-    expect(simple.all()).toEqual new Set [42, 50, 'a', 'b', 'c', {}, []]
-    y.put 60
-    expect(reactive.all()).toEqual new Set [60, 42, 50, 'a', 'b', 'c', {}, []]
-    expect(simple.all()).toEqual new Set [42, 50, 'a', 'b', 'c', {}, []]
-  it 'should support intersection', ->
-    reactive = x.intersection y
-    simple = x.intersection z
-    expect(reactive.all()).toEqual new Set ['a']
-    expect(simple.all()).toEqual new Set ['a']
-    x.put 42
-    expect(reactive.all()).toEqual new Set ['a']
-    expect(simple.all()).toEqual new Set ['a']
-    y.put 42
-    expect(reactive.all()).toEqual new Set [42, 'a']
-    expect(simple.all()).toEqual new Set ['a']
-    x.put 50
-    expect(reactive.all()).toEqual new Set [42, 'a']
-    expect(simple.all()).toEqual new Set ['a']
-    y.put 60
-    expect(reactive.all()).toEqual new Set [42, 'a']
-    expect(simple.all()).toEqual new Set ['a']
-  it 'should support difference', ->
-    reactive = x.difference y
-    simple = x.difference z
-    expect(reactive.all()).toEqual new Set ['c', []]
-    expect(simple.all()).toEqual new Set ['c', []]
-    x.put 42
-    expect(reactive.all()).toEqual new Set ['c', 42, []]
-    expect(simple.all()).toEqual new Set ['c', 42, []]
-    y.put 42
-    expect(reactive.all()).toEqual new Set ['c', []]
-    expect(simple.all()).toEqual new Set ['c', 42, []]
-    x.put 50
-    expect(reactive.all()).toEqual new Set ['c', 50, []]
-    expect(simple.all()).toEqual new Set ['c', 42, 50, []]
-    y.put 60
-    expect(reactive.all()).toEqual new Set ['c', 50, []]
-    expect(simple.all()).toEqual new Set ['c', 42, 50, []]
-  it 'should support symmetricDifference', ->
-    reactive = x.symmetricDifference y
-    simple = x.symmetricDifference z
-    expect(reactive.all()).toEqual new Set ['c', [], {}, 'b']
-    expect(simple.all()).toEqual new Set ['c', [], {}, 'b']
-    x.put 42
-    expect(reactive.all()).toEqual new Set ['c', [], 42, {}, 'b']
-    expect(simple.all()).toEqual new Set ['c', [], {}, 42, 'b']
-    y.put 42
-    expect(reactive.all()).toEqual new Set ['c', [], {}, 'b']
-    expect(simple.all()).toEqual new Set ['c', [], {}, 42, 'b']
-    x.put 50
-    expect(reactive.all()).toEqual new Set ['c', 50, [], {}, 'b']
-    expect(simple.all()).toEqual new Set [50, 'c', [], {}, 42, 'b']
-    y.put 60
-    expect(reactive.all()).toEqual new Set ['c', 50, [], {},  60, 'b']
-    expect(simple.all()).toEqual new Set [50, 'c', [], {}, 42, 'b']
+#describe 'ObsSet operations', ->
+#  x = y = z = null
+#  beforeEach ->
+#    x = rx.set ['a', 'c', []]
+#    y = rx.set ['a', {}, 'b']
+#    z = new Set ['a', {}, 'b']
+#  it 'should support union', ->
+#    reactive = x.union y
+#    simple = x.union z
+#    expect(reactive.all()).toEqual new Set ['a', 'b', 'c', {}, []]
+#    expect(simple.all()).toEqual new Set ['a', 'b', 'c', {}, []]
+#    x.put 42
+#    expect(reactive.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
+#    expect(simple.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
+#    y.put 42
+#    expect(reactive.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
+#    expect(simple.all()).toEqual new Set [42, 'a', 'b', 'c', {}, []]
+#    x.put 50
+#    expect(reactive.all()).toEqual new Set [42, 50, 'a', 'b', 'c', {}, []]
+#    expect(simple.all()).toEqual new Set [42, 50, 'a', 'b', 'c', {}, []]
+#    y.put 60
+#    expect(reactive.all()).toEqual new Set [60, 42, 50, 'a', 'b', 'c', {}, []]
+#    expect(simple.all()).toEqual new Set [42, 50, 'a', 'b', 'c', {}, []]
+#  it 'should support intersection', ->
+#    reactive = x.intersection y
+#    simple = x.intersection z
+#    expect(reactive.all()).toEqual new Set ['a']
+#    expect(simple.all()).toEqual new Set ['a']
+#    x.put 42
+#    expect(reactive.all()).toEqual new Set ['a']
+#    expect(simple.all()).toEqual new Set ['a']
+#    y.put 42
+#    expect(reactive.all()).toEqual new Set [42, 'a']
+#    expect(simple.all()).toEqual new Set ['a']
+#    x.put 50
+#    expect(reactive.all()).toEqual new Set [42, 'a']
+#    expect(simple.all()).toEqual new Set ['a']
+#    y.put 60
+#    expect(reactive.all()).toEqual new Set [42, 'a']
+#    expect(simple.all()).toEqual new Set ['a']
+#  it 'should support difference', ->
+#    reactive = x.difference y
+#    simple = x.difference z
+#    expect(reactive.all()).toEqual new Set ['c', []]
+#    expect(simple.all()).toEqual new Set ['c', []]
+#    x.put 42
+#    expect(reactive.all()).toEqual new Set ['c', 42, []]
+#    expect(simple.all()).toEqual new Set ['c', 42, []]
+#    y.put 42
+#    expect(reactive.all()).toEqual new Set ['c', []]
+#    expect(simple.all()).toEqual new Set ['c', 42, []]
+#    x.put 50
+#    expect(reactive.all()).toEqual new Set ['c', 50, []]
+#    expect(simple.all()).toEqual new Set ['c', 42, 50, []]
+#    y.put 60
+#    expect(reactive.all()).toEqual new Set ['c', 50, []]
+#    expect(simple.all()).toEqual new Set ['c', 42, 50, []]
+#  it 'should support symmetricDifference', ->
+#    reactive = x.symmetricDifference y
+#    simple = x.symmetricDifference z
+#    expect(reactive.all()).toEqual new Set ['c', [], {}, 'b']
+#    expect(simple.all()).toEqual new Set ['c', [], {}, 'b']
+#    x.put 42
+#    expect(reactive.all()).toEqual new Set ['c', [], 42, {}, 'b']
+#    expect(simple.all()).toEqual new Set ['c', [], {}, 42, 'b']
+#    y.put 42
+#    expect(reactive.all()).toEqual new Set ['c', [], {}, 'b']
+#    expect(simple.all()).toEqual new Set ['c', [], {}, 42, 'b']
+#    x.put 50
+#    expect(reactive.all()).toEqual new Set ['c', 50, [], {}, 'b']
+#    expect(simple.all()).toEqual new Set [50, 'c', [], {}, 42, 'b']
+#    y.put 60
+#    expect(reactive.all()).toEqual new Set ['c', 50, [], {},  60, 'b']
+#    expect(simple.all()).toEqual new Set [50, 'c', [], {}, 42, 'b']
 
 
 describe 'nested bindings', ->
@@ -1605,29 +1596,29 @@ describe 'cellToMap', ->
     x = rx.map {a: 42}
     y = rx.cellToMap bind ->
       x.all()
-    expect(rx.snap -> y.all()).toEqual new Map [['a', 42]]
+    expect(Array.from rx.snap -> y.all()).toEqual [['a', 42]]
     x.put 'b', 17
-    expect(rx.snap -> y.all()).toEqual new Map [['a', 42], ['b', 17]]
+    expect(Array.from rx.snap -> y.all()).toEqual [['a', 42], ['b', 17]]
     x.put 'c', 4
-    expect(rx.snap -> y.all()).toEqual new Map [['a', 42], ['b', 17], ['c', 4]]
+    expect(Array.from rx.snap -> y.all()).toEqual [['a', 42], ['b', 17], ['c', 4]]
     x.update new Map []
-    expect(rx.snap -> y.all()).toEqual new Map []
+    expect(Array.from rx.snap -> y.all()).toEqual []
     obj = {}
     x.update new Map [[obj, 0]]
-    expect(rx.snap -> y.all()).toEqual new Map [[obj, 0]]
+    expect(Array.from rx.snap -> y.all()).toEqual [[obj, 0]]
 
 describe 'cellToSet', ->
   it 'should correctly track changes', ->
     obj = {}
     x = rx.set ['a', obj, 42]
     y = rx.cellToSet bind -> x.all()
-    expect(rx.snap -> y.all()).toEqual new Set ['a', obj, 42]
+    expect(Array.from rx.snap -> y.all()).toEqual ['a', obj, 42]
     x.put 'b'
-    expect(rx.snap -> y.all()).toEqual new Set ['a', obj, 42, 'b']
+    expect(Array.from rx.snap -> y.all()).toEqual ['a', obj, 42, 'b']
     x.put 'c'
-    expect(rx.snap -> y.all()).toEqual new Set ['a', obj, 42, 'b', 'c']
+    expect(Array.from rx.snap -> y.all()).toEqual ['a', obj, 42, 'b', 'c']
     x.update new Set []
-    expect(rx.snap -> y.all()).toEqual new Set []
+    expect(Array.from rx.snap -> y.all()).toEqual []
 
 
 describe 'cellToArray', ->
