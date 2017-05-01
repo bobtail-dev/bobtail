@@ -79,10 +79,7 @@ module.exports = function (grunt) {
       server: '.tmp'
     },
     karma: {
-      unit: {
-        configFile: 'karma.conf.js',
-        singleRun: true
-      }
+      unit: {configFile: 'karma.conf.js'}
     },
     concat: {
       dist: {
