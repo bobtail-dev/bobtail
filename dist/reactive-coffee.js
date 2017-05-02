@@ -84,19 +84,18 @@
       };
 
       DepMgr.prototype.transaction = function(f) {
-        var b, j, len1, ref, res;
+        var fns, res;
         this.buffering += 1;
         try {
           res = f();
         } finally {
           this.buffering -= 1;
           if (this.buffering === 0) {
-            ref = this.buffer;
-            for (j = 0, len1 = ref.length; j < len1; j++) {
-              b = ref[j];
-              b();
-            }
+            fns = this.buffer;
             this.buffer = [];
+            fns.forEach(function(fn) {
+              return fn();
+            });
           }
         }
         return res;
