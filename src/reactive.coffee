@@ -62,8 +62,9 @@ rxFactory = (_, $) ->
       finally
         @buffering -= 1
         if @buffering == 0
-          b() for b in @buffer
+          fns = @buffer
           @buffer = []
+          fns.forEach (fn) -> fn()
       res
 
   rx._depMgr = depMgr = new DepMgr()

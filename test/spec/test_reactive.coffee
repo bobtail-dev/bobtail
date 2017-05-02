@@ -1755,6 +1755,16 @@ describe 'transaction', ->
       y.set(5)
       expect(z.get()).toBe(5)
     expect(z.get()).toBe(5)
+  it 'should not infinite loop if an event is fired while executing a transaction', ->
+    x = rx.cell 0
+    y = rx.cell 1
+    count = rx.cell 0
+    rx.autoSub x.onSet, rx.skipFirst -> count.set snap -> count.get() + 1
+    rx.transaction ->
+      x.set 1
+      x.set 2
+      y.set 3
+    expect(snap -> count.get()).toBe 2
 
 describe 'onElementAttrsChanged', ->
   it 'should trigger for each changed attribute', ->
