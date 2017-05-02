@@ -516,7 +516,7 @@ rxFactory = (_, $) ->
       recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
-      @x
+      new Map @x
     size: -> recorder.sub (target) =>
       recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
@@ -591,7 +591,7 @@ rxFactory = (_, $) ->
       super()
       c = new DepCell(@f)
       c.refresh()
-      rx.autoSub c.onSet, ([old, val]) => @_update objToJSMap val
+      rx.autoSub c.onSet, ([old, val]) => @_update val
 
   #
   # Converting POJO attributes to reactive ones.
@@ -609,14 +609,14 @@ rxFactory = (_, $) ->
   ObsSet = class rx.ObsSet
     constructor: (@_x = new Set()) ->
       @_x = objToJSSet @_x
-      @onChange = new Ev => [[@_x, new Set()]]
+      @onChange = new Ev => [[@_x, new Set()]]  # additions, removals
     has: (key) ->
       recorder.sub (target) => rx.autoSub @onChange, ([additions, removals]) ->
         if additions.has(key) or removals.has(key) then target.refresh()
       @_x.has key
     all: ->
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
-      @_x
+      new Set @_x
     values: -> @all()
     entries: -> @all()
     size: ->
@@ -631,7 +631,7 @@ rxFactory = (_, $) ->
         me = @all()
         other = _castOther other
         new Set Array.from(union(me, other)).filter (item) -> not me.has(item) or not other.has(item)
-    _update: (y) -> rx.transaction =>
+    _update: (y) ->
       old_ = new Set @_x
       new_ = objToJSSet y
 
@@ -685,11 +685,11 @@ rxFactory = (_, $) ->
   DepSet = class rx.DepSet extends ObsSet
     constructor: (@f) ->
       super()
-      c = new DepCell(@f)
-      c.refresh()
-      rx.autoSub c.onSet, ([old, val]) => @_update objToJSSet val
+      c = bind => @f()
+      rx.autoSub c.onSet, ([old, val]) => @_update val
 
-  rx.cellToSet = (c) -> new rx.DepSet -> @done @record -> c.get()
+  rx.cellToSet = (c) ->
+    new rx.DepSet -> c.get()
 
   rx.liftSpec = (obj) ->
     _.object(
