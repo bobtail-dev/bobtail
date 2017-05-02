@@ -61,8 +61,7 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, it capture browsers, run tests and exit
-    singleRun: false
-
+    singleRun: true
   };
 
   if (process && process.env && process.env.TRAVIS) {
@@ -71,4 +70,3 @@ module.exports = function(config) {
 
   config.set(configuration);
 };
-

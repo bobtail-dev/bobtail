@@ -1232,7 +1232,7 @@
             });
           };
         })(this));
-        return this.x;
+        return new Map(this.x);
       };
 
       ObsMap.prototype.size = function() {
@@ -1402,7 +1402,7 @@
           return function(arg) {
             var old, val;
             old = arg[0], val = arg[1];
-            return _this._update(objToJSMap(val));
+            return _this._update(val);
           };
         })(this));
       }
@@ -1465,7 +1465,7 @@
             });
           };
         })(this));
-        return this._x;
+        return new Set(this._x);
       };
 
       ObsSet.prototype.values = function() {
@@ -1529,33 +1529,33 @@
       };
 
       ObsSet.prototype._update = function(y) {
-        return rx.transaction((function(_this) {
-          return function() {
-            var additions, new_, old_, removals;
-            old_ = new Set(_this._x);
-            new_ = objToJSSet(y);
-            additions = new Set();
-            removals = new Set();
-            old_.forEach(function(item) {
-              if (!new_.has(item)) {
-                return removals.add(item);
-              }
-            });
-            new_.forEach(function(item) {
-              if (!old_.has(item)) {
-                return additions.add(item);
-              }
-            });
-            old_.forEach(function(item) {
-              return _this._x["delete"](item);
-            });
-            new_.forEach(function(item) {
-              return _this._x.add(item);
-            });
-            _this.onChange.pub([additions, removals]);
-            return old_;
+        var additions, new_, old_, removals;
+        old_ = new Set(this._x);
+        new_ = objToJSSet(y);
+        additions = new Set();
+        removals = new Set();
+        old_.forEach(function(item) {
+          if (!new_.has(item)) {
+            return removals.add(item);
+          }
+        });
+        new_.forEach(function(item) {
+          if (!old_.has(item)) {
+            return additions.add(item);
+          }
+        });
+        old_.forEach((function(_this) {
+          return function(item) {
+            return _this._x["delete"](item);
           };
         })(this));
+        new_.forEach((function(_this) {
+          return function(item) {
+            return _this._x.add(item);
+          };
+        })(this));
+        this.onChange.pub([additions, removals]);
+        return old_;
       };
 
       return ObsSet;
@@ -1632,13 +1632,16 @@
         var c;
         this.f = f1;
         DepSet.__super__.constructor.call(this);
-        c = new DepCell(this.f);
-        c.refresh();
+        c = bind((function(_this) {
+          return function() {
+            return _this.f();
+          };
+        })(this));
         rx.autoSub(c.onSet, (function(_this) {
           return function(arg) {
             var old, val;
             old = arg[0], val = arg[1];
-            return _this._update(objToJSSet(val));
+            return _this._update(val);
           };
         })(this));
       }
@@ -1648,9 +1651,7 @@
     })(ObsSet);
     rx.cellToSet = function(c) {
       return new rx.DepSet(function() {
-        return this.done(this.record(function() {
-          return c.get();
-        }));
+        return c.get();
       });
     };
     rx.liftSpec = function(obj) {
