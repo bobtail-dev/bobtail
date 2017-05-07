@@ -419,6 +419,14 @@
         return this.all();
       };
 
+      ObsCell.prototype.readonly = function() {
+        return new DepCell((function(_this) {
+          return function() {
+            return _this.all();
+          };
+        })(this));
+      };
+
       return ObsCell;
 
     })(ObsBase);
@@ -581,6 +589,14 @@
         return this._cells.map(function(c) {
           return c.raw();
         });
+      };
+
+      ObsArray.prototype.readonly = function() {
+        return new DepArray((function(_this) {
+          return function() {
+            return _this.all();
+          };
+        })(this));
       };
 
       ObsArray.prototype.rawCells = function() {
@@ -1235,6 +1251,14 @@
         return new Map(this._base);
       };
 
+      ObsMap.prototype.readonly = function() {
+        return new DepMap((function(_this) {
+          return function() {
+            return _this.all();
+          };
+        })(this));
+      };
+
       ObsMap.prototype.size = function() {
         return recorder.sub((function(_this) {
           return function(target) {
@@ -1460,6 +1484,14 @@
           return target.refresh();
         });
         return new Set(this._base);
+      };
+
+      ObsSet.prototype.readonly = function() {
+        return new DepSet((function(_this) {
+          return function() {
+            return _this.all();
+          };
+        })(this));
       };
 
       ObsSet.prototype.values = function() {

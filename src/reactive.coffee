@@ -246,6 +246,7 @@ rxFactory = (_, $) ->
       @subAll (target) -> target.refresh()
       @_base
     get: -> @all()
+    readonly: -> new DepCell => @all()
 
   SrcCell = class rx.SrcCell extends ObsCell
     set: (x) -> recorder.mutating => if @_base != x
@@ -330,6 +331,7 @@ rxFactory = (_, $) ->
       recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
       @_cells.map (c) -> c.get()
     raw: -> @_cells.map (c) -> c.raw()
+    readonly: -> new DepArray => @all()
     rawCells: -> @_cells
     at: (i) ->
       recorder.sub (target) => rx.autoSub @onChange, ([index, removed, added]) ->
@@ -539,6 +541,7 @@ rxFactory = (_, $) ->
     all: ->
       @subAll (target) -> target.refresh()
       new Map @_base
+    readonly: -> new DepMap => @all()
     size: -> recorder.sub (target) =>
       recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
       recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
@@ -639,6 +642,7 @@ rxFactory = (_, $) ->
     all: ->
       @subAll (target) -> target.refresh()
       new Set @_base
+    readonly: -> new DepSet => @all()
     values: -> @all()
     entries: -> @all()
     size: ->
