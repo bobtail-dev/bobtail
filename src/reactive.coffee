@@ -49,16 +49,10 @@ rxFactory = (_, $) ->
   # dependents)
   DepMgr = class rx.DepMgr
     constructor: ->
-      @uid2src = {}
       @buffering = 0
       @buffer = []
+      @events = new Set()
     # called by Ev.sub to register a new subscription
-    sub: (uid, src) ->
-      @uid2src[uid] = src
-    # called by Ev.unsub to unregister a subscription
-    unsub: (uid) ->
-      popKey(@uid2src, uid)
-    # transactions
     transaction: (f) ->
       @buffering += 1
       try
@@ -66,32 +60,44 @@ rxFactory = (_, $) ->
       finally
         @buffering -= 1
         if @buffering == 0
-          fns = @buffer
-          @buffer = []
-          fns.forEach (fn) -> fn()
+          immediateDeps = new Set _.flatten Array.from(@events).map ({downstreamCells}) -> Array.from downstreamCells
+          allDeps = rx.allDownstream immediateDeps...
+          allDeps.forEach (cell) -> cell._shield = true
+          try
+            # we need to clear the buffer now, in case rx.transaction is called as a result of one
+            # the events that we're publishing, since that would cause transaction to execute again with
+            # the full buffer, causing an infinite loop.
+            bufferedPubs = @buffer
+            @buffer = []
+            @events.clear()
+
+            bufferedPubs.map ([ev, data]) -> ev.pub data
+            allDeps.forEach (c) -> c.refresh()
+          finally
+            allDeps.forEach (cell) -> cell._shield = false
       res
 
   rx._depMgr = depMgr = new DepMgr()
 
   Ev = class rx.Ev
-    constructor: (@init) ->
+    constructor: (@init, @observable) ->
       @subs = mkMap()
+      @downstreamCells = new Set()
     sub: (listener) ->
       uid = mkuid()
       if @init? then listener @init()
       @subs[uid] = listener
-      depMgr.sub(uid, this)
       uid
     # callable only by the src
     pub: (data) ->
       if depMgr.buffering
-        depMgr.buffer.push => @pub(data)
+        depMgr.buffer.push [@, data]
+        depMgr.events.add @
       else
         for uid, listener of @subs
           listener(data)
     unsub: (uid) ->
       popKey(@subs, uid)
-      depMgr.unsub(uid, this)
     # listener is subscribed only for the duration of the context
     scoped: (listener, context) ->
       uid = @sub(listener)
@@ -109,6 +115,23 @@ rxFactory = (_, $) ->
   #
   # Reactivity
   #
+
+  rx.upstream = (cell) ->
+    events = Array.from cell.upstreamEvents
+    depCells = events.map (ev) -> ev.observable
+    Array.from new Set depCells
+
+  allDownstreamHelper = rx._allDownstreamHelper = (cells...) ->
+    if cells.length
+      downstream = Array.from new Set _.flatten cells.map (cell) ->
+        Array.from cell.onSet.downstreamCells
+      r = _.flatten [downstream, allDownstreamHelper downstream...]
+      return r
+    return []
+
+  rx.allDownstream = (cells...) ->
+    Array.from(new Set [cells..., allDownstreamHelper(cells...)...].reverse()).reverse()
+
 
   Recorder = class rx.Recorder
     constructor: ->
@@ -135,16 +158,18 @@ rxFactory = (_, $) ->
         @isIgnoring = wasIgnoring
         @isMutating = wasMutating
         @stack.pop()
-    # Takes a subscriber function that adds the current cell as an invalidation
-    # listener; the subscriber function is responsible for actually subscribing
-    # the current listener to the appropriate events; note that we are
-    # establishing both directions of the dependency tracking here (subscribing
-    # to the dependency's events as well as registering the subscription UID with
-    # the current listener)
-    sub: (sub) ->
+
+    # subscribes the current cell to an event; the cell will refresh if the event fires and condFn returns true.
+    # note that we are establishing both directions of the dependency tracking here (subscribing
+    # to the dependency's events as well as registering the subscription UID with the current listener)
+    sub: (event, condFn=->true) ->
       if @stack.length > 0 and not @isIgnoring
         topCell = _(@stack).last()
-        handle = sub(topCell)
+        topCell.upstreamEvents.add event
+        event.downstreamCells.add topCell
+        rx.autoSub event, (evData...) ->
+          if condFn evData... then topCell.refresh()
+
     addCleanup: (cleanup) ->
       _(@stack).last().addCleanup(cleanup) if @stack.length > 0
     # Delimit the function as one where a mutation takes place, such that if
@@ -228,8 +253,7 @@ rxFactory = (_, $) ->
       set: => rx.set.from @
     }
     flatten: -> rx.flatten @
-    subAll: (targetFn) -> @events.forEach (ev) -> recorder.sub (target) -> rx.autoSub ev, (result) ->
-      targetFn target, result
+    subAll: (condFn=-> true) -> @events.forEach (ev) -> recorder.sub ev, condFn
     raw: -> @_base
     _mkEv: (f) ->
       ev = new Ev f, @
@@ -242,8 +266,21 @@ rxFactory = (_, $) ->
       super()
       @_base = @_base ? null
       @onSet = @_mkEv => [null, @_base] # [old, new]
+      @_shield = false
+      downstreamCells = => @onSet.downstreamCells
+      @refreshAll = =>
+        if @onSet.downstreamCells.size and not @_shield
+          @_shield = true
+          cells = rx.allDownstream Array.from(downstreamCells())...
+          cells.forEach (c) -> c._shield = true
+          try cells.forEach (c) -> c.refresh()
+          finally
+            cells.forEach (c) -> c._shield = false
+            @_shield = false
+      @refreshSub = rx.autoSub @onSet, @refreshAll
+
     all: ->
-      @subAll (target) -> target.refresh()
+      @subAll => not @_shield
       @_base
     get: -> @all()
     readonly: -> new DepCell => @all()
@@ -261,6 +298,7 @@ rxFactory = (_, $) ->
       @refreshing = false
       @nestedBinds = []
       @cleanups = []
+      @upstreamEvents = new Set()
     refresh: ->
       if not @refreshing
         old = @_base
@@ -276,7 +314,8 @@ rxFactory = (_, $) ->
         # create and discard tentative recordings.  It's also unclear whether
         # such a lagBind is more desirable (in the face of changing dependencies)
         # and whether on-completion is what's most generalizable.
-        realDone = (@_base) => @onSet.pub([old, @_base])
+        realDone = (@_base) =>
+          @onSet.pub [old, @_base]
         recorded = false
         syncResult = null
         isSynchronous = false
@@ -313,6 +352,8 @@ rxFactory = (_, $) ->
         nestedBind.disconnect()
       @nestedBinds = []
       @cleanups = []
+      @upstreamEvents.forEach (ev) => ev.downstreamCells.delete @
+      @upstreamEvents.clear()
     # called by recorder
     addNestedBind: (nestedBind) ->
       @nestedBinds.push(nestedBind)
@@ -326,23 +367,22 @@ rxFactory = (_, $) ->
       @onChange = @_mkEv => [0, [], @_cells.map (c) -> c.raw()] # [index, removed, added]
       @onChangeCells = @_mkEv => [0, [], @_cells] # [index, removed, added]
       @_indexed = null
-      super @onChange, @onChangeCells
     all: ->
-      recorder.sub (target) => rx.autoSub @onChange, -> target.refresh()
+      recorder.sub @onChange
       @_cells.map (c) -> c.get()
     raw: -> @_cells.map (c) -> c.raw()
     readonly: -> new DepArray => @all()
     rawCells: -> @_cells
     at: (i) ->
-      recorder.sub (target) => rx.autoSub @onChange, ([index, removed, added]) ->
+      recorder.sub @onChange, ([index, removed, added]) ->
         # if elements were inserted or removed prior to this element
-        if index <= i and removed.length != added.length then target.refresh()
+        if index <= i and removed.length != added.length then true
         # if this element is one of the elements changed
-        if removed.length == added.length and i <= index + removed.length then target.refresh()
+        else if removed.length == added.length and i <= index + removed.length then true
+        else false
       @_cells[i]?.get()
     length: ->
-      recorder.sub (target) => rx.autoSub @onChangeCells, ([index, removed, added]) ->
-        target.refresh() if removed.length != added.length
+      recorder.sub @onChangeCells, ([index, removed, added]) -> removed.length != added.length
       @_cells.length
     size: -> @length()
     map: (f) ->
@@ -380,8 +420,9 @@ rxFactory = (_, $) ->
       removed = @_cells.splice.apply(@_cells, [index, count].concat(additions))
       removedElems = rx.snap -> (x2.get() for x2 in removed)
       addedElems = rx.snap -> (x3.get() for x3 in additions)
-      @onChangeCells.pub([index, removed, additions])
-      @onChange.pub([index, removedElems, addedElems])
+      rx.transaction =>
+        @onChangeCells.pub([index, removed, additions])
+        @onChange.pub([index, removedElems, addedElems])
     realSplice: (index, count, additions) ->
       @realSpliceCells(index, count, additions.map(rx.cell))
     _update: (val, diff = @diff) ->
@@ -491,8 +532,9 @@ rxFactory = (_, $) ->
       @is.splice(index, count, newIs...)
 
       addedElems = rx.snap -> (x3.get() for x3 in additions)
-      @onChangeCells.pub([index, removed, _.zip(additions, newIs)])
-      @onChange.pub([index, removedElems, _.zip(addedElems, newIs)])
+      rx.transaction =>
+        @onChangeCells.pub([index, removed, _.zip(additions, newIs)])
+        @onChange.pub([index, removedElems, _.zip(addedElems, newIs)])
   IndexedMappedDepArray = class rx.IndexedMappedDepArray extends IndexedDepArray
 
   DepArray = class rx.DepArray extends ObsArray
@@ -532,19 +574,19 @@ rxFactory = (_, $) ->
       @onRemove = @_mkEv => new Map() # {key: old...}
       @onChange = @_mkEv => new Map() # {key: [old, new]...}
     get: (key) ->
-      @subAll (target, result) -> if result.has key then target.refresh()
+      @subAll (result) -> result.has key
       @_base.get key
     has: (key) ->
-      recorder.sub (target) => rx.autoSub @onAdd, (additions) -> if additions.has key then target.refresh()
-      recorder.sub (target) => rx.autoSub @onRemove, (removals) -> if removals.has key then target.refresh()
+      recorder.sub @onAdd, (additions) -> additions.has key
+      recorder.sub @onRemove, (removals) -> removals.has key
       @_base.has key
     all: ->
-      @subAll (target) -> target.refresh()
+      @subAll()
       new Map @_base
     readonly: -> new DepMap => @all()
-    size: -> recorder.sub (target) =>
-      recorder.sub (target) => rx.autoSub @onRemove, -> target.refresh()
-      recorder.sub (target) => rx.autoSub @onAdd, -> target.refresh()
+    size: ->
+      recorder.sub @onRemove
+      recorder.sub @onAdd
       @_base.size
     realPut: (key, val) ->
       if @_base.has key
@@ -588,9 +630,10 @@ rxFactory = (_, $) ->
            return [k, [old, val]]
          .value()
 
-      if removals.length then @onRemove.pub new Map removals
-      if additions.length then @onAdd.pub new Map additions
-      if changes.length then @onChange.pub new Map changes
+      rx.transaction =>
+        if removals.length then @onRemove.pub new Map removals
+        if additions.length then @onAdd.pub new Map additions
+        if changes.length then @onChange.pub new Map changes
 
       return ret
 
@@ -636,18 +679,16 @@ rxFactory = (_, $) ->
       @_base = objToJSSet @_base
       @onChange = @_mkEv => [@_base, new Set()]  # additions, removals
     has: (key) ->
-      @subAll (target, [additions, removals]) ->
-        if additions.has(key) or removals.has(key) then target.refresh()
+      @subAll ([additions, removals]) -> additions.has(key) or removals.has(key)
       @_base.has key
     all: ->
-      @subAll (target) -> target.refresh()
+      @subAll()
       new Set @_base
     readonly: -> new DepSet => @all()
     values: -> @all()
     entries: -> @all()
     size: ->
-      @subAll (target, [additions, removals]) ->
-        if additions.size != removals.size then target.refresh()
+      @subAll ([additions, removals]) -> additions.size != removals.size
       @_base.size
     union: (other) -> new DepSet => union @all(), _castOther other
     intersection: (other) -> new DepSet => intersection @all(), _castOther other
