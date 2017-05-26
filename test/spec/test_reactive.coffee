@@ -3,9 +3,12 @@
 div = rxt.tags.div
 outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
-{jasmine} = window
+{_, $, jasmine} = window
 
 jasmine.CATCH_EXCEPTIONS = false
+
+describe 'ObsBase', ->
+
 
 describe 'source cell', ->
   src = null
@@ -1538,11 +1541,12 @@ describe 'cast', ->
       label: 'hello'
       options: [1..3]
       values: bind -> [1..3]
-    casted = rxt.cast opts,
+    casted = rxt.cast opts, {
       selected: 'cell'
       label: 'cell'
       options: 'array'
       values: 'array'
+    }
     expect(casted.change).toBe(opts.change)
     expect(casted.selected).toBe(opts.selected)
     expect(casted.label.get()).toBe(opts.label)
@@ -1724,17 +1728,18 @@ describe 'lift', ->
     expect(rx.lift({})).toEqual({})
   it 'should convert POJO attributes to observable ones', ->
     x = {x:0, y:[], z:{}, n:null}
-    expect(rx.lift(x)).toBe(x)
-    expect(x.x).toEqual(jasmine.any(rx.ObsCell))
-    expect(x.y).toEqual(jasmine.any(rx.ObsArray))
-    expect(x.z).toEqual(jasmine.any(rx.ObsCell))
-    expect(x.n).toEqual(jasmine.any(rx.ObsCell))
+    y = rx.lift(x)
+    expect(_.mapObject y, (v) -> v.all()).toEqual x
+    expect(y.x).toEqual jasmine.any rx.ObsCell
+    expect(y.y).toEqual jasmine.any rx.ObsArray
+    expect(y.z).toEqual jasmine.any rx.ObsCell
+    expect(y.n).toEqual jasmine.any rx.ObsCell
     expect(
-      x:x.x.get()
-      y:x.y.all()
-      z:x.z.get()
-      n:x.n.get()
-    ).toEqual({x:0, y:[], z:{}, n:null})
+      x:y.x.get()
+      y:y.y.all()
+      z:y.z.get()
+      n:y.n.get()
+    ).toEqual {x:0, y:[], z:{}, n:null}
   it 'should skip over already-observable members', ->
     c = {x: bind(-> 0), y: rx.array(), z: rx.map()}
     {x,y,z} = c
