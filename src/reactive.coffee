@@ -218,6 +218,12 @@ rxFactory = (_, $) ->
     rx.onDispose -> ev.unsub(subid)
     subid
 
+  rx.subOnce = (event, listener) ->
+    uid = rx.autoSub event, rx.skipFirst (args...) ->
+      _.defer -> listener args...
+      event.unsub uid
+    return uid
+
   ObsBase = class rx.ObsBase
     constructor: ->
       @events = []
@@ -1194,6 +1200,53 @@ rxFactory = (_, $) ->
         elt
 
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
+    {input} = rxt.tags
+
+    _input = (type, opts) -> swapVal input _.extend {type}, opts
+    input.color = (opts) -> _input 'color', opts
+    input.date = (opts) -> _input 'date', opts
+    input.datetime = (opts) -> _input 'datetime', opts
+    input.datetimeLocal = (opts) -> _input 'datetime-local', opts
+    input.email = (opts) -> _input 'email', opts
+    input.file = (opts) -> _input 'file', opts
+    input.hidden = (opts) -> _input 'hidden', opts
+    input.image = (opts) -> _input 'image', opts
+    input.month = (opts) -> _input 'month', opts
+    input.number = (opts) -> _input 'number', opts
+    input.password = (opts) -> _input 'password', opts
+    input.range = (opts) -> _input 'range', opts
+    input.reset = (opts) -> _input 'reset', opts
+    input.search = (opts) -> _input 'search', opts
+    input.submit = (opts) -> _input 'submit', opts
+    input.tel = (opts) -> _input 'tel', opts
+    input.text = (opts) -> _input 'text', opts
+    input.time = (opts) -> _input 'time', opts
+    input.url = (opts) -> _input 'url', opts
+    input.week = (opts) -> _input 'week', opts
+
+    swapChecked = ($input) ->
+      ###
+      Swaps $input.prop so that, whenever $input.prop("checked", ...) is called to set whether $input
+      is checked, we also update the content of $input.rx("checked") with the same.
+      ###
+      $input._oldProp = $input.prop
+      $input.prop = (args...) ->
+        res = $input._oldProp(args...)
+        if args.length > 1 and args[0] == "checked"
+          $input.rx("checked").set $input.prop("checked")
+        return res
+      return $input
+
+    input.checkbox = (opts) ->
+      ###
+      A checkbox with a default property `data-unchecked-value` of "false".  This is so that if you
+      use $.serializeJSON() to read the value of this checkbox in a form, the value will be false
+      if it is unchecked.
+      ###
+      swapChecked input _.extend({type: "checkbox"}, opts)
+
+    input.radio = radio = (opts) -> swapChecked input _.extend({type: "radio"}, opts)
+
     rxt.svg_tags = _.object([tag, rxt.svg_mktag(tag)] for tag in svg_tags)
 
     rxt.rawHtml = (html) -> new RawHtml(html)

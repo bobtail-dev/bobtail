@@ -6,7 +6,7 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, DepSet, Ev, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsBase, ObsCell, ObsMap, ObsSet, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcSet, _castOther, asyncBind, bind, depMgr, difference, ev, events, firstWhere, flatten, flattenHelper, fn1, intersection, j, lagBind, len1, mapPop, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, objToJSMap, objToJSSet, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, tag, tags, toNodes, union, updateContents, updateSVGContents;
+    var DepArray, DepCell, DepMap, DepMgr, DepSet, Ev, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsBase, ObsCell, ObsMap, ObsSet, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcSet, _castOther, _input, asyncBind, bind, depMgr, difference, ev, events, firstWhere, flatten, flattenHelper, fn1, input, intersection, j, lagBind, len1, mapPop, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, objToJSMap, objToJSSet, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, radio, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, swapChecked, tag, tags, toNodes, union, updateContents, updateSVGContents;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -344,6 +344,18 @@
         return ev.unsub(subid);
       });
       return subid;
+    };
+    rx.subOnce = function(event, listener) {
+      var uid;
+      uid = rx.autoSub(event, rx.skipFirst(function() {
+        var args;
+        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        _.defer(function() {
+          return listener.apply(null, args);
+        });
+        return event.unsub(uid);
+      }));
+      return uid;
     };
     ObsBase = rx.ObsBase = (function() {
       function ObsBase() {
@@ -2423,6 +2435,106 @@
         }
         return results;
       })());
+      input = rxt.tags.input;
+      _input = function(type, opts) {
+        return swapVal(input(_.extend({
+          type: type
+        }, opts)));
+      };
+      input.color = function(opts) {
+        return _input('color', opts);
+      };
+      input.date = function(opts) {
+        return _input('date', opts);
+      };
+      input.datetime = function(opts) {
+        return _input('datetime', opts);
+      };
+      input.datetimeLocal = function(opts) {
+        return _input('datetime-local', opts);
+      };
+      input.email = function(opts) {
+        return _input('email', opts);
+      };
+      input.file = function(opts) {
+        return _input('file', opts);
+      };
+      input.hidden = function(opts) {
+        return _input('hidden', opts);
+      };
+      input.image = function(opts) {
+        return _input('image', opts);
+      };
+      input.month = function(opts) {
+        return _input('month', opts);
+      };
+      input.number = function(opts) {
+        return _input('number', opts);
+      };
+      input.password = function(opts) {
+        return _input('password', opts);
+      };
+      input.range = function(opts) {
+        return _input('range', opts);
+      };
+      input.reset = function(opts) {
+        return _input('reset', opts);
+      };
+      input.search = function(opts) {
+        return _input('search', opts);
+      };
+      input.submit = function(opts) {
+        return _input('submit', opts);
+      };
+      input.tel = function(opts) {
+        return _input('tel', opts);
+      };
+      input.text = function(opts) {
+        return _input('text', opts);
+      };
+      input.time = function(opts) {
+        return _input('time', opts);
+      };
+      input.url = function(opts) {
+        return _input('url', opts);
+      };
+      input.week = function(opts) {
+        return _input('week', opts);
+      };
+      swapChecked = function($input) {
+
+        /*
+        Swaps $input.prop so that, whenever $input.prop("checked", ...) is called to set whether $input
+        is checked, we also update the content of $input.rx("checked") with the same.
+         */
+        $input._oldProp = $input.prop;
+        $input.prop = function() {
+          var args, res;
+          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          res = $input._oldProp.apply($input, args);
+          if (args.length > 1 && args[0] === "checked") {
+            $input.rx("checked").set($input.prop("checked"));
+          }
+          return res;
+        };
+        return $input;
+      };
+      input.checkbox = function(opts) {
+
+        /*
+        A checkbox with a default property `data-unchecked-value` of "false".  This is so that if you
+        use $.serializeJSON() to read the value of this checkbox in a form, the value will be false
+        if it is unchecked.
+         */
+        return swapChecked(input(_.extend({
+          type: "checkbox"
+        }, opts)));
+      };
+      input.radio = radio = function(opts) {
+        return swapChecked(input(_.extend({
+          type: "radio"
+        }, opts)));
+      };
       rxt.svg_tags = _.object((function() {
         var l, len2, results;
         results = [];
