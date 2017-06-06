@@ -1250,6 +1250,8 @@ rxFactory = (_, $) ->
     rxt.svg_tags = _.object([tag, rxt.svg_mktag(tag)] for tag in svg_tags)
 
     rxt.rawHtml = (html) -> new RawHtml(html)
+    rxt.specialChar = (code, tag='span') -> rxt.rawHtml "<#{tag}>&#{code};</#{tag}>"
+    rxt.unicodeChar = (code, tag='span') -> rxt.rawHtml "<#{tag}>\\u#{code};</#{tag}>"
     rxt.importTags = (x) => _(x ? this).extend(rxt.tags)
     #
     # rxt utilities
