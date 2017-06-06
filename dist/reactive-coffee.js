@@ -2547,6 +2547,18 @@
       rxt.rawHtml = function(html) {
         return new RawHtml(html);
       };
+      rxt.specialChar = function(code, tag) {
+        if (tag == null) {
+          tag = 'span';
+        }
+        return rxt.rawHtml("<" + tag + ">&" + code + ";</" + tag + ">");
+      };
+      rxt.unicodeChar = function(code, tag) {
+        if (tag == null) {
+          tag = 'span';
+        }
+        return rxt.rawHtml("<" + tag + ">\\u" + code + ";</" + tag + ">");
+      };
       rxt.importTags = (function(_this) {
         return function(x) {
           return _(x != null ? x : _this).extend(rxt.tags);
