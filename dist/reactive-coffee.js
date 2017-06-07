@@ -1906,6 +1906,47 @@
         });
       }
     };
+    rx.cast = function(value, type) {
+      var opts, realType, types, x;
+      if (type == null) {
+        type = 'cell';
+      }
+      if (type === ObsCell || type === ObsArray || type === ObsMap || type === ObsSet) {
+        realType = null;
+        switch (type) {
+          case ObsCell:
+            realType = 'cell';
+            break;
+          case ObsArray:
+            realType = 'array';
+            break;
+          case ObsMap:
+            realType = 'map';
+            break;
+          case ObsSet:
+            realType = 'set';
+        }
+        type = realType;
+      }
+      if (_.isString(type)) {
+        if (type in rx.types) {
+          return rx[type].from(value);
+        } else {
+          return value;
+        }
+      } else {
+        opts = value;
+        types = type;
+        x = _.mapObject(opts, function(value, key) {
+          if (types[key]) {
+            return rx.cast(value, types[key]);
+          } else {
+            return value;
+          }
+        });
+        return x;
+      }
+    };
     rx.flatten = function(xs) {
       return new DepArray(function() {
         return _.chain(flattenHelper([xs])).flatten().filter(function(x) {
@@ -2565,45 +2606,11 @@
         };
       })(this);
       rxt.cast = function(value, type) {
-        var opts, realType, types, x;
         if (type == null) {
           type = "cell";
         }
-        if (type === ObsCell || type === ObsArray || type === ObsMap || type === ObsSet) {
-          realType = null;
-          switch (type) {
-            case ObsCell:
-              realType = 'cell';
-              break;
-            case ObsArray:
-              realType = 'array';
-              break;
-            case ObsMap:
-              realType = 'map';
-              break;
-            case ObsSet:
-              realType = 'set';
-          }
-          type = realType;
-        }
-        if (_.isString(type)) {
-          if (type in rx.types) {
-            return rx[type].from(value);
-          } else {
-            return value;
-          }
-        } else {
-          opts = value;
-          types = type;
-          x = _.mapObject(opts, function(value, key) {
-            if (types[key]) {
-              return rxt.cast(value, types[key]);
-            } else {
-              return value;
-            }
-          });
-          return x;
-        }
+        console.warn("Warning: rx.rxt.cast is deprecated. Use rx.cast instead.");
+        return rx.cast(value, type);
       };
       rxt.trim = $.trim;
       rxt.dasherize = function(str) {
@@ -2627,7 +2634,7 @@
       specialAttrs.style = function(elt, value) {
         var isCell;
         isCell = value instanceof ObsCell;
-        return rx.autoSub(rxt.cast(value).onSet, function(arg) {
+        return rx.autoSub(rx.cast(value).onSet, function(arg) {
           var n, o;
           o = arg[0], n = arg[1];
           if ((n == null) || _.isString(n)) {
