@@ -835,6 +835,23 @@ rxFactory = (_, $) ->
     else if value instanceof rx.ObsBase then new DepSet -> value.all()
     else new DepSet -> value
 
+  rx.cast = (value, type='cell') ->
+    if type in [ObsCell, ObsArray, ObsMap, ObsSet]
+      realType = null
+      switch type
+        when ObsCell then realType = 'cell'
+        when ObsArray then realType = 'array'
+        when ObsMap then realType = 'map'
+        when ObsSet then realType = 'set'
+      type = realType
+    if _.isString type
+      if type of rx.types then rx[type].from value
+      else value
+    else
+      opts  = value
+      types = type
+      x = _.mapObject opts, (value, key) -> if types[key] then rx.cast(value, types[key]) else value
+      x
 
   #
   # Reactive utilities
@@ -1258,22 +1275,8 @@ rxFactory = (_, $) ->
     #
 
     rxt.cast = (value, type = "cell") ->
-      if type in [ObsCell, ObsArray, ObsMap, ObsSet]
-        realType = null
-        switch type
-          when ObsCell then realType = 'cell'
-          when ObsArray then realType = 'array'
-          when ObsMap then realType = 'map'
-          when ObsSet then realType = 'set'
-        type = realType
-      if _.isString type
-        if type of rx.types then rx[type].from value
-        else value
-      else
-        opts  = value
-        types = type
-        x = _.mapObject opts, (value, key) -> if types[key] then rxt.cast(value, types[key]) else value
-        x
+      console.warn "Warning: rx.rxt.cast is deprecated. Use rx.cast instead."
+      return rx.cast value, type
 
     # a little underscore-string inlining
     rxt.trim = $.trim
@@ -1290,7 +1293,7 @@ rxFactory = (_, $) ->
 
     specialAttrs.style = (elt, value) ->
       isCell = value instanceof ObsCell
-      rx.autoSub rxt.cast(value).onSet, ([o,n]) ->
+      rx.autoSub rx.cast(value).onSet, ([o,n]) ->
         if not n? or _.isString(n)
           setProp(elt, 'style', n)
         else
