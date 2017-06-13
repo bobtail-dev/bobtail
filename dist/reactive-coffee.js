@@ -6,7 +6,7 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, DepSet, Ev, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsBase, ObsCell, ObsMap, ObsSet, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcSet, _castOther, _input, asyncBind, bind, depMgr, difference, ev, events, firstWhere, flatten, flattenHelper, fn1, input, intersection, j, lagBind, len1, mapPop, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, objToJSMap, objToJSSet, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, radio, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, swapChecked, tag, tags, toNodes, union, updateContents, updateSVGContents;
+    var DepArray, DepCell, DepMap, DepMgr, DepSet, Ev, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsBase, ObsCell, ObsMap, ObsSet, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcSet, _castOther, _input, allDownstreamHelper, asyncBind, bind, depMgr, difference, ev, events, firstWhere, flatten, flattenHelper, fn1, input, intersection, j, lagBind, len1, mapPop, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, objToJSMap, objToJSSet, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, radio, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, swapChecked, tag, tags, toNodes, union, updateContents, updateSVGContents;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -83,32 +83,45 @@
     };
     DepMgr = rx.DepMgr = (function() {
       function DepMgr() {
-        this.uid2src = {};
         this.buffering = 0;
         this.buffer = [];
+        this.events = new Set();
       }
 
-      DepMgr.prototype.sub = function(uid, src) {
-        return this.uid2src[uid] = src;
-      };
-
-      DepMgr.prototype.unsub = function(uid) {
-        return popKey(this.uid2src, uid);
-      };
-
       DepMgr.prototype.transaction = function(f) {
-        var fns, res;
+        var allDeps, bufferedPubs, immediateDeps, res;
         this.buffering += 1;
         try {
           res = f();
         } finally {
           this.buffering -= 1;
           if (this.buffering === 0) {
-            fns = this.buffer;
-            this.buffer = [];
-            fns.forEach(function(fn) {
-              return fn();
+            immediateDeps = new Set(_.flatten(Array.from(this.events).map(function(arg) {
+              var downstreamCells;
+              downstreamCells = arg.downstreamCells;
+              return Array.from(downstreamCells);
+            })));
+            allDeps = rx.allDownstream.apply(rx, immediateDeps);
+            allDeps.forEach(function(cell) {
+              return cell._shield = true;
             });
+            try {
+              bufferedPubs = this.buffer;
+              this.buffer = [];
+              this.events.clear();
+              bufferedPubs.map(function(arg) {
+                var data, ev;
+                ev = arg[0], data = arg[1];
+                return ev.pub(data);
+              });
+              allDeps.forEach(function(c) {
+                return c.refresh();
+              });
+            } finally {
+              allDeps.forEach(function(cell) {
+                return cell._shield = false;
+              });
+            }
           }
         }
         return res;
@@ -119,9 +132,11 @@
     })();
     rx._depMgr = depMgr = new DepMgr();
     Ev = rx.Ev = (function() {
-      function Ev(init1) {
+      function Ev(init1, observable) {
         this.init = init1;
+        this.observable = observable;
         this.subs = mkMap();
+        this.downstreamCells = new Set();
       }
 
       Ev.prototype.sub = function(listener) {
@@ -131,18 +146,14 @@
           listener(this.init());
         }
         this.subs[uid] = listener;
-        depMgr.sub(uid, this);
         return uid;
       };
 
       Ev.prototype.pub = function(data) {
         var listener, ref, results, uid;
         if (depMgr.buffering) {
-          return depMgr.buffer.push((function(_this) {
-            return function() {
-              return _this.pub(data);
-            };
-          })(this));
+          depMgr.buffer.push([this, data]);
+          return depMgr.events.add(this);
         } else {
           ref = this.subs;
           results = [];
@@ -155,8 +166,7 @@
       };
 
       Ev.prototype.unsub = function(uid) {
-        popKey(this.subs, uid);
-        return depMgr.unsub(uid, this);
+        return popKey(this.subs, uid);
       };
 
       Ev.prototype.scoped = function(listener, context) {
@@ -184,6 +194,31 @@
           return f.apply(null, args);
         }
       };
+    };
+    rx.upstream = function(cell) {
+      var depCells, events;
+      events = Array.from(cell.upstreamEvents);
+      depCells = events.map(function(ev) {
+        return ev.observable;
+      });
+      return Array.from(new Set(depCells));
+    };
+    allDownstreamHelper = rx._allDownstreamHelper = function() {
+      var cells, downstream, r;
+      cells = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      if (cells.length) {
+        downstream = Array.from(new Set(_.flatten(cells.map(function(cell) {
+          return Array.from(cell.onSet.downstreamCells);
+        }))));
+        r = _.flatten([downstream, allDownstreamHelper.apply(null, downstream)]);
+        return r;
+      }
+      return [];
+    };
+    rx.allDownstream = function() {
+      var cells;
+      cells = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      return Array.from(new Set(slice.call(cells).concat(slice.call(allDownstreamHelper.apply(null, cells))).reverse())).reverse();
     };
     Recorder = rx.Recorder = (function() {
       function Recorder() {
@@ -213,11 +248,24 @@
         }
       };
 
-      Recorder.prototype.sub = function(sub) {
-        var handle, topCell;
+      Recorder.prototype.sub = function(event, condFn) {
+        var topCell;
+        if (condFn == null) {
+          condFn = function() {
+            return true;
+          };
+        }
         if (this.stack.length > 0 && !this.isIgnoring) {
           topCell = _(this.stack).last();
-          return handle = sub(topCell);
+          topCell.upstreamEvents.add(event);
+          event.downstreamCells.add(topCell);
+          return rx.autoSub(event, function() {
+            var evData;
+            evData = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+            if (condFn.apply(null, evData)) {
+              return topCell.refresh();
+            }
+          });
         }
       };
 
@@ -381,13 +429,14 @@
         return rx.flatten(this);
       };
 
-      ObsBase.prototype.subAll = function(targetFn) {
+      ObsBase.prototype.subAll = function(condFn) {
+        if (condFn == null) {
+          condFn = function() {
+            return true;
+          };
+        }
         return this.events.forEach(function(ev) {
-          return recorder.sub(function(target) {
-            return rx.autoSub(ev, function(result) {
-              return targetFn(target, result);
-            });
-          });
+          return recorder.sub(ev, condFn);
         });
       };
 
@@ -409,7 +458,7 @@
       extend(ObsCell, superClass);
 
       function ObsCell(_base) {
-        var ref;
+        var downstreamCells, ref;
         this._base = _base;
         ObsCell.__super__.constructor.call(this);
         this._base = (ref = this._base) != null ? ref : null;
@@ -418,12 +467,43 @@
             return [null, _this._base];
           };
         })(this));
+        this._shield = false;
+        downstreamCells = (function(_this) {
+          return function() {
+            return _this.onSet.downstreamCells;
+          };
+        })(this);
+        this.refreshAll = (function(_this) {
+          return function() {
+            var cells;
+            if (_this.onSet.downstreamCells.size && !_this._shield) {
+              _this._shield = true;
+              cells = rx.allDownstream.apply(rx, Array.from(downstreamCells()));
+              cells.forEach(function(c) {
+                return c._shield = true;
+              });
+              try {
+                return cells.forEach(function(c) {
+                  return c.refresh();
+                });
+              } finally {
+                cells.forEach(function(c) {
+                  return c._shield = false;
+                });
+                _this._shield = false;
+              }
+            }
+          };
+        })(this);
+        this.refreshSub = rx.autoSub(this.onSet, this.refreshAll);
       }
 
       ObsCell.prototype.all = function() {
-        this.subAll(function(target) {
-          return target.refresh();
-        });
+        this.subAll((function(_this) {
+          return function() {
+            return !_this._shield;
+          };
+        })(this));
         return this._base;
       };
 
@@ -475,6 +555,7 @@
         this.refreshing = false;
         this.nestedBinds = [];
         this.cleanups = [];
+        this.upstreamEvents = new Set();
       }
 
       DepCell.prototype.refresh = function() {
@@ -545,7 +626,13 @@
           nestedBind.disconnect();
         }
         this.nestedBinds = [];
-        return this.cleanups = [];
+        this.cleanups = [];
+        this.upstreamEvents.forEach((function(_this) {
+          return function(ev) {
+            return ev.downstreamCells["delete"](_this);
+          };
+        })(this));
+        return this.upstreamEvents.clear();
       };
 
       DepCell.prototype.addNestedBind = function(nestedBind) {
@@ -581,17 +668,10 @@
           };
         })(this));
         this._indexed = null;
-        ObsArray.__super__.constructor.call(this, this.onChange, this.onChangeCells);
       }
 
       ObsArray.prototype.all = function() {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChange, function() {
-              return target.refresh();
-            });
-          };
-        })(this));
+        recorder.sub(this.onChange);
         return this._cells.map(function(c) {
           return c.get();
         });
@@ -617,35 +697,26 @@
 
       ObsArray.prototype.at = function(i) {
         var ref;
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChange, function(arg) {
-              var added, index, removed;
-              index = arg[0], removed = arg[1], added = arg[2];
-              if (index <= i && removed.length !== added.length) {
-                target.refresh();
-              }
-              if (removed.length === added.length && i <= index + removed.length) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
+        recorder.sub(this.onChange, function(arg) {
+          var added, index, removed;
+          index = arg[0], removed = arg[1], added = arg[2];
+          if (index <= i && removed.length !== added.length) {
+            return true;
+          } else if (removed.length === added.length && i <= index + removed.length) {
+            return true;
+          } else {
+            return false;
+          }
+        });
         return (ref = this._cells[i]) != null ? ref.get() : void 0;
       };
 
       ObsArray.prototype.length = function() {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onChangeCells, function(arg) {
-              var added, index, removed;
-              index = arg[0], removed = arg[1], added = arg[2];
-              if (removed.length !== added.length) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
+        recorder.sub(this.onChangeCells, function(arg) {
+          var added, index, removed;
+          index = arg[0], removed = arg[1], added = arg[2];
+          return removed.length !== added.length;
+        });
         return this._cells.length;
       };
 
@@ -782,8 +853,12 @@
           }
           return results;
         });
-        this.onChangeCells.pub([index, removed, additions]);
-        return this.onChange.pub([index, removedElems, addedElems]);
+        return rx.transaction((function(_this) {
+          return function() {
+            _this.onChangeCells.pub([index, removed, additions]);
+            return _this.onChange.pub([index, removedElems, addedElems]);
+          };
+        })(this));
       };
 
       ObsArray.prototype.realSplice = function(index, count, additions) {
@@ -1105,8 +1180,12 @@
           }
           return results;
         });
-        this.onChangeCells.pub([index, removed, _.zip(additions, newIs)]);
-        return this.onChange.pub([index, removedElems, _.zip(addedElems, newIs)]);
+        return rx.transaction((function(_this) {
+          return function() {
+            _this.onChangeCells.pub([index, removed, _.zip(additions, newIs)]);
+            return _this.onChange.pub([index, removedElems, _.zip(addedElems, newIs)]);
+          };
+        })(this));
       };
 
       return IndexedDepArray;
@@ -1226,40 +1305,24 @@
       }
 
       ObsMap.prototype.get = function(key) {
-        this.subAll(function(target, result) {
-          if (result.has(key)) {
-            return target.refresh();
-          }
+        this.subAll(function(result) {
+          return result.has(key);
         });
         return this._base.get(key);
       };
 
       ObsMap.prototype.has = function(key) {
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onAdd, function(additions) {
-              if (additions.has(key)) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
-        recorder.sub((function(_this) {
-          return function(target) {
-            return rx.autoSub(_this.onRemove, function(removals) {
-              if (removals.has(key)) {
-                return target.refresh();
-              }
-            });
-          };
-        })(this));
+        recorder.sub(this.onAdd, function(additions) {
+          return additions.has(key);
+        });
+        recorder.sub(this.onRemove, function(removals) {
+          return removals.has(key);
+        });
         return this._base.has(key);
       };
 
       ObsMap.prototype.all = function() {
-        this.subAll(function(target) {
-          return target.refresh();
-        });
+        this.subAll();
         return new Map(this._base);
       };
 
@@ -1272,21 +1335,9 @@
       };
 
       ObsMap.prototype.size = function() {
-        return recorder.sub((function(_this) {
-          return function(target) {
-            recorder.sub(function(target) {
-              return rx.autoSub(_this.onRemove, function() {
-                return target.refresh();
-              });
-            });
-            recorder.sub(function(target) {
-              return rx.autoSub(_this.onAdd, function() {
-                return target.refresh();
-              });
-            });
-            return _this._base.size;
-          };
-        })(this));
+        recorder.sub(this.onRemove);
+        recorder.sub(this.onAdd);
+        return this._base.size;
       };
 
       ObsMap.prototype.realPut = function(key, val) {
@@ -1348,15 +1399,19 @@
             }).value();
           };
         })(this)();
-        if (removals.length) {
-          this.onRemove.pub(new Map(removals));
-        }
-        if (additions.length) {
-          this.onAdd.pub(new Map(additions));
-        }
-        if (changes.length) {
-          this.onChange.pub(new Map(changes));
-        }
+        rx.transaction((function(_this) {
+          return function() {
+            if (removals.length) {
+              _this.onRemove.pub(new Map(removals));
+            }
+            if (additions.length) {
+              _this.onAdd.pub(new Map(additions));
+            }
+            if (changes.length) {
+              return _this.onChange.pub(new Map(changes));
+            }
+          };
+        })(this));
         return ret;
       };
 
@@ -1481,20 +1536,16 @@
       }
 
       ObsSet.prototype.has = function(key) {
-        this.subAll(function(target, arg) {
+        this.subAll(function(arg) {
           var additions, removals;
           additions = arg[0], removals = arg[1];
-          if (additions.has(key) || removals.has(key)) {
-            return target.refresh();
-          }
+          return additions.has(key) || removals.has(key);
         });
         return this._base.has(key);
       };
 
       ObsSet.prototype.all = function() {
-        this.subAll(function(target) {
-          return target.refresh();
-        });
+        this.subAll();
         return new Set(this._base);
       };
 
@@ -1515,12 +1566,10 @@
       };
 
       ObsSet.prototype.size = function() {
-        this.subAll(function(target, arg) {
+        this.subAll(function(arg) {
           var additions, removals;
           additions = arg[0], removals = arg[1];
-          if (additions.size !== removals.size) {
-            return target.refresh();
-          }
+          return additions.size !== removals.size;
         });
         return this._base.size;
       };

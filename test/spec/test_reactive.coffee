@@ -7,7 +7,7 @@ outerHtml = ($x) -> $x.clone().wrap('<p>').parent().html()
 
 jasmine.CATCH_EXCEPTIONS = false
 
-describe 'ObsBase', ->
+describe 'ObsBase', -> it 'should start', ->
 
 
 describe 'source cell', ->
@@ -751,9 +751,138 @@ describe 'DepArray', ->
     nums.put(2,4)
     expect(mapEvalCount).toBe(startMapEvalCount + 1)
 
-    startMapEvalCount = mapEvalCount
+    mapEvalCount = 0
     bump.set(0)
-    expect(mapEvalCount).toBe(startMapEvalCount + 3)
+    expect(mapEvalCount).toBe(3)
+
+describe 'Recorder.depsEvsMap', ->
+  it 'should track the dependency tree', ->
+    a = rx.cell 5
+    b = rx.cell 4
+    c = rx.cell 3
+    d = rx.cell 2
+    e = rx.cell 1
+    x = bind -> a.get() * b.get()
+    y = bind -> b.get() * c.get()
+    z = bind -> d.get() * e.get()
+    f = -> x.get() + y.get() + z.get() + x.get()
+    res = bind f
+    resplus = bind -> res.get() + b.get()
+    resplusplus = bind -> resplus.get() + b.get()
+    triangle = bind -> x.get() + a.get()
+    arr = new rx.DepArray -> [a.get(), x.get(), y.get(), z.get()]
+    b.set 3
+    expect(res.raw()).toEqual snap f
+    rx.transaction ->
+      a.set 4
+      a.set 6
+      b.set 5
+      c.set 4
+      d.set 3
+      e.set 2
+    expect(res.raw()).toEqual snap f
+    expect(resplus.raw()).toEqual snap -> f() + b.get()
+    expect(resplusplus.raw()).toEqual snap -> f() + b.get() * 2
+    expect(triangle.raw()).toEqual snap -> x.get() + a.get()
+
+  it 'should not run in exponential time', ->
+    a = rx.cell 0
+    inc = rx.cell 1
+    b = bind -> a.get() + inc.get()
+    c = bind -> a.get() + inc.get()
+    d = bind -> b.get() + c.get()
+    e = bind -> d.get() + inc.get()
+    f = bind -> d.get() + inc.get()
+    g = bind -> e.get() + f.get()
+    h = bind -> g.get() + inc.get()
+    i = bind -> g.get() + inc.get()
+    j = bind -> h.get() + i.get()
+    k = bind -> j.get() + inc.get()
+    l = bind -> j.get() + inc.get()
+    m = bind -> j.get() + inc.get()
+    func = -> k.get() + l.get() + m.get()
+    n = bind func
+    a.set 1
+    expect(b.raw()).toBe 2
+    expect(d.raw()).toBe 4
+    expect(g.raw()).toBe 10
+    expect(j.raw()).toBe 22
+    expect(n.raw()).toBe 69
+    expect(n.raw()).toBe snap -> func()
+    inc.set 0
+
+  describe 'crazy diamond shapes', ->
+    # this reverses the order binds are stored, to let us test shapes like
+    #   A
+    #   |\
+    #   | B
+    #   |/
+    #   C
+    # These are relatively difficult to construct due to the need to instantiate B before C.
+    reverseBinds = (c) -> c.onSet.downstreamCells = new Set Array.from(c.onSet.downstreamCells).reverse()
+    it 'should work with left triangle', ->
+      a = rx.cell 0
+      b = bind -> a.get() * 2
+      c = bind -> a.get() + b.get()
+      expect(a.onSet.downstreamCells).toEqual new Set [b, c]
+
+      marker = {}
+      counter = 0
+
+      rx.autoSub b.onSet, rx.skipFirst -> marker.b = ++counter
+      rx.autoSub c.onSet, rx.skipFirst -> marker.c = ++counter
+      a.set 1
+      expect(b.raw()).toBe 2
+      expect(c.raw()).toBe 3
+      # ensure b executes before c
+      expect(marker.b).toBe 1
+      expect(marker.c).toBe 2
+
+      reverseBinds a
+      expect(a.onSet.downstreamCells).toEqual new Set [c, b]
+
+      counter = 0
+      a.set 2
+      expect(b.raw()).toBe 4
+      expect(c.raw()).toBe 6
+      # ensure b executes before c
+      expect(marker.b).toBe 1
+      expect(marker.c).toBe 2
+    it 'should work with right triangle', ->
+      a = rx.cell 0
+      b = bind -> a.get() * 2
+      c = bind -> a.get() + b.get()
+      a.set 1
+      expect(b.raw()).toBe 2
+      expect(c.raw()).toBe 3
+    it 'should work with diamond', ->
+      a = rx.cell 0
+      b = bind -> a.get() * 2
+      c = bind -> a.get() * 3
+      d = bind -> b.get() + c.get()
+      a.set 1
+      expect(b.raw()).toBe 2
+      expect(c.raw()).toBe 3
+      expect(d.raw()).toBe 5
+    it 'should work with k5', ->
+      a = rx.cell 0
+      b = bind -> a.get() * 2
+      c = bind -> a.get() * b.get()
+      d = bind -> a.get() * b.get() * c.get()
+      e = bind -> (bind -> (bind -> a.get() * b.get()).get() * c.get() * d.get()).get() + d.get()
+      a.set 1
+      expect(b.raw()).toBe 2
+      expect(c.raw()).toBe 2
+      expect(d.raw()).toBe 4
+      expect(e.raw()).toBe 20
+      reverseBinds a
+      a.set 0
+      [b,c,d,e].map (cell) -> expect(cell.raw()).toBe 0
+      a.set 1
+      expect(b.raw()).toBe 2
+      expect(c.raw()).toBe 2
+      expect(d.raw()).toBe 4
+      expect(e.raw()).toBe 20
 
 describe 'ObsMap', ->
   x = cb = a = b = all = hasA = hasB = size = cbA = cbB = cbHasA = cbHasB = cbAll = cbSize = null
@@ -1125,15 +1254,18 @@ describe 'nested bindings', ->
   it 'should not leak memory via subscription references', ->
     expect(innerDisposed).toBe(false)
     expect(outerDisposed).toBe(false)
-    nsubs0 = _.keys(x.onSet.subs).length
+    nsubs0 = x.onSet.subs.size
     x.set(' ')
     expect(innerDisposed).toBe(true)
     expect(outerDisposed).toBe(true)
-    nsubs1 = _.keys(x.onSet.subs).length
+    nsubs1 = x.onSet.subs.size
     x.set('  ')
-    nsubs2 = _.keys(x.onSet.subs).length
+    nsubs2 = x.onSet.subs.size
     expect(nsubs0).toBe(nsubs1)
     expect(nsubs0).toBe(nsubs2)
+    x.set('   ')
+    nsubs3 = x.onSet.subs.size
+    expect(nsubs0).toBe(nsubs3)
 
 describe 'onDispose', ->
   it 'should not die even outside any bind context', ->
@@ -1449,35 +1581,29 @@ describe 'promiseBind', ->
         expect(secretToLife.get()).toBe 47
 
 describe 'lagBind', ->
-  x = y = evaled = start = null
+  x = y = start = null
   beforeEach ->
     x = rx.cell 0
-    rx.autoSub x.onSet, ->
-      evaled = $.Deferred()
-    y = rx.lagBind 30, 'none', ->
-      _.defer -> evaled.resolve true
-      x.get()
+    y = rx.lagBind 30, 'none', -> x.get()
   it 'should remain at init value until the given lag', ->
     expect(y.get()).toBe 'none'
     setTimeout (->
-      expect(evaled.state()).toBe 'pending'
       expect(y.get()).toBe 'none'
     ), 10
-    evaled.done -> expect(y.get()).toBe 0
+    setTimeout (-> expect(y.get()).toBe 0), 60
   it 'should (after init) update on upstream set by (and not before) the given lag', (done) ->
-    evaled.done ->
-      x.set(1)
-      setTimeout(
-        ->
-          expect(y.get()).toBe 0
-          setTimeout(
-            ->
-              expect(y.get()).toBe 1
-              done()
-            60
-          )
-        10
-      )
+    setTimeout(
+      ->
+        expect(y.get()).toBe 0
+        x.set(1)
+        setTimeout(
+          ->
+            expect(y.get()).toBe 1
+            done()
+          60
+        )
+      45
+    )
   it 'should not evaluate as long as new refresh keeps getting scheduled', ->
     # potentially flaky test :(
     expect(y.get()).toBe 'none'
@@ -1760,16 +1886,32 @@ describe 'transaction', ->
       y.set(5)
       expect(z.get()).toBe(5)
     expect(z.get()).toBe(5)
-  it 'should not infinite loop if an event is fired while executing a transaction', ->
-    x = rx.cell 0
-    y = rx.cell 1
-    count = rx.cell 0
-    rx.autoSub x.onSet, rx.skipFirst -> count.set snap -> count.get() + 1
+  it 'should work for DepArrays', ->
+    x = rx.array [1,2,3]
+    y = x.indexed().map (c, iCell) -> c * (iCell.get() + 1)
+    changes = rx.cell 0
     rx.transaction ->
-      x.set 1
+      len = bind -> x.length()
+      x.push 4
+      x.removeAt 1
+      x.put 1, 2
+      expect(len.get()).toBe 3
+    expect(x.raw()).toEqual [1,2,4]
+  it 'should not infinite loop if we call transaction as the result of an event pubbed by a transaction', ->
+    x = rx.cell 0
+    changes = rx.cell 0
+    rx.autoSub x.onSet, -> rx.transaction -> changes.set changes.raw() + 1
+    expect(changes.raw()).toBe 1
+    rx.transaction -> x.set 1
+    expect(changes.raw()).toBe 2
+    rx.transaction ->
       x.set 2
-      y.set 3
-    expect(snap -> count.get()).toBe 2
+      x.set 3
+      rx.transaction ->
+        x.set 4
+        rx.transaction -> x.set 5
+    expect(changes.raw()).toBe 6
+
 
 describe 'onElementAttrsChanged', ->
   it 'should trigger for each changed attribute', ->
