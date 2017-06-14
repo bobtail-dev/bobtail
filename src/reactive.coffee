@@ -558,7 +558,7 @@ rxFactory = (_, $) ->
 
   rx.concat = (xss...) ->
     ys = new MappedDepArray()
-    casted = xss.map (xs) -> rxt.cast xs, 'array'
+    casted = xss.map (xs) -> rx.cast xs, 'array'
     repLens = (0 for xs in xss)
     casted.forEach (xs, i) ->
       rx.autoSub xs.onChange, ([index, removed, added]) ->
