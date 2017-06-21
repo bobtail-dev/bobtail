@@ -28,10 +28,7 @@
     "karma-chrome-launcher": "^2.0.0",
     "karma-coffee-preprocessor": "^1.0.1",
     "karma-jasmine": "^1.1.0",
-    "karma-phantomjs-launcher": "^1.0.2",
     "matchdep": "^1.0.1",
-    "phantomjs": "^2.1.1",
-    "phantomjs-prebuilt": "^2.1.14",
     "serve-static": "^1.11.2",
     "typescript": "^2.1.6"
   },
@@ -46,5 +43,6 @@
     "es6-shim": "^0.35.3",
     "jquery": ">=2.1.1",
     "underscore": "~1.6.0"
-  }
+  },
+  "false": {}
 }
