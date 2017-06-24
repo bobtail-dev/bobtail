@@ -1942,23 +1942,6 @@ describe 'onElementAttrsChanged', ->
     expect(handler).toHaveBeenCalledWith({$element: $div, attr: "style"})
 
 describe 'onElementChildrenChanged', ->
-  it 'should work for bind body', ->
-    rxt.events.enabled = true
-    handler = jasmine.createSpy()
-    rx.autoSub rxt.events.onElementChildrenChanged, handler
-
-    stateCell = rx.cell("safe")
-    offsetCell = rx.cell(0)
-    $div = rxt.tags.div bind -> stateCell.get()
-
-    expect(handler.calls.count()).toBe(1)
-    expect(handler).toHaveBeenCalledWith({$element: $div, type: "rerendered"})
-
-    handler.calls.reset()
-    stateCell.set("danger")
-    expect(handler.calls.count()).toBe(1)
-    expect(handler).toHaveBeenCalledWith({$element: $div, type: "rerendered"})
-
   it "should work for reactive array body", ->
     rxt.events.enabled = true
     handler = jasmine.createSpy()
@@ -2031,18 +2014,15 @@ describe 'onElementChildrenChanged', ->
     expect(handler.calls.first().args[0].removed.length).toBe(0)
 
     handler.calls.reset()
+    expect(handler.calls.count()).toEqual(0)
     onSaleCell.set(true)
-    expect(handler.calls.count()).toEqual(2)
+    expect(handler.calls.count()).toEqual(1)
     expect(handler.calls.first().args[0].$element).toBe($ul)
     expect(handler.calls.first().args[0].type).toBe("childrenUpdated")
-    expect(handler.calls.first().args[0].added).toBe(undefined)
-    expect(handler.calls.first().args[0].removed).toBe(undefined)
-    expect(handler.calls.first().args[0].updated.length).toBe(1)
-    expect(handler.calls.first().args[0].updated[0]).toBe($("li", $ul)[0])
+    expect(handler.calls.first().args[0].added.length).toBe(2)
+    expect(handler.calls.first().args[0].removed.length).toBe(2)
+    expect(handler.calls.first().args[0].updated).toBe(undefined)
 
     expect(handler.calls.mostRecent().args[0].$element).toBe($ul)
     expect(handler.calls.mostRecent().args[0].type).toBe("childrenUpdated")
-    expect(handler.calls.mostRecent().args[0].added).toBe(undefined)
-    expect(handler.calls.mostRecent().args[0].removed).toBe(undefined)
-    expect(handler.calls.mostRecent().args[0].updated.length).toBe(1)
-    expect(handler.calls.mostRecent().args[0].updated[0]).toBe($("li", $ul)[1])
+    expect(handler.calls.mostRecent().args[0].added[0]).toBe($("li", $ul)[0])
