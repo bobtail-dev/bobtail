@@ -1667,7 +1667,7 @@ describe 'cast', ->
       label: 'hello'
       options: [1..3]
       values: bind -> [1..3]
-    casted = rxt.cast opts, {
+    casted = rx.cast opts, {
       selected: 'cell'
       label: 'cell'
       options: 'array'
