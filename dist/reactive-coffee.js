@@ -6,7 +6,7 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   rxFactory = function(_, $) {
-    var DepArray, DepCell, DepMap, DepMgr, DepSet, Ev, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsBase, ObsCell, ObsMap, ObsSet, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcSet, _castOther, _input, allDownstreamHelper, asyncBind, bind, depMgr, difference, ev, events, firstWhere, flatten, flattenHelper, fn1, input, intersection, j, lagBind, len1, mapPop, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, objToJSMap, objToJSSet, permToSplices, popKey, postLagBind, promiseBind, prop, propSet, props, radio, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, swapChecked, tag, tags, toNodes, union, updateContents, updateSVGContents;
+    var DepArray, DepCell, DepMap, DepMgr, DepSet, Ev, IndexedArray, IndexedDepArray, IndexedMappedDepArray, MappedDepArray, ObsArray, ObsBase, ObsCell, ObsMap, ObsSet, RawHtml, Recorder, SrcArray, SrcCell, SrcMap, SrcSet, _castOther, _input, allDownstreamHelper, asyncBind, bind, depMgr, difference, ev, events, firstWhere, flatten, flattenHelper, fn1, input, intersection, j, lagBind, len1, mapPop, mkMap, mktag, mkuid, nextUid, normalizeTagArgs, nthWhere, objToJSMap, objToJSSet, permToSplices, popKey, postLagBind, prepContents, promiseBind, prop, propSet, props, radio, recorder, rx, rxt, setDynProp, setProp, specialAttrs, sum, svg_events, svg_tags, swapChecked, tag, tags, toNodes, union, updateContents, updateSVGContents;
     rx = {};
     nextUid = 0;
     mkuid = function() {
@@ -2003,6 +2003,12 @@
         }).value();
       });
     };
+    prepContents = function(contents) {
+      if (contents instanceof ObsCell || contents instanceof ObsArray || _.isArray(contents)) {
+        contents = rx.flatten(contents);
+      }
+      return contents;
+    };
     flattenHelper = function(x) {
       if (x instanceof ObsArray) {
         return flattenHelper(x.all());
@@ -2357,6 +2363,7 @@
         return function(arg1, arg2) {
           var attrs, contents, elt, key, name, ref, ref1, value;
           ref = normalizeTagArgs(arg1, arg2), attrs = ref[0], contents = ref[1];
+          contents = prepContents(contents);
           elt = $("<" + tag + "/>");
           ref1 = _.omit(attrs, _.keys(specialAttrs));
           for (name in ref1) {
@@ -2416,18 +2423,6 @@
                   })(cell, icell));
                 }
                 return results;
-              });
-            } else if (contents instanceof ObsCell) {
-              rx.autoSub(contents.onSet, function(arg) {
-                var old, val;
-                old = arg[0], val = arg[1];
-                updateContents(elt, val);
-                if (rxt.events.enabled) {
-                  return rxt.events.onElementChildrenChanged.pub({
-                    $element: elt,
-                    type: "rerendered"
-                  });
-                }
               });
             } else {
               updateContents(elt, contents);

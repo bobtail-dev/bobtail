@@ -904,6 +904,12 @@ rxFactory = (_, $) ->
      .filter (x) -> x?
      .value()
 
+  prepContents = (contents) ->
+    if contents instanceof ObsCell or contents instanceof ObsArray or _.isArray contents
+      contents = rx.flatten contents
+    return contents
+
+
   flattenHelper = (x) ->
     if x instanceof ObsArray then flattenHelper x.all()
     else if x instanceof ObsSet then flattenHelper Array.from x.values()
@@ -1138,6 +1144,7 @@ rxFactory = (_, $) ->
     rxt.mktag = mktag = (tag) ->
       (arg1, arg2) ->
         [attrs, contents] = normalizeTagArgs(arg1, arg2)
+        contents = prepContents contents
 
         elt = $("<#{tag}/>")
         for name, value of _.omit(attrs, _.keys(specialAttrs))
@@ -1168,14 +1175,6 @@ rxFactory = (_, $) ->
                       rxt.events.onElementChildrenChanged.pub {
                         $element: elt, type: "childrenUpdated", updated: toAdd
                       }
-          else if contents instanceof ObsCell
-            # TODO: make this more efficient by checking each element to see if it
-            # changed (i.e. layer a MappedDepArray over this, and make DepArrays
-            # propagate the minimal change set)
-            rx.autoSub contents.onSet, ([old, val]) ->
-              updateContents(elt, val)
-              if rxt.events.enabled
-                rxt.events.onElementChildrenChanged.pub {$element: elt, type: "rerendered"}
           else
             updateContents(elt, contents)
         for key of attrs when key of specialAttrs
