@@ -1,7 +1,7 @@
 {
   "name": "bobtail",
   "main": "dist/reactive-coffee.js",
-  "version": "1.8.0",
+  "version": "1.8.2",
   "ignore": [
     "**/.*",
     "node_modules",
