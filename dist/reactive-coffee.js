@@ -2522,9 +2522,9 @@
       })());
       input = rxt.tags.input;
       _input = function(type, opts) {
-        return swapVal(input(_.extend({
+        return input(_.extend({
           type: type
-        }, opts)));
+        }, opts));
       };
       input.color = function(opts) {
         return _input('color', opts);

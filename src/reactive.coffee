@@ -1259,7 +1259,7 @@ rxFactory = (_, $) ->
     rxt.tags = _.object([tag, rxt.mktag(tag)] for tag in tags)
     {input} = rxt.tags
 
-    _input = (type, opts) -> swapVal input _.extend {type}, opts
+    _input = (type, opts) -> input _.extend {type}, opts
     input.color = (opts) -> _input 'color', opts
     input.date = (opts) -> _input 'date', opts
     input.datetime = (opts) -> _input 'datetime', opts
