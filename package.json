@@ -9,7 +9,7 @@
     "name": "Yang Zhang",
     "url": "http://yz.mit.edu/"
   },
-  "main": "dist/reactive-coffee",
+  "main": "dist/main.js",
   "devDependencies": {
     "jasmine-core": "^2.5.2",
     "karma": "^1.4.1",
@@ -22,13 +22,12 @@
     "build": "npm run clean-dist && npm run test && npm run copy && npm run minify",
     "clean-server": "rm -rf .tmp",
     "clean-dist": "rm -f dist/*",
-    "coffee": "npm run rename && coffee -o .tmp -c --map .tmp/*.coffee && rm .tmp/*.coffee",
+    "coffee": "coffee -o .tmp -c --map src/*.coffee",
     "copy": "cp -ra .tmp/* dist",
     "karma": "if grep -qE \"(Microsoft|WSL)\" /proc/version; then export BOBTAIL_KARMA_BFW=1; fi; karma start karma.conf.js",
-    "minify": "uglifyjs -mc --source-map -o dist/reactive-coffee.min.js dist/reactive-coffee.js",
-    "rename": "cp src/reactive.coffee .tmp/reactive-coffee.coffee",
+    "minify": "uglifyjs -mc --source-map -o dist/main.min.js dist/main.js",
     "test": "npm run clean-server && mkdir -p .tmp && npm run coffee && npm run karma && npm run tsc",
-    "tsc": "tsc --target es5 --strictNullChecks --alwaysStrict src/reactive.d.ts"
+    "tsc": "tsc --target es5 --strictNullChecks --alwaysStrict src/main.d.ts"
   },
   "engines": {
     "node": ">=0.8.0"
