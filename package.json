@@ -38,7 +38,7 @@
     "es6-shim": "^0.35.3",
     "jquery": ">=2.1.1",
     "uglify-es": "^3.0.23",
-    "underscore": "~1.6.0"
+    "underscore": "^1.8.3"
   },
   "false": {}
 }
