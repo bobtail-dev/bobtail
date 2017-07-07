@@ -1,0 +1,15 @@
+{
+  "presets": ["es2015"],
+  "plugins": [[
+    "transform-es2015-modules-umd", {
+      "globals": {
+        "bobtail": "rx",
+        "bobtail-rx": "rx",
+        "underscore": "_",
+        "jquery": "$"
+      },
+      "exactGlobals": true
+    }
+  ]],
+  "moduleId": "bobtail"
+}

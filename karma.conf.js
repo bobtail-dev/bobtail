@@ -3,18 +3,7 @@
 module.exports = function(config) {
   configuration = {
     basePath: '',
-    frameworks: ['jasmine'],
-    preprocessors: {
-      '**/*.coffee': ['coffee']
-    },
-    coffeePreprocessor: {
-      // options passed to the coffee compiler
-      options: {
-        bare: true,
-        sourceMap: true
-      }
-    },
-
+    frameworks: ['source-map-support', 'jasmine'],
     // list of files / patterns to load in the browser
     files: [
       'node_modules/underscore/underscore.js',
@@ -23,13 +12,10 @@ module.exports = function(config) {
       'node_modules/es6-shim/es6-shim.js',
       'node_modules/bobtail-rx/dist/main.js',
       '.tmp/**/*.js',
-      'test/mock/**/*.js',
-      'test/spec/**/*.coffee',
+      // '.tmp/**/*.js.map',
+      'test/spec/**/*.js',
       'test/*.js'
     ],
-
-    // list of files to exclude
-    exclude: ['test/nodeTest.js'],
 
     // test results reporter to use
     // possible values: dots || progress || growl
@@ -51,7 +37,7 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: false,
     browsers: ['Chrome'],
-    plugins: ['karma-coffee-preprocessor', 'karma-chrome-launcher', 'karma-jasmine'],
+    plugins: ['karma-source-map-support', 'karma-chrome-launcher', 'karma-jasmine'],
     customLaunchers: {
       Chrome_travis_ci: {
         base: 'Chrome',
