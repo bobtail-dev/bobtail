@@ -815,42 +815,15 @@
       tag = 'span';
     }return rawHtml('<' + tag + '>\\u' + code + ';</' + tag + '>');
   };
-  var importTags = function importTags(x) {
-    return (0, _underscore2.default)(x != null ? x : undefined).extend(tags);
-  };
   //
   // rxt utilities
   //
-
-  var cast = function cast(value, type) {
-    if (type == null) {
-      type = "cell";
-    }
-    console.warn("Warning: rx.rxt.cast is deprecated. Use rx.cast instead.");
-    return rx.cast(value, type);
-  };
 
   // a little underscore-string inlining
   var trim = _jquery2.default.trim;
 
   var dasherize = function dasherize(str) {
     return trim(str).replace(/([A-Z])/g, '-$1').replace(/[-_\s]+/g, '-').toLowerCase();
-  };
-
-  var cssify = function cssify(map) {
-    console.warn('cssify is deprecated; set the `style` property directly to a JSON object.');
-    return function () {
-      var result3 = [];
-
-      for (var k in map) {
-        var v = map[k];
-        if (v != null) {
-          result3.push(dasherize(k) + ': ' + (_underscore2.default.isNumber(v) ? v + 'px' : v) + ';');
-        }
-      }
-
-      return result3;
-    }().join(' ');
   };
 
   specialAttrs.style = function (elt, value) {
@@ -888,7 +861,7 @@
 
   var rxt = exports.rxt = {
     events: events, RawHtml: RawHtml, specialAttrs: specialAttrs, mktag: mktag, svg_mktag: svg_mktag, tags: tags, svg_tags: svg_tags, rawHtml: rawHtml, specialChar: specialChar, unicodeChar: unicodeChar,
-    importTags: importTags, cast: cast, trim: trim, dasherize: dasherize, cssify: cssify, smushClasses: smushClasses
+    trim: trim, dasherize: dasherize, smushClasses: smushClasses
   };
 });
 
