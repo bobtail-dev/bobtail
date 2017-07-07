@@ -429,37 +429,14 @@ svg_tags = _.object(svg_tags.map(svg_tag => [svg_tag, svg_mktag(svg_tag)]));
 let rawHtml = html => new RawHtml(html);
 let specialChar = function(code, tag) { if (tag == null) { tag = 'span'; } return rawHtml(`<${tag}>&${code};</${tag}>`); };
 let unicodeChar = function(code, tag) { if (tag == null) { tag = 'span'; } return rawHtml(`<${tag}>\\u${code};</${tag}>`); };
-let importTags = x => _(x != null ? x : this).extend(tags);
 //
 // rxt utilities
 //
-
-let cast = function(value, type) {
-  if (type == null) { type = "cell"; }
-  console.warn("Warning: rx.rxt.cast is deprecated. Use rx.cast instead.");
-  return rx.cast(value, type);
-};
 
 // a little underscore-string inlining
 let trim = $.trim;
 
 let dasherize = str=> trim(str).replace(/([A-Z])/g, '-$1').replace(/[-_\s]+/g, '-').toLowerCase();
-
-let cssify = function(map) {
-  console.warn('cssify is deprecated; set the `style` property directly to a JSON object.');
-  return ((() => {
-    let result3 = [];
-
-    for (let k in map) {
-      let v = map[k];
-      if (v != null) {
-        result3.push(`${dasherize(k)}: ${_.isNumber(v) ? v+'px' : v};`);
-      }
-    }
-
-    return result3;
-  })()).join(' ');
-};
 
 specialAttrs.style = function(elt, value) {
   let isCell = value instanceof rx.ObsCell;
@@ -487,5 +464,5 @@ specialAttrs.class = (elt, value) =>
 export * from 'bobtail-rx';
 export let rxt = {
   events, RawHtml, specialAttrs, mktag, svg_mktag, tags, svg_tags, rawHtml, specialChar, unicodeChar,
-  importTags, cast, trim, dasherize, cssify, smushClasses
+  trim, dasherize, smushClasses
 };
