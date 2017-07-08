@@ -10,6 +10,11 @@
     "url": "http://yz.mit.edu/"
   },
   "main": "dist/main.js",
+  "contributors": [
+    {"name": "Richard Mehlinger", "email": "rmehlinger@gmail.com", "url": "www.rmehlinger.com"},
+    {"name": "Chung Wu"},
+    {"name": "Joel Dodge"}
+  ],
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
