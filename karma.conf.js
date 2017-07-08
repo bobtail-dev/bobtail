@@ -3,33 +3,19 @@
 module.exports = function(config) {
   configuration = {
     basePath: '',
-    frameworks: ['jasmine'],
-    preprocessors: {
-      '**/*.coffee': ['coffee']
-    },
-    coffeePreprocessor: {
-      // options passed to the coffee compiler
-      options: {
-        bare: true,
-        sourceMap: true
-      }
-    },
-
+    frameworks: ['source-map-support', 'jasmine'],
     // list of files / patterns to load in the browser
     files: [
-      'bower_components/underscore/underscore.js',
-      'bower_components/jquery/dist/jquery.js',
-      'bower_components/es5-shim/es5-shim.js',
-      'bower_components/es6-shim/es6-shim.js',
-      'src/*.coffee',
-      'src/**/*.js',
-      'test/mock/**/*.js',
-      'test/spec/**/*.coffee',
+      'node_modules/underscore/underscore.js',
+      'node_modules/jquery/dist/jquery.js',
+      'node_modules/es5-shim/es5-shim.js',
+      'node_modules/es6-shim/es6-shim.js',
+      'node_modules/bobtail-rx/dist/main.js',
+      '.tmp/**/*.js',
+      // '.tmp/**/*.js.map',
+      'test/spec/**/*.js',
       'test/*.js'
     ],
-
-    // list of files to exclude
-    exclude: ['test/nodeTest.js'],
 
     // test results reporter to use
     // possible values: dots || progress || growl
@@ -51,9 +37,24 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: false,
     browsers: ['Chrome'],
-    plugins: ['karma-coffee-preprocessor', 'karma-chrome-launcher', 'karma-jasmine'],
+    plugins: ['karma-source-map-support', 'karma-chrome-launcher', 'karma-jasmine'],
     customLaunchers: {
-      Chrome_travis_ci: {base: 'Chrome', flags: ['--no-sandbox']}
+      Chrome_travis_ci: {
+        base: 'Chrome',
+        flags: ['--no-sandbox']
+      },
+      // Chrome configuration for Bash for Windows.
+      // Developers using Bash for Windows must configure the following env variables:
+      // CHROME_BIN: should point to your chrome.exe folder, using BfW's /mnt/<drive>
+      // style notation.
+      Chrome_bfw: {
+        base: 'Chrome',
+        chromeDataDir: '.bobtail-karma-chrome-data'
+        // necessary because otherwise Karma will attempt to use the /tmp directory, which apparently
+        // the Chrome executable spawned by karma does not have the right permissions for. As a result
+        // Chrome throws up an annoying blocking modal, which has to be closed before tests can continue.
+        // This avoids that problem.
+      }
     },
 
     // If browser does not capture in given timeout [ms], kill it
@@ -66,6 +67,8 @@ module.exports = function(config) {
 
   if (process && process.env && process.env.TRAVIS) {
     configuration.browsers = ['Chrome_travis_ci'];
+  } else if (process.env.BOBTAIL_KARMA_BFW) {
+    configuration.browsers = ['Chrome_bfw'];
   }
 
   config.set(configuration);

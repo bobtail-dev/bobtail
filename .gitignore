@@ -4,3 +4,6 @@ node_modules/
 .idea/
 .tscache/
 bower_components/
+.bobtail-karma-chrome-data/
+
+
