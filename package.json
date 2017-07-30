@@ -41,9 +41,10 @@
     "build": "npm run clean-dist && npm run test && npm run babel && npm run minify",
     "clean-server": "rm -rf .tmp",
     "clean-dist": "rm -f dist/*",
+    "eslint": "eslint src/**/*.js --fix",
     "karma": "if grep -qE \"(Microsoft|WSL)\" /proc/version; then export BOBTAIL_KARMA_BFW=1; fi; karma start karma.conf.js",
     "minify": "uglifyjs -mc --source-map -o dist/main.min.js dist/main.js",
-    "test": "npm run clean-server && mkdir -p .tmp && npm run babel-test && npm run karma ; npm run tsc",
+    "test": "npm run eslint && npm run clean-server && mkdir -p .tmp && npm run babel-test && npm run karma ; npm run tsc",
     "tsc": "tsc --target es5 --strictNullChecks --alwaysStrict src/main.d.ts"
   },
   "engines": {
@@ -53,6 +54,7 @@
     "bobtail-rx": "^2.1.1",
     "es5-shim": "^4.5.9",
     "es6-shim": "^0.35.3",
+    "eslint": "^4.3.0",
     "jquery": ">=2.1.1",
     "uglify-es": "^3.0.23",
     "underscore": "^1.8.3"
