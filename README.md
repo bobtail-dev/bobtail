@@ -116,3 +116,5 @@ rationale][design].
 [design]: http://yang.github.io/reactive-coffee/design.html
 [related]: http://yang.github.io/reactive-coffee/related.html
 
+# Mascot
+Charlie the Bobtail designed by Adele Boulie.
