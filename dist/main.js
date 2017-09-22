@@ -284,16 +284,24 @@
   //   (attrs: Object, contents: Contents)
   // where Contents is:
   //   string | number | Element | RawHtml | $ | Array | ObsCell | ObsArray
+  var validContents = function validContents(contents) {
+    return _underscore2.default.isString(contents) || _underscore2.default.isNumber(contents) || _underscore2.default.isArray(contents) || _underscore2.default.isBoolean(contents) || _underscore2.default.isFunction(contents) || contents instanceof Element || contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof _jquery2.default || contents instanceof rx.ObsCell || contents instanceof rx.ObsArray || contents instanceof rx.ObsSet;
+  };
+
   var normalizeTagArgs = function normalizeTagArgs(arg1, arg2) {
     if (arg1 == null && arg2 == null) {
       return [{}, null];
-    } else if (arg1 instanceof Object && arg2 != null) {
-      return [arg1, arg2];
-    } else if (arg2 == null && (_underscore2.default.isString(arg1) || _underscore2.default.isNumber(arg1) || _underscore2.default.isArray(arg1) || _underscore2.default.isFunction(arg1) || arg1 instanceof Element || arg1 instanceof SVGElement || arg1 instanceof RawHtml || arg1 instanceof _jquery2.default || arg1 instanceof rx.ObsCell || arg1 instanceof rx.ObsArray || arg1 instanceof rx.ObsSet)) {
+    } else if (arg2 == null && validContents(arg1)) {
       return [{}, arg1];
-    } else {
-      return [arg1, null];
+    } else if (_underscore2.default.isObject(arg1)) {
+      if (validContents(arg2)) {
+        return [arg1, arg2];
+      } else if (arg2 == null) {
+        return [arg1, null];
+      }
     }
+
+    throw Error("Unparsable arguments [" + arg1.constructor.name + ", " + arg2 + "]");
   };
 
   var toNodes = function toNodes(contents) {
@@ -357,7 +365,7 @@
       var nodes = toNodes(contents);
       elt.append(nodes);
       return nodes;
-    } else if (_underscore2.default.isString(contents) || _underscore2.default.isNumber(contents) || contents instanceof Element || contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof _jquery2.default) {
+    } else if (_underscore2.default.isString(contents) || _underscore2.default.isNumber(contents) || _underscore2.default.isBoolean(contents) || contents instanceof Element || contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof _jquery2.default) {
       return updateContents(elt, [contents]);
     } else {
       throw new Error("Unknown type for element contents: " + contents.constructor.name + " \n(accepted types: string, number, Element, RawHtml, jQuery object of single element, \nor array of the aforementioned)");
