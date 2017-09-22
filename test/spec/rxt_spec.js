@@ -9,15 +9,16 @@ describe('tag', function() {
   describe('object creation', function() {
     let elt;
     let size = (elt = null);
+    let cls = rx.cell('my-class');
     beforeEach(function() {
       size = rx.cell(10);
       elt = rxt.tags.header({
-        class: 'my-class',
+        class: () => cls.get(),
         style: bind(function() { if (size.get() != null) { return `font-size: ${size.get()}px`; } else { return null; } }),
         id: 'my-elt',
         click() {},
         init() { return this.data('foo', 'bar'); }
-      }, bind(() => [
+      }, () => [
         'hello world',
         rxt.tags.span(
           bind(function() {
@@ -27,7 +28,7 @@ describe('tag', function() {
           })
         ),
         rxt.tags.button(['click me'])
-      ] ));
+      ]);
       return elt;
     });
     it('should have the right tag', function() {
@@ -227,7 +228,7 @@ describe('flatten', function() {
     return expect(snap(() => flattened.all())).toEqual([
       1, 42, 500, 800, "ABC", "DEF", "GHI", "XYZ", 2
     ]);
-});
+  });
 });
 describe('RawHtml', function() {
   let frag = null;
@@ -244,7 +245,7 @@ describe('RawHtml', function() {
 });
 
 describe('rxt', () =>
-  it('should take as contents (arrays of) numbers, strings, elements, RawHtml, $ or null', () =>
+  it('should take as contents (arrays of) numbers, strings, elements, RawHtml, $, or null', () =>
     (() => {
       let result = [];
       for (var useArray of [false, true]) {
@@ -388,5 +389,17 @@ describe('onElementChildrenChanged', function() {
     expect(handler.calls.mostRecent().args[0].$element).toBe($ul);
     expect(handler.calls.mostRecent().args[0].type).toBe("childrenUpdated");
     return expect(handler.calls.mostRecent().args[0].added[0]).toBe($("li", $ul)[0]);
+  });
+});
+
+describe('normalizeTagArgs', () => {
+  it("should work with no/null-like args", () => {
+    expect(rxt.normalizeTagArgs()).toEqual([{}, null]);
+    expect(rxt.normalizeTagArgs(null)).toEqual([{}, null]);
+    expect(rxt.normalizeTagArgs(null, null)).toEqual([{}, null]);
+  });
+  it("should work with attr object as only arg", () => {
+    expect(rxt.normalizeTagArgs({})).toEqual([{}, null]);
+    expect(rxt.normalizeTagArgs({abc: 'def'})).toEqual([{abc: 'def'}, null]);
   });
 });

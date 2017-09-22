@@ -169,7 +169,7 @@
   //
 
   var prepContents = function prepContents(contents) {
-    if (contents instanceof rx.ObsCell || contents instanceof rx.ObsArray || _underscore2.default.isArray(contents)) {
+    if (contents instanceof rx.ObsCell || contents instanceof rx.ObsArray || _underscore2.default.isArray(contents) || _underscore2.default.isFunction(contents)) {
       contents = rx.flatten(contents);
     }
     return contents;
@@ -258,6 +258,9 @@
     if (xform == null) {
       xform = _underscore2.default.identity;
     }
+    if (_underscore2.default.isFunction(val)) {
+      val = rx.bind(val);
+    }
     if (val instanceof rx.ObsCell) {
       return rx.autoSub(val.onSet, function (_ref) {
         var _ref2 = _slicedToArray(_ref, 2),
@@ -286,7 +289,7 @@
       return [{}, null];
     } else if (arg1 instanceof Object && arg2 != null) {
       return [arg1, arg2];
-    } else if (arg2 == null && _underscore2.default.isString(arg1) || _underscore2.default.isNumber(arg1) || arg1 instanceof Element || arg1 instanceof SVGElement || arg1 instanceof RawHtml || arg1 instanceof _jquery2.default || _underscore2.default.isArray(arg1) || arg1 instanceof rx.ObsCell || arg1 instanceof rx.ObsArray || arg1 instanceof rx.ObsSet) {
+    } else if (arg2 == null && (_underscore2.default.isString(arg1) || _underscore2.default.isNumber(arg1) || _underscore2.default.isArray(arg1) || _underscore2.default.isFunction(arg1) || arg1 instanceof Element || arg1 instanceof SVGElement || arg1 instanceof RawHtml || arg1 instanceof _jquery2.default || arg1 instanceof rx.ObsCell || arg1 instanceof rx.ObsArray || arg1 instanceof rx.ObsSet)) {
       return [{}, arg1];
     } else {
       return [arg1, null];
@@ -357,7 +360,7 @@
     } else if (_underscore2.default.isString(contents) || _underscore2.default.isNumber(contents) || contents instanceof Element || contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof _jquery2.default) {
       return updateContents(elt, [contents]);
     } else {
-      throw new Error("Unknown type for element contents: " + contents.constructor.name + " (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)");
+      throw new Error("Unknown type for element contents: " + contents.constructor.name + " \n(accepted types: string, number, Element, RawHtml, jQuery object of single element, \nor array of the aforementioned)");
     }
   };
 
@@ -516,6 +519,10 @@
       for (var name in object) {
         var value = object[name];
         setDynProp(elt, name, value);
+      }
+
+      if (_underscore2.default.isFunction(contents)) {
+        contents = rx.bind(contents);
       }
 
       if (contents != null) {
@@ -698,6 +705,9 @@
   };
 
   specialAttrs.style = function (elt, value) {
+    if (_underscore2.default.isFunction(value)) {
+      value = rx.bind(value);
+    }
     var isCell = value instanceof rx.ObsCell;
     return rx.autoSub(rx.cast(value).onSet, function (_ref9) {
       var _ref10 = _slicedToArray(_ref9, 2),
@@ -731,7 +741,7 @@
 
   var rxt = exports.rxt = {
     events: events, RawHtml: RawHtml, specialAttrs: specialAttrs, mktag: mktag, svg_mktag: svg_mktag, tags: tags, svg_tags: svg_tags, rawHtml: rawHtml, specialChar: specialChar, unicodeChar: unicodeChar,
-    trim: trim, dasherize: dasherize, smushClasses: smushClasses
+    trim: trim, dasherize: dasherize, smushClasses: smushClasses, normalizeTagArgs: normalizeTagArgs
   };
 });
 

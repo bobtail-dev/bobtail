@@ -45,7 +45,7 @@ $.fn.rx = function(prop) {
 //
 
 let prepContents = function(contents) {
-  if (contents instanceof rx.ObsCell || contents instanceof rx.ObsArray || _.isArray(contents)) {
+  if (contents instanceof rx.ObsCell || contents instanceof rx.ObsArray || _.isArray(contents) || _.isFunction(contents)) {
     contents = rx.flatten(contents);
   }
   return contents;
@@ -111,6 +111,9 @@ let setProp = function(elt, prop, val) {
 
 let setDynProp = function(elt, prop, val, xform) {
   if (xform == null) { xform = _.identity; }
+  if (_.isFunction(val)) {
+    val = rx.bind(val);
+  }
   if (val instanceof rx.ObsCell) {
     return rx.autoSub(val.onSet, function([o, n]) {
       setProp(elt, prop, xform(n));
@@ -135,17 +138,19 @@ let normalizeTagArgs = function(arg1, arg2) {
     return [{}, null];
   } else if (arg1 instanceof Object && (arg2 != null)) {
     return [arg1, arg2];
-  } else if (((arg2 == null) &&
-      _.isString(arg1)) ||
-      _.isNumber(arg1) ||
-      arg1 instanceof Element ||
-      arg1 instanceof SVGElement ||
-      arg1 instanceof RawHtml ||
-      arg1 instanceof $ ||
-      _.isArray(arg1) ||
-      arg1 instanceof rx.ObsCell ||
-      arg1 instanceof rx.ObsArray ||
-      arg1 instanceof rx.ObsSet) {
+  } else if (arg2 == null && (
+    _.isString(arg1) ||
+    _.isNumber(arg1) ||
+    _.isArray(arg1) ||
+    _.isFunction(arg1) ||
+    arg1 instanceof Element ||
+    arg1 instanceof SVGElement ||
+    arg1 instanceof RawHtml ||
+    arg1 instanceof $ ||
+    arg1 instanceof rx.ObsCell ||
+    arg1 instanceof rx.ObsArray ||
+    arg1 instanceof rx.ObsSet
+  )) {
     return [{}, arg1];
   } else {
     return [arg1, null];
@@ -189,7 +194,11 @@ let updateContents = function(elt, contents) {
       contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof $) {
     return updateContents(elt, [contents]);
   } else {
-    throw new Error(`Unknown type for element contents: ${contents.constructor.name} (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)`);
+    throw new Error(
+      `Unknown type for element contents: ${contents.constructor.name} 
+(accepted types: string, number, Element, RawHtml, jQuery object of single element, 
+or array of the aforementioned)`
+    );
   }
 };
 
@@ -317,6 +326,10 @@ let svg_mktag = tag =>
       setDynProp(elt, name, value);
     }
 
+    if(_.isFunction(contents)) {
+      contents = rx.bind(contents);
+    }
+
     if (contents != null) {
       if (contents instanceof rx.ObsArray) {
         contents.onChange.sub(function(...args) {
@@ -411,6 +424,9 @@ let trim = $.trim;
 let dasherize = str=> trim(str).replace(/([A-Z])/g, "-$1").replace(/[-_\s]+/g, "-").toLowerCase();
 
 specialAttrs.style = function(elt, value) {
+  if(_.isFunction(value)) {
+    value = rx.bind(value);
+  }
   let isCell = value instanceof rx.ObsCell;
   return rx.autoSub(rx.cast(value).onSet, ([o, n]) => {
     if ((n == null) || _.isString(n)) {
@@ -435,5 +451,5 @@ specialAttrs.class = (elt, value) =>
 export * from "bobtail-rx";
 export let rxt = {
   events, RawHtml, specialAttrs, mktag, svg_mktag, tags, svg_tags, rawHtml, specialChar, unicodeChar,
-  trim, dasherize, smushClasses
+  trim, dasherize, smushClasses, normalizeTagArgs
 };
