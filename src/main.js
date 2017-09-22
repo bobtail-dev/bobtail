@@ -130,26 +130,34 @@ let setDynProp = function(elt, prop, val, xform) {
 //   (attrs: Object, contents: Contents)
 // where Contents is:
 //   string | number | Element | RawHtml | $ | Array | ObsCell | ObsArray
+let validContents = contents => (
+  _.isString(contents) ||
+  _.isNumber(contents) ||
+  _.isArray(contents) ||
+  _.isBoolean(contents) ||
+  contents instanceof Element ||
+  contents instanceof SVGElement ||
+  contents instanceof RawHtml ||
+  contents instanceof $ ||
+  contents instanceof rx.ObsCell ||
+  contents instanceof rx.ObsArray ||
+  contents instanceof rx.ObsSet
+);
+
 let normalizeTagArgs = function(arg1, arg2) {
-  if ((arg1 == null) && (arg2 == null)) {
+  if (arg1 == null && arg2 == null) {
     return [{}, null];
-  } else if (arg1 instanceof Object && (arg2 != null)) {
-    return [arg1, arg2];
-  } else if (((arg2 == null) &&
-      _.isString(arg1)) ||
-      _.isNumber(arg1) ||
-      arg1 instanceof Element ||
-      arg1 instanceof SVGElement ||
-      arg1 instanceof RawHtml ||
-      arg1 instanceof $ ||
-      _.isArray(arg1) ||
-      arg1 instanceof rx.ObsCell ||
-      arg1 instanceof rx.ObsArray ||
-      arg1 instanceof rx.ObsSet) {
+  } else if (arg2 == null && validContents(arg1)) {
     return [{}, arg1];
-  } else {
-    return [arg1, null];
+  } else if (_.isObject(arg1)) {
+    if(validContents(arg2)) {
+      return [arg1, arg2];
+    } else if(arg2 == null) {
+      return [arg1, null];
+    }
   }
+
+  throw Error(`Unparsable arguments [${arg1.constructor.name}, ${arg2}]`);
 };
 
 let toNodes = contents => {
@@ -185,11 +193,22 @@ let updateContents = function(elt, contents) {
     let nodes = toNodes(contents);
     elt.append(nodes);
     return nodes;
-  } else if (_.isString(contents) || _.isNumber(contents) || contents instanceof Element ||
-      contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof $) {
+  } else if (
+    _.isString(contents) ||
+    _.isNumber(contents) ||
+    _.isBoolean(contents) ||
+      contents instanceof Element ||
+      contents instanceof SVGElement ||
+      contents instanceof RawHtml ||
+      contents instanceof $
+  ) {
     return updateContents(elt, [contents]);
   } else {
-    throw new Error(`Unknown type for element contents: ${contents.constructor.name} (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)`);
+    throw new Error(
+      `Unknown type for element contents: ${contents.constructor.name} 
+(accepted types: string, number, Element, RawHtml, jQuery object of single element, 
+or array of the aforementioned)`
+    );
   }
 };
 
@@ -435,5 +454,5 @@ specialAttrs.class = (elt, value) =>
 export * from "bobtail-rx";
 export let rxt = {
   events, RawHtml, specialAttrs, mktag, svg_mktag, tags, svg_tags, rawHtml, specialChar, unicodeChar,
-  trim, dasherize, smushClasses
+  trim, dasherize, smushClasses, normalizeTagArgs
 };
