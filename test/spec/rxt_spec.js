@@ -390,3 +390,49 @@ describe('onElementChildrenChanged', function() {
     return expect(handler.calls.mostRecent().args[0].added[0]).toBe($("li", $ul)[0]);
   });
 });
+
+describe('normalizeTagArgs', () => {
+  it("should work with no/null-like args", () => {
+    expect(rxt.normalizeTagArgs()).toEqual([{}, null]);
+    expect(rxt.normalizeTagArgs(null)).toEqual([{}, null]);
+    expect(rxt.normalizeTagArgs(null, null)).toEqual([{}, null]);
+  });
+  it("should work with attr object as only arg", () => {
+    expect(rxt.normalizeTagArgs({})).toEqual([{}, null]);
+    expect(rxt.normalizeTagArgs({abc: 'def'})).toEqual([{abc: 'def'}, null]);
+  });
+
+  let types = new Map([
+    ["String", "dancing"],
+    ["Number", 101],
+    ["hex", 0xdeadbeef],
+    ["false", false],
+    ["true", true],
+    ["Array", ["YES", "NO"]],
+    ["Element", $("<div>jquery</div>")[0]],
+    ["SVGElement", $("<textpath>textual</textpath>")[0]],
+    ["RawHtml", rxt.rawHtml("<div>42</div>")],
+    ["$", $("<div>jquery</div>")],
+    ["rx.ObsCell", rx.bind(() => 42)],
+    ["rx.ObsArray", rx.bind(() => [42, 45]).toArray()],
+    ["rx.ObsSet", rx.bind(() => [42, 45, 42]).toSet()]
+  ]);
+
+  let attrs = {name: 'foo', class: 'bar'};
+
+  describe("should work with contents of type ", () => {
+    for(let [name, contents] of types.entries()) {
+      it(name, () => {
+        let normed = rxt.normalizeTagArgs(contents);
+        expect(normed).toEqual([{}, contents]);
+
+        let attrNormed = rxt.normalizeTagArgs(attrs, contents);
+        expect(attrNormed).toEqual([attrs, contents]);
+      })
+    }
+  });
+  it('should fail on unrecognizable arguments', () => {
+    expect(() => rxt.normalizeTagArgs("abc", "def")).toThrow();
+    expect(() => rxt.normalizeTagArgs({}, new Map())).toThrow();
+  })
+});
