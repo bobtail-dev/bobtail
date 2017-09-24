@@ -1,6 +1,7 @@
 let {jasmine, _, $, rx} = window;
 let {snap, bind, Ev, rxt} = rx;
-let { div } = rxt.tags;
+let {tags} = rxt;
+let {div} = tags;
 let outerHtml = $x => $x.clone().wrap('<p>').parent().html();
 
 jasmine.CATCH_EXCEPTIONS = false;
@@ -192,7 +193,7 @@ describe('flatten', function() {
   it('should not flatten jQuery objects (which are array-like)', function() {
     flattened = rx.flatten([
       $('body'),
-      bind(() => $('<div/>'))
+      () => bind(() => $('<div/>'))
     ]);
     expect(flattened.at(0).is('body')).toBe(true);
     return expect(flattened.at(1).is('div')).toBe(true);
@@ -216,6 +217,7 @@ describe('flatten', function() {
       rx.cell([rx.array([42]), [500, undefined, rx.set([800])], [null, new Set([null])]]),
       undefined,
       [undefined],
+      () => () => bind(() => 'wat'),
       bind(() => undefined),
       rx.array([null]),
       rx.array([
@@ -225,7 +227,7 @@ describe('flatten', function() {
       2
     ]);
     return expect(snap(() => flattened.all())).toEqual([
-      1, 42, 500, 800, "ABC", "DEF", "GHI", "XYZ", 2
+      1, 42, 500, 800, 'wat', "ABC", "DEF", "GHI", "XYZ", 2
     ]);
 });
 });
@@ -391,6 +393,19 @@ describe('onElementChildrenChanged', function() {
   });
 });
 
+describe('abbreviated template syntax', () => {
+  it("should work with variadic arguments", () => {
+    expect(outerHtml(div(
+      ["Sing to me, "],
+      ["Muse, "],
+      bind(() => "of the "),
+      rxt.tags.strong("wrath"),
+      " ",
+      () => () => rxt.tags.em("of Achilles")
+    ))).toBe(`<div>Sing to me, Muse, of the <strong>wrath</strong> <em>of Achilles</em></div>`);
+  });
+});
+
 describe('normalizeTagArgs', () => {
   it("should work with no/null-like args", () => {
     expect(rxt.normalizeTagArgs()).toEqual([{}, null]);
@@ -415,7 +430,8 @@ describe('normalizeTagArgs', () => {
     ["$", $("<div>jquery</div>")],
     ["rx.ObsCell", rx.bind(() => 42)],
     ["rx.ObsArray", rx.bind(() => [42, 45]).toArray()],
-    ["rx.ObsSet", rx.bind(() => [42, 45, 42]).toSet()]
+    ["rx.ObsSet", rx.bind(() => [42, 45, 42]).toSet()],
+    ["function", () => 42]
   ]);
 
   let attrs = {name: 'foo', class: 'bar'};
@@ -431,8 +447,11 @@ describe('normalizeTagArgs', () => {
       })
     }
   });
-  it('should fail on unrecognizable arguments', () => {
-    expect(() => rxt.normalizeTagArgs("abc", "def")).toThrow();
-    expect(() => rxt.normalizeTagArgs({}, new Map())).toThrow();
+
+  it("should work with variadic args", () => {
+    let normalized = rxt.normalizeTagArgs(...types.values());
+    let attred = rxt.normalizeTagArgs(attrs, ...types.values());
+    expect(normalized).toEqual([{}, Array.from(types.values())]);
+    expect(attred).toEqual([attrs, Array.from(types.values())]);
   })
 });

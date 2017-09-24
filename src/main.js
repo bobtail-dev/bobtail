@@ -135,6 +135,7 @@ let validContents = contents => (
   _.isNumber(contents) ||
   _.isArray(contents) ||
   _.isBoolean(contents) ||
+  _.isFunction(contents) ||
   contents instanceof Element ||
   contents instanceof SVGElement ||
   contents instanceof RawHtml ||
@@ -144,20 +145,31 @@ let validContents = contents => (
   contents instanceof rx.ObsSet
 );
 
-let normalizeTagArgs = function(arg1, arg2) {
-  if (arg1 == null && arg2 == null) {
+let normalizeTagArgs = function(...args) {
+  // while not strictly necessary, a great deal of the special-casing in this function is provided
+  // to ensure exact backwards compatibility.
+  // @TODO: Prior to the 3.0.0 release, this should be simplified.
+  args = args.filter(a => a != null);
+  let first = _.first(args);
+  let rest = args.slice(1);
+  if (first == null && !rest.length) {
     return [{}, null];
-  } else if (arg2 == null && validContents(arg1)) {
-    return [{}, arg1];
-  } else if (_.isObject(arg1)) {
-    if(validContents(arg2)) {
-      return [arg1, arg2];
-    } else if(arg2 == null) {
-      return [arg1, null];
+  } else if (validContents(first)) {
+    if(args.length > 1) {
+      return [{}, args];
     }
+    else {
+      return [{}, first];
+    }
+  } else {
+    if (rest.length === 0) {
+      return [first, null];
+    }
+    else if(rest.length === 1) {
+      return [first, _.first(rest)];
+    }
+    return [first, rest];
   }
-
-  throw Error(`Unparsable arguments [${arg1.constructor.name}, ${arg2}]`);
 };
 
 let toNodes = contents => {
@@ -213,8 +225,8 @@ or array of the aforementioned)`
 };
 
 mktag = tag =>
-  function(arg1, arg2) {
-    let [attrs, contents] = Array.from(normalizeTagArgs(arg1, arg2));
+  function(...args) {
+    let [attrs, contents] = Array.from(normalizeTagArgs(...args));
     contents = prepContents(contents);
 
     let elt = $(`<${tag}/>`);
@@ -225,8 +237,7 @@ mktag = tag =>
     }
     if (contents != null) {
       if (contents instanceof rx.ObsArray) {
-        rx.autoSub(contents.indexed().onChangeCells, function(...args) {
-          let [index, removed, added] = Array.from(args[0]);
+        rx.autoSub(contents.indexed().onChangeCells, function([index, removed, added]) {
           elt.contents().slice(index, index + removed.length).remove();
           let toAdd = toNodes(added.map(([cell, icell]) => rx.snap(() => cell.get())));
           if (index === elt.contents().length) {
