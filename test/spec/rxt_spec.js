@@ -1,6 +1,7 @@
 let {jasmine, _, $, rx} = window;
 let {snap, bind, Ev, rxt} = rx;
-let { div } = rxt.tags;
+let {tags} = rxt;
+let {div} = tags;
 let outerHtml = $x => $x.clone().wrap('<p>').parent().html();
 
 jasmine.CATCH_EXCEPTIONS = false;
@@ -9,13 +10,14 @@ describe('tag', () => {
   describe('object creation', () => {
     let elt;
     let size = (elt = null);
-    let cls = rx.cell('my-class');
-    beforeEach(() => {
+    let clz;
+    beforeEach(function() {
       size = rx.cell(10);
+      clz = rx.cell('my-class');
       elt = rxt.tags.header({
-        class: () => cls.get(),
-        style: bind(() => { if (size.get() != null) { return `font-size: ${size.get()}px`; } else { return null; } }),
-        id: 'my-elt',
+        class: () => clz.get(),
+        style: () => { if (size.get() != null) { return `font-size: ${size.get()}px`; } else { return null; } },
+        id: rx.bind(() => 'my-elt'),
         click() {},
         init() { return this.data('foo', 'bar'); }
       }, () => [
@@ -33,7 +35,7 @@ describe('tag', () => {
     });
     it('should have the right tag', () => {
       expect(elt.is('header')).toBe(true);
-      return expect(elt[0] instanceof Element).toBe(true);
+      expect(elt[0] instanceof Element).toBe(true);
     });
     it('should have the set attributes', () => {
       expect(elt.prop('class')).toBe('my-class');
@@ -41,7 +43,7 @@ describe('tag', () => {
       expect(elt.prop('id')).toBe('my-elt');
       expect(elt.hasClass('my-class')).toBe(true);
       expect(elt.css('font-size')).toBe('10px');
-      return expect(elt.data('foo')).toBe('bar');
+      expect(elt.data('foo')).toBe('bar');
     });
     it('should update attrs in response to size changes', () => {
       size.set(9);
@@ -51,7 +53,9 @@ describe('tag', () => {
       size.set();
       expect(elt.attr('style')).toBe(undefined);
       expect(elt.css('font-size')).toBe('');
-      return expect(elt.contents()[1].textContent).toBe('');
+      expect(elt.contents()[1].textContent).toBe('');
+      clz.set('foobar');
+      expect(elt.prop('class')).toBe('foobar');
     });
     it('should have the given child contents', () => {
       let cont = elt.contents();
@@ -62,11 +66,11 @@ describe('tag', () => {
       expect(cont[1].tagName).toBe('SPAN');
       expect(cont[1].textContent).toBe('20');
       expect(cont.last().is('button')).toBe(true);
-      return expect(cont.last().text()).toBe('click me');
+      expect(cont.last().text()).toBe('click me');
     });
     return it('should not have special attrs set', () => {
       expect(elt.attr('init')).toBe(undefined);
-      return expect(elt.attr('click')).toBe(undefined);
+      expect(elt.attr('click')).toBe(undefined);
     });
   });
 
@@ -92,16 +96,16 @@ describe('tag', () => {
 
     it('should have the right tag', () => {
       expect(elt).toBeDefined();
-      return expect(elt instanceof SVGRectElement).toBe(true);
+      expect(elt instanceof SVGRectElement).toBe(true);
     });
     it('should have the set attributes', () => {
       expect(elt.getAttribute('x')).toBe('10');
-      return expect(elt.getAttribute('class')).toBe('shape');
+      expect(elt.getAttribute('class')).toBe('shape');
     });
     return it('should have the given child contents', () => {
       let kids = elt.childNodes;
       expect(kids.length).toBe(1);
-      return expect(kids[0] instanceof SVGElement).toBe(true);
+      expect(kids[0] instanceof SVGElement).toBe(true);
     });
   });
 });
@@ -121,7 +125,7 @@ describe('rxt of observable array', () => {
     expect(cont[1]).toEqual(jasmine.any(Text));
     expect(cont.eq(1).text()).toBe('plain 2');
     expect(cont.eq(2).is('li')).toBe(true);
-    return expect(cont.eq(2).text()).toBe('item 3');
+    expect(cont.eq(2).text()).toBe('item 3');
   });
   it('should update contents in response to array changes', () => {
     xs.splice(0, 3, 0, 1, 2);
@@ -131,7 +135,7 @@ describe('rxt of observable array', () => {
     expect(cont.eq(1).is('li')).toBe(true);
     expect(cont.eq(1).text()).toBe('item 1');
     expect(cont[2]).toEqual(jasmine.any(Text));
-    return expect(cont.eq(2).text()).toBe('plain 2');
+    expect(cont.eq(2).text()).toBe('plain 2');
   });
   return it("should work with reactive map functions", () => {
     let x;
@@ -144,7 +148,7 @@ describe('rxt of observable array', () => {
       return result;
     })()).toEqual(["1", "2", "3"]);
     multiplierCell.set(10);
-    return expect((() => {
+    expect((() => {
       let result1 = [];
       for (x of Array.from($("li", $ul))) {         result1.push($(x).text());
       }
@@ -181,15 +185,15 @@ describe('flattenWeb', () => {
     expect(mapped.all()).toEqual(['a','b','c','d','e','f','g','h','j','x','k','c','d','xkcd!']);
     ys.push('f');
     expect(flattened.all()).toEqual(['A','B','C','D','E','F','f','G','H','J','X','K','C','D','XKCD!']);
-    return expect(mapped.all()).toEqual(['a','b','c','d','e','f','f','g','h','j','x','k','c','d','xkcd!']);
+    expect(mapped.all()).toEqual(['a','b','c','d','e','f','f','g','h','j','x','k','c','d','xkcd!']);
   });
   it('should not flatten jQuery objects (which are array-like)', () => {
     flattened = rxt.flattenWeb([
       $('body'),
-      bind(() => $('<div/>'))
+      () => bind(() => $('<div/>'))
     ]);
     expect(flattened.at(0).is('body')).toBe(true);
-    return expect(flattened.at(1).is('div')).toBe(true);
+    expect(flattened.at(1).is('div')).toBe(true);
   });
   it('should remove undefineds/nulls (for convenient conditionals)', () => {
     flattened = rxt.flattenWeb([
@@ -201,7 +205,7 @@ describe('flattenWeb', () => {
       rx.array([null]),
       2
     ]);
-    return expect(flattened.all()).toEqual([1,2]);
+    expect(flattened.all()).toEqual([1,2]);
   });
   return it('should flatten recursively', () => {
     flattened = rxt.flattenWeb([
@@ -210,6 +214,7 @@ describe('flattenWeb', () => {
       rx.cell([rx.array([42]), [500, undefined, rx.set([800])], [null, new Set([null])]]),
       undefined,
       [undefined],
+      () => () => bind(() => 'wat'),
       bind(() => undefined),
       rx.array([null]),
       rx.array([
@@ -218,8 +223,8 @@ describe('flattenWeb', () => {
       "XYZ",
       2
     ]);
-    return expect(snap(() => flattened.all())).toEqual([
-      1, 42, 500, 800, "ABC", "DEF", "GHI", "XYZ", 2
+    expect(snap(() => flattened.all())).toEqual([
+      1, 42, 500, 800, 'wat', "ABC", "DEF", "GHI", "XYZ", 2
     ]);
   });
 });
@@ -228,12 +233,12 @@ describe('RawHtml', () => {
   beforeEach(() => frag = rxt.rawHtml('<em>hi</em>'));
   it('should support insertion of arbitrary HTML elements', () => {
     let $x = div({class: 'stuff'}, bind(() => [frag]));
-    return expect($x.html()).toBe('<em>hi</em>');
+    expect($x.html()).toBe('<em>hi</em>');
   });
   return it('should only be supported if containing single element', () => {
     frag = rxt.rawHtml('<em>hi</em><em>ho</em>');
     expect(() => div({class: 'stuff'}, bind(() => frag))).toThrow();
-    return expect(() => div({class: 'stuff'}, bind(() => rxt.rawHtml('')))).toThrow();
+    expect(() => div({class: 'stuff'}, bind(() => rxt.rawHtml('')))).toThrow();
   });
 });
 
@@ -292,7 +297,7 @@ describe('onElementAttrsChanged', () =>
     handler.calls.reset();
     offsetCell.set(10);
     expect(handler.calls.count()).toBe(1);
-    return expect(handler).toHaveBeenCalledWith({$element: $div, attr: "style"});
+    expect(handler).toHaveBeenCalledWith({$element: $div, attr: "style"});
   })
  );
 
@@ -347,7 +352,7 @@ describe('onElementChildrenChanged', () => {
     expect(handler.calls.first().args[0].added.length).toBe(2);
     expect(handler.calls.first().args[0].added[0]).toBe($("li", $ul)[0]);
     expect(handler.calls.first().args[0].added[1]).toBe($("li", $ul)[1]);
-    return expect(handler.calls.first().args[0].removed.length).toBe(2);
+    expect(handler.calls.first().args[0].removed.length).toBe(2);
   });
 
   return it("should work with reactive map function", () => {
@@ -381,7 +386,20 @@ describe('onElementChildrenChanged', () => {
 
     expect(handler.calls.mostRecent().args[0].$element).toBe($ul);
     expect(handler.calls.mostRecent().args[0].type).toBe("childrenUpdated");
-    return expect(handler.calls.mostRecent().args[0].added[0]).toBe($("li", $ul)[0]);
+    expect(handler.calls.mostRecent().args[0].added[0]).toBe($("li", $ul)[0]);
+  });
+});
+
+describe('abbreviated template syntax', () => {
+  it("should work with variadic arguments", () => {
+    expect(outerHtml(div(
+      ["Sing to me, "],
+      ["Muse, "],
+      bind(() => "of the "),
+      rxt.tags.strong("wrath"),
+      " ",
+      () => () => rxt.tags.em("of Achilles")
+    ))).toBe(`<div>Sing to me, Muse, of the <strong>wrath</strong> <em>of Achilles</em></div>`);
   });
 });
 
@@ -422,7 +440,8 @@ describe('normalizeTagArgs', () => {
     ["$", $("<div>jquery</div>")],
     ["rx.ObsCell", rx.bind(() => 42)],
     ["rx.ObsArray", rx.bind(() => [42, 45]).toArray()],
-    ["rx.ObsSet", rx.bind(() => [42, 45, 42]).toSet()]
+    ["rx.ObsSet", rx.bind(() => [42, 45, 42]).toSet()],
+    ["function", () => 42]
   ]);
 
   let attrs = {name: 'foo', class: 'bar'};
@@ -438,8 +457,11 @@ describe('normalizeTagArgs', () => {
       })
     }
   });
-  it('should fail on unrecognizable arguments', () => {
-    expect(() => rxt.normalizeTagArgs("abc", "def")).toThrow();
-    expect(() => rxt.normalizeTagArgs({}, new Map())).toThrow();
+
+  it("should work with variadic args", () => {
+    let normalized = rxt.normalizeTagArgs(...types.values());
+    let attred = rxt.normalizeTagArgs(attrs, ...types.values());
+    expect(normalized).toEqual([{}, Array.from(types.values())]);
+    expect(attred).toEqual([attrs, Array.from(types.values())]);
   });
 });

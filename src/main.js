@@ -43,6 +43,7 @@ $.fn.rx = function(prop) {
 //
 // reactive template DSL
 //
+const autoFuncBind = (x) => _.isFunction(x) ? rx.bind(x) : x;
 
 const flattenWeb = (x) => rx.flatten(x, rxtFlattenHelper);
 
@@ -82,12 +83,32 @@ let DOMEvents = ["blur", "change", "click", "dblclick", "error", "focus", "focus
   "ready", "resize", "scroll", "select", "submit", "toggle", "unload"];
 
 let svg_events = ["click"];
+let smushClasses = xs => _(xs).chain().flatten().compact().value().join(" ").replace(/\s+/, " ").trim();
 
 let specialAttrs = {
-  init(elt, fn) { return fn.call(elt); }
+  init(elt, fn) { return fn.call(elt); },
+  style (elt, value) {
+    value = autoFuncBind(value);
+    let isCell = value instanceof rx.ObsCell;
+    return rx.autoSub(rx.cast(value).onSet, ([o, n]) => {
+      if ((n == null) || _.isString(n)) {
+        setProp(elt, "style", n);
+      } else {
+        elt.removeAttr("style").css(n);
+      }
+      if (isCell && events.enabled) {
+        return events.onElementAttrsChanged.pub({$element: elt, attr: "style"});
+      }
+    });
+  },
+  class (elt, value) {
+    return setDynProp(elt, "class", value, function(val) {
+      if (_.isString(val)) { return val; } else { return smushClasses(val); }
+    });
+  }
 };
 
-for (let ev of Array.from(DOMEvents)) {
+for (let ev of DOMEvents) {
   (ev =>
     specialAttrs[ev] = function(elt, fn) {
       if (elt instanceof SVGElement && Array.from(svg_events).includes(ev)) {
@@ -98,6 +119,11 @@ for (let ev of Array.from(DOMEvents)) {
     }
   )(ev);
 }
+
+// a little underscore-string inlining
+let trim = $.trim;
+
+let dasherize = str=> trim(str).replace(/([A-Z])/g, "-$1").replace(/[-_\s]+/g, "-").toLowerCase();
 
 // attr vs prop:
 // http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
@@ -123,9 +149,7 @@ let setProp = function(elt, prop, val) {
 
 let setDynProp = function(elt, prop, val, xform) {
   if (xform == null) { xform = _.identity; }
-  if (_.isFunction(val)) {
-    val = rx.bind(val);
-  }
+  val = autoFuncBind(val);
   if (val instanceof rx.ObsCell) {
     return rx.autoSub(val.onSet, function([o, n]) {
       setProp(elt, prop, xform(n));
@@ -160,20 +184,31 @@ let validContents = contents => (
   contents instanceof rx.ObsSet
 );
 
-let normalizeTagArgs = function(arg1, arg2) {
-  if (arg1 == null && arg2 == null) {
+let normalizeTagArgs = function(...args) {
+  // while not strictly necessary, a great deal of the special-casing in this function is provided
+  // to ensure exact backwards compatibility.
+  // @TODO: Prior to the 3.0.0 release, this should be simplified.
+  args = args.filter(a => a != null);
+  let first = _.first(args);
+  let rest = args.slice(1);
+  if (first == null && !rest.length) {
     return [{}, null];
-  } else if (arg2 == null && validContents(arg1)) {
-    return [{}, arg1];
-  } else if (_.isObject(arg1)) {
-    if(validContents(arg2)) {
-      return [arg1, arg2];
-    } else if(arg2 == null) {
-      return [arg1, null];
+  } else if (validContents(first)) {
+    if(args.length > 1) {
+      return [{}, args];
     }
+    else {
+      return [{}, first];
+    }
+  } else {
+    if (rest.length === 0) {
+      return [first, null];
+    }
+    else if(rest.length === 1) {
+      return [first, _.first(rest)];
+    }
+    return [first, rest];
   }
-
-  throw Error(`Unparsable arguments [${arg1.constructor.name}, ${arg2}]`);
 };
 
 let toNodes = contents => {
@@ -232,11 +267,15 @@ or array of the aforementioned)`
 };
 
 mktag = tag =>
-  function(arg1, arg2) {
-    let [attrs, contents] = Array.from(normalizeTagArgs(arg1, arg2));
+  function(...args) {
+    let [attrs, contents] = Array.from(normalizeTagArgs(...args));
     contents = prepContents(contents);
 
     let elt = $(`<${tag}/>`);
+    attrs = _.mapObject(attrs, (value, key) => {
+      if(key in specialAttrs) return value;
+      else return autoFuncBind(value);
+    });
     let object = _.omit(attrs, _.keys(specialAttrs));
     for (let name in object) {
       let value = object[name];
@@ -244,8 +283,7 @@ mktag = tag =>
     }
     if (contents != null) {
       if (contents instanceof rx.ObsArray) {
-        rx.autoSub(contents.indexed().onChangeCells, function(...args) {
-          let [index, removed, added] = Array.from(args[0]);
+        rx.autoSub(contents.indexed().onChangeCells, function([index, removed, added]) {
           elt.contents().slice(index, index + removed.length).remove();
           let toAdd = toNodes(added.map(([cell, icell]) => rx.snap(() => cell.get())));
           if (index === elt.contents().length) {
@@ -345,8 +383,8 @@ let updateSVGContents = function(elt, contents) {
 };
 
 let svg_mktag = tag =>
-  function(arg1, arg2) {
-    let [attrs, contents] = Array.from(normalizeTagArgs(arg1, arg2));
+  function(...args) {
+    let [attrs, contents] = Array.from(normalizeTagArgs(...args));
 
     let elt = document.createElementNS("http://www.w3.org/2000/svg", tag);
     let object = _.omit(attrs, _.keys(specialAttrs));
@@ -446,36 +484,6 @@ let unicodeChar = function(code, tag) { if (tag == null) { tag = "span"; } retur
 //
 // rxt utilities
 //
-
-// a little underscore-string inlining
-let trim = $.trim;
-
-let dasherize = str=> trim(str).replace(/([A-Z])/g, "-$1").replace(/[-_\s]+/g, "-").toLowerCase();
-
-specialAttrs.style = function(elt, value) {
-  if(_.isFunction(value)) {
-    value = rx.bind(value);
-  }
-  let isCell = value instanceof rx.ObsCell;
-  return rx.autoSub(rx.cast(value).onSet, ([o, n]) => {
-    if ((n == null) || _.isString(n)) {
-      setProp(elt, "style", n);
-    } else {
-      elt.removeAttr("style").css(n);
-    }
-    if (isCell && events.enabled) {
-      return events.onElementAttrsChanged.pub({$element: elt, attr: "style"});
-    }
-  });
-};
-
-let smushClasses = xs => _(xs).chain().flatten().compact().value().join(" ").replace(/\s+/, " ").trim();
-
-specialAttrs.class = (elt, value) =>
-  setDynProp(elt, "class", value, function(val) {
-    if (_.isString(val)) { return val; } else { return smushClasses(val); }
-  })
-;
 
 export * from "bobtail-rx";
 export let rxt = {
