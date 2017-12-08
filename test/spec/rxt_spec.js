@@ -1,4 +1,5 @@
-let {jasmine, _, $, rx} = window;
+import $ from 'jquery';
+import * as rx from '../../src/main.js';
 let {snap, bind, Ev, rxt} = rx;
 let {tags} = rxt;
 let {div} = tags;
@@ -140,7 +141,7 @@ describe('rxt of observable array', () => {
   return it("should work with reactive map functions", () => {
     let x;
     let multiplierCell = rx.cell(1);
-    let $ul = rxt.tags.ul(xs.map(f => rxt.tags.li(f * multiplierCell.get())));
+    let $ul = tags.ul(xs.map(f => tags.li(f * multiplierCell.get())));
     expect((() => {
       let result = [];
       for (x of Array.from($("li", $ul))) {         result.push($(x).text());
@@ -279,7 +280,7 @@ describe('onElementAttrsChanged', () =>
 
     let stateCell = rx.cell("safe");
     let offsetCell = rx.cell(0);
-    let $div = rxt.tags.div({
+    let $div = tags.div({
       class: bind(() => ["notif", `notif--${stateCell.get()}`]),
       style: bind(() => ({left: offsetCell.get()})),
       otherThing: "yes"
@@ -309,7 +310,7 @@ describe('onElementChildrenChanged', () => {
 
     let items = rx.array([{name: "Chicken feet", price: 10}]);
 
-    let $ul = rxt.tags.ul(items.map(item => rxt.tags.li(item)));
+    let $ul = tags.ul(items.map(item => tags.li(item)));
 
     expect(handler.calls.count()).toBe(1);
     expect(handler.calls.first().args[0].$element).toBe($ul);
@@ -363,7 +364,7 @@ describe('onElementChildrenChanged', () => {
     let onSaleCell = rx.cell(false);
     let items = rx.array([{name: "Chicken feet", price: 10}, {name: "buns", price: 5}]);
 
-    let $ul = rxt.tags.ul(items.map(item => rxt.tags.li(onSaleCell.get() ? item.price * 0.1 : item.price))
+    let $ul = tags.ul(items.map(item => tags.li(onSaleCell.get() ? item.price * 0.1 : item.price))
     );
 
     expect(handler.calls.count()).toEqual(1);
@@ -404,6 +405,16 @@ describe('abbreviated template syntax', () => {
 });
 
 describe('normalizeTagArgs', () => {
+  it("should work with variadic arguments", () => {
+    expect(outerHtml(div(
+      ["Sing to me, "],
+      ["Muse, "],
+      bind(() => "of the "),
+      tags.strong("wrath"),
+      " ",
+      () => () => tags.em("of Achilles")
+    ))).toBe(`<div>Sing to me, Muse, of the <strong>wrath</strong> <em>of Achilles</em></div>`);
+  });
   it("should work with no/null-like args", () => {
     expect(rxt.normalizeTagArgs()).toEqual([{}, null]);
     expect(rxt.normalizeTagArgs(null)).toEqual([{}, null]);

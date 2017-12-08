@@ -4,7 +4,6 @@ import "es6-shim";
 import _ from "underscore";
 import * as rx from "bobtail-rx";
 
-let mktag;
 $.fn.rx = function(prop) {
   let map = this.data("rx-map");
   if ((map == null)) {
@@ -266,69 +265,69 @@ or array of the aforementioned)`
   }
 };
 
-mktag = tag =>
-  function(...args) {
-    let [attrs, contents] = Array.from(normalizeTagArgs(...args));
-    contents = prepContents(contents);
+const mktag = tag => (...args) => createTag(tag, ...args);
 
-    let elt = $(`<${tag}/>`);
-    attrs = _.mapObject(attrs, (value, key) => {
-      if(key in specialAttrs) return value;
-      else return autoFuncBind(value);
-    });
-    let object = _.omit(attrs, _.keys(specialAttrs));
-    for (let name in object) {
-      let value = object[name];
-      setDynProp(elt, name, value);
-    }
-    if (contents != null) {
-      if (contents instanceof rx.ObsArray) {
-        rx.autoSub(contents.indexed().onChangeCells, function([index, removed, added]) {
-          elt.contents().slice(index, index + removed.length).remove();
-          let toAdd = toNodes(added.map(([cell, icell]) => rx.snap(() => cell.get())));
-          if (index === elt.contents().length) {
-            elt.append(toAdd);
-          } else {
-            elt.contents().eq(index).before(toAdd);
-          }
-          if (events.enabled && (removed.length || toAdd.length)) {
-            events.onElementChildrenChanged.pub({
-              $element: elt,
-              type: "childrenUpdated",
-              added: toAdd,
-              removed: toNodes(removed.map(cell => rx.snap(() => cell.get())))
-            });
-          }
-          return (() => {
-            let result1 = [];
-            for (let [cell, icell] of Array.from(added)) {
-              result1.push(((cell, icell) =>
-                rx.autoSub(cell.onSet, rx.skipFirst(([old, val]) => {
-                  let ival = rx.snap(() => icell.get());
-                  toAdd = toNodes([val]);
-                  elt.contents().eq(ival).replaceWith(toAdd);
-                  if (events.enabled) {
-                    return events.onElementChildrenChanged.pub({
-                      $element: elt, type: "childrenUpdated", updated: toAdd
-                    });
-                  }}))
-              )(cell, icell));
-            }
-            return result1;
-          })();
-        });
-      } else {
-        updateContents(elt, contents);
-      }
-    }
-    for (let key in attrs) {
-      if (key in specialAttrs) {
-        specialAttrs[key](elt, attrs[key], attrs, contents);
-      }
-    }
-    return elt;
-  };
+const createTag = (tag, ...args) => {
+  let [attrs, contents] = Array.from(normalizeTagArgs(...args));
+  contents = prepContents(contents);
 
+  let elt = $(`<${tag}/>`);
+  attrs = _.mapObject(attrs, (value, key) => {
+    if(key in specialAttrs) return value;
+    else return autoFuncBind(value);
+  });
+  let object = _.omit(attrs, _.keys(specialAttrs));
+  for (let name in object) {
+    let value = object[name];
+    setDynProp(elt, name, value);
+  }
+  if (contents != null) {
+    if (contents instanceof rx.ObsArray) {
+      rx.autoSub(contents.indexed().onChangeCells, function([index, removed, added]) {
+        elt.contents().slice(index, index + removed.length).remove();
+        let toAdd = toNodes(added.map(([cell, icell]) => rx.snap(() => cell.get())));
+        if (index === elt.contents().length) {
+          elt.append(toAdd);
+        } else {
+          elt.contents().eq(index).before(toAdd);
+        }
+        if (events.enabled && (removed.length || toAdd.length)) {
+          events.onElementChildrenChanged.pub({
+            $element: elt,
+            type: "childrenUpdated",
+            added: toAdd,
+            removed: toNodes(removed.map(cell => rx.snap(() => cell.get())))
+          });
+        }
+        return (() => {
+          let result1 = [];
+          for (let [cell, icell] of Array.from(added)) {
+            result1.push(((cell, icell) =>
+              rx.autoSub(cell.onSet, rx.skipFirst(([old, val]) => {
+                let ival = rx.snap(() => icell.get());
+                toAdd = toNodes([val]);
+                elt.contents().eq(ival).replaceWith(toAdd);
+                if (events.enabled) {
+                  return events.onElementChildrenChanged.pub({
+                    $element: elt, type: "childrenUpdated", updated: toAdd
+                  });
+                }}))
+            )(cell, icell));
+          }
+          return result1;
+        })();
+      });
+    } else {
+      updateContents(elt, contents);
+    }
+  }
+  for (let key in attrs) {
+    if (attrs.hasOwnProperty(key) && specialAttrs.hasOwnProperty(key)) {
+      specialAttrs[key](elt, attrs[key], attrs, contents);
+    }
+  }
+  return elt;
+};
 // From <https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list>
 //
 // Extract with:
@@ -481,12 +480,37 @@ svg_tags = _.object(svg_tags.map(svg_tag => [svg_tag, svg_mktag(svg_tag)]));
 let rawHtml = html => new RawHtml(html);
 let specialChar = function(code, tag) { if (tag == null) { tag = "span"; } return rawHtml(`<${tag}>&${code};</${tag}>`); };
 let unicodeChar = function(code, tag) { if (tag == null) { tag = "span"; } return rawHtml(`<${tag}>\\u${code};</${tag}>`); };
+
 //
 // rxt utilities
 //
+specialAttrs.class = (elt, value) =>
+  setDynProp(elt, "class", value, function(val) {
+    if (_.isString(val)) { return val; } else { return smushClasses(val); }
+  })
+;
+
+specialAttrs.className = specialAttrs.class;
+
+function createElement(elemType, props, ...contents) {
+  if(_.isString(elemType)) {
+    return createTag(elemType, props, ...contents);
+  } else if (
+    _.isObject(elemType) &&
+    elemType.prototype &&
+    _.isFunction(elemType.prototype.render)
+  ) {
+    return new elemType(props, ...contents).render();
+  } else if (_.isFunction(elemType)) {
+    return elemType(props, ...contents);
+  } else {
+    throw Error(`Cannot create element ${elemType}!`);
+  }
+}
 
 export * from "bobtail-rx";
 export let rxt = {
-  events, RawHtml, specialAttrs, mktag, svg_mktag, tags, svg_tags, rawHtml, specialChar, unicodeChar,
-  trim, dasherize, smushClasses, normalizeTagArgs, flattenWeb, rxtFlattenHelper
+  events, RawHtml, specialAttrs, mktag, svg_mktag, tags, svg_tags, rawHtml, specialChar,
+  unicodeChar, trim, dasherize, smushClasses, normalizeTagArgs, flattenWeb, rxtFlattenHelper,
+  createElement
 };

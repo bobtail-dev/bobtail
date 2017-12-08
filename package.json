@@ -25,12 +25,18 @@
     }
   ],
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.0.0-beta.34",
     "babel-cli": "^6.24.1",
     "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
     "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babelify": "^8.0.0",
+    "browserify": "^14.5.0",
     "eslint": "^4.3.0",
     "jasmine-core": "^2.5.2",
     "karma": "^1.4.1",
+    "karma-browserify": "^5.1.2",
     "karma-chrome-launcher": "^2.0.0",
     "karma-jasmine": "^1.1.0",
     "karma-source-map-support": "^1.2.0",
@@ -38,15 +44,13 @@
     "uglify-es": "^3.0.23"
   },
   "scripts": {
-    "babel-test": "babel src/main.js --out-file .tmp/main.js --source-maps inline",
     "babel": "babel src/main.js --out-file dist/main.js --source-maps",
     "build": "npm run clean-dist && npm run test && npm run babel && npm run minify",
-    "clean-server": "rm -rf .tmp",
     "clean-dist": "rm -f dist/*",
     "eslint": "eslint src/**/*.js --fix",
     "karma": "if grep -qE \"(Microsoft|WSL)\" /proc/version; then export BOBTAIL_KARMA_BFW=1; fi; karma start karma.conf.js",
     "minify": "uglifyjs -mc --source-map -o dist/main.min.js dist/main.js",
-    "test": "npm run eslint && npm run clean-server && mkdir -p .tmp && npm run babel-test && npm run karma ; npm run tsc",
+    "test": "npm run karma && npm run eslint",
     "tsc": "tsc --target es5 --strictNullChecks --alwaysStrict src/main.d.ts"
   },
   "engines": {
