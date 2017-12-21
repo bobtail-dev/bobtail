@@ -44,9 +44,21 @@ $.fn.rx = function(prop) {
 // reactive template DSL
 //
 
-let prepContents = function(contents) {
-  if (contents instanceof rx.ObsCell || contents instanceof rx.ObsArray || _.isArray(contents)) {
-    contents = rx.flatten(contents);
+const flattenWeb = (x) => rx.flatten(x, rxtFlattenHelper);
+
+const rxtFlattenHelper = x =>
+  _.isFunction(x)
+    ? rxtFlattenHelper(x())
+    : rx.flattenHelper(x, rxtFlattenHelper);
+
+const prepContents = function(contents) {
+  if (
+    contents instanceof rx.ObsCell ||
+    contents instanceof rx.ObsArray ||
+    _.isArray(contents) ||
+    _.isFunction(contents)
+  ) {
+    contents = flattenWeb(contents);
   }
   return contents;
 };
@@ -111,6 +123,9 @@ let setProp = function(elt, prop, val) {
 
 let setDynProp = function(elt, prop, val, xform) {
   if (xform == null) { xform = _.identity; }
+  if (_.isFunction(val)) {
+    val = rx.bind(val);
+  }
   if (val instanceof rx.ObsCell) {
     return rx.autoSub(val.onSet, function([o, n]) {
       setProp(elt, prop, xform(n));
@@ -130,26 +145,35 @@ let setDynProp = function(elt, prop, val, xform) {
 //   (attrs: Object, contents: Contents)
 // where Contents is:
 //   string | number | Element | RawHtml | $ | Array | ObsCell | ObsArray
+let validContents = contents => (
+  _.isString(contents) ||
+  _.isNumber(contents) ||
+  _.isArray(contents) ||
+  _.isBoolean(contents) ||
+  _.isFunction(contents) ||
+  contents instanceof Element ||
+  contents instanceof SVGElement ||
+  contents instanceof RawHtml ||
+  contents instanceof $ ||
+  contents instanceof rx.ObsCell ||
+  contents instanceof rx.ObsArray ||
+  contents instanceof rx.ObsSet
+);
+
 let normalizeTagArgs = function(arg1, arg2) {
-  if ((arg1 == null) && (arg2 == null)) {
+  if (arg1 == null && arg2 == null) {
     return [{}, null];
-  } else if (arg1 instanceof Object && (arg2 != null)) {
-    return [arg1, arg2];
-  } else if (((arg2 == null) &&
-      _.isString(arg1)) ||
-      _.isNumber(arg1) ||
-      arg1 instanceof Element ||
-      arg1 instanceof SVGElement ||
-      arg1 instanceof RawHtml ||
-      arg1 instanceof $ ||
-      _.isArray(arg1) ||
-      arg1 instanceof rx.ObsCell ||
-      arg1 instanceof rx.ObsArray ||
-      arg1 instanceof rx.ObsSet) {
+  } else if (arg2 == null && validContents(arg1)) {
     return [{}, arg1];
-  } else {
-    return [arg1, null];
+  } else if (_.isObject(arg1)) {
+    if(validContents(arg2)) {
+      return [arg1, arg2];
+    } else if(arg2 == null) {
+      return [arg1, null];
+    }
   }
+
+  throw Error(`Unparsable arguments [${arg1.constructor.name}, ${arg2}]`);
 };
 
 let toNodes = contents => {
@@ -168,7 +192,10 @@ let toNodes = contents => {
         if (child.length !== 1) { throw new Error("jQuery object must wrap a single element"); }
         result1.push(child[0]);
       } else {
-        throw new Error(`Unknown element type in array: ${child.constructor.name} (must be string, number, Element, RawHtml, or jQuery objects)`);
+        throw new Error(
+          `Unknown element type in array: ${child.constructor.name} (must be string, number, function, 
+Element, RawHtml, or jQuery objects)`
+        );
       }
     } else {
       result1.push(undefined);
@@ -185,11 +212,22 @@ let updateContents = function(elt, contents) {
     let nodes = toNodes(contents);
     elt.append(nodes);
     return nodes;
-  } else if (_.isString(contents) || _.isNumber(contents) || contents instanceof Element ||
-      contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof $) {
+  } else if (
+    _.isString(contents) ||
+    _.isNumber(contents) ||
+    _.isBoolean(contents) ||
+      contents instanceof Element ||
+      contents instanceof SVGElement ||
+      contents instanceof RawHtml ||
+      contents instanceof $
+  ) {
     return updateContents(elt, [contents]);
   } else {
-    throw new Error(`Unknown type for element contents: ${contents.constructor.name} (accepted types: string, number, Element, RawHtml, jQuery object of single element, or array of the aforementioned)`);
+    throw new Error(
+      `Unknown type for element contents: ${contents.constructor.name} 
+(accepted types: string, number, Element, RawHtml, jQuery object of single element, 
+or array of the aforementioned)`
+    );
   }
 };
 
@@ -317,6 +355,10 @@ let svg_mktag = tag =>
       setDynProp(elt, name, value);
     }
 
+    if(_.isFunction(contents)) {
+      contents = rx.bind(contents);
+    }
+
     if (contents != null) {
       if (contents instanceof rx.ObsArray) {
         contents.onChange.sub(function(...args) {
@@ -411,6 +453,9 @@ let trim = $.trim;
 let dasherize = str=> trim(str).replace(/([A-Z])/g, "-$1").replace(/[-_\s]+/g, "-").toLowerCase();
 
 specialAttrs.style = function(elt, value) {
+  if(_.isFunction(value)) {
+    value = rx.bind(value);
+  }
   let isCell = value instanceof rx.ObsCell;
   return rx.autoSub(rx.cast(value).onSet, ([o, n]) => {
     if ((n == null) || _.isString(n)) {
@@ -435,5 +480,5 @@ specialAttrs.class = (elt, value) =>
 export * from "bobtail-rx";
 export let rxt = {
   events, RawHtml, specialAttrs, mktag, svg_mktag, tags, svg_tags, rawHtml, specialChar, unicodeChar,
-  trim, dasherize, smushClasses
+  trim, dasherize, smushClasses, normalizeTagArgs, flattenWeb, rxtFlattenHelper
 };
