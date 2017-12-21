@@ -168,9 +168,17 @@
   // reactive template DSL
   //
 
+  var flattenWeb = function flattenWeb(x) {
+    return rx.flatten(x, rxtFlattenHelper);
+  };
+
+  var rxtFlattenHelper = function rxtFlattenHelper(x) {
+    return _underscore2.default.isFunction(x) ? rxtFlattenHelper(x()) : rx.flattenHelper(x, rxtFlattenHelper);
+  };
+
   var prepContents = function prepContents(contents) {
     if (contents instanceof rx.ObsCell || contents instanceof rx.ObsArray || _underscore2.default.isArray(contents) || _underscore2.default.isFunction(contents)) {
-      contents = rx.flatten(contents);
+      contents = flattenWeb(contents);
     }
     return contents;
   };
@@ -331,7 +339,7 @@
             }
             result1.push(child[0]);
           } else {
-            throw new Error("Unknown element type in array: " + child.constructor.name + " (must be string, number, Element, RawHtml, or jQuery objects)");
+            throw new Error("Unknown element type in array: " + child.constructor.name + " (must be string, number, function, \nElement, RawHtml, or jQuery objects)");
           }
         } else {
           result1.push(undefined);
@@ -749,7 +757,7 @@
 
   var rxt = exports.rxt = {
     events: events, RawHtml: RawHtml, specialAttrs: specialAttrs, mktag: mktag, svg_mktag: svg_mktag, tags: tags, svg_tags: svg_tags, rawHtml: rawHtml, specialChar: specialChar, unicodeChar: unicodeChar,
-    trim: trim, dasherize: dasherize, smushClasses: smushClasses, normalizeTagArgs: normalizeTagArgs
+    trim: trim, dasherize: dasherize, smushClasses: smushClasses, normalizeTagArgs: normalizeTagArgs, flattenWeb: flattenWeb, rxtFlattenHelper: rxtFlattenHelper
   };
 });
 

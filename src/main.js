@@ -44,9 +44,21 @@ $.fn.rx = function(prop) {
 // reactive template DSL
 //
 
-let prepContents = function(contents) {
-  if (contents instanceof rx.ObsCell || contents instanceof rx.ObsArray || _.isArray(contents) || _.isFunction(contents)) {
-    contents = rx.flatten(contents);
+const flattenWeb = (x) => rx.flatten(x, rxtFlattenHelper);
+
+const rxtFlattenHelper = x =>
+  _.isFunction(x)
+    ? rxtFlattenHelper(x())
+    : rx.flattenHelper(x, rxtFlattenHelper);
+
+const prepContents = function(contents) {
+  if (
+    contents instanceof rx.ObsCell ||
+    contents instanceof rx.ObsArray ||
+    _.isArray(contents) ||
+    _.isFunction(contents)
+  ) {
+    contents = flattenWeb(contents);
   }
   return contents;
 };
@@ -180,7 +192,10 @@ let toNodes = contents => {
         if (child.length !== 1) { throw new Error("jQuery object must wrap a single element"); }
         result1.push(child[0]);
       } else {
-        throw new Error(`Unknown element type in array: ${child.constructor.name} (must be string, number, Element, RawHtml, or jQuery objects)`);
+        throw new Error(
+          `Unknown element type in array: ${child.constructor.name} (must be string, number, function, 
+Element, RawHtml, or jQuery objects)`
+        );
       }
     } else {
       result1.push(undefined);
@@ -465,5 +480,5 @@ specialAttrs.class = (elt, value) =>
 export * from "bobtail-rx";
 export let rxt = {
   events, RawHtml, specialAttrs, mktag, svg_mktag, tags, svg_tags, rawHtml, specialChar, unicodeChar,
-  trim, dasherize, smushClasses, normalizeTagArgs
+  trim, dasherize, smushClasses, normalizeTagArgs, flattenWeb, rxtFlattenHelper
 };
