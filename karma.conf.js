@@ -3,19 +3,23 @@
 module.exports = function(config) {
   let configuration = {
     basePath: "",
-    frameworks: ["source-map-support", "jasmine"],
+    frameworks: ["jasmine", "browserify"],
     // list of files / patterns to load in the browser
     files: [
-      "node_modules/underscore/underscore.js",
-      "node_modules/jquery/dist/jquery.js",
-      "node_modules/es5-shim/es5-shim.js",
-      "node_modules/es6-shim/es6-shim.js",
-      "node_modules/bobtail-rx/dist/main.js",
-      ".tmp/**/*.js",
-      // '.tmp/**/*.js.map',
-      "test/spec/**/*.js",
-      "test/*.js"
+      'src/**/*.js',
+      'test/**/*'
     ],
+
+    preprocessors: {
+        'src/**/*': ['browserify'],
+        'test/**/*': ['browserify']
+    },
+
+    browserify: {
+        debug: true,
+        transform: ['babelify'],
+        extensions: ['js', 'jsx']
+    },
 
     // test results reporter to use
     // possible values: dots || progress || growl
@@ -37,7 +41,7 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: false,
     browsers: ["Chrome"],
-    plugins: ["karma-source-map-support", "karma-chrome-launcher", "karma-jasmine"],
+    plugins: ["karma-chrome-launcher", "karma-jasmine", "karma-browserify"],
     customLaunchers: {
       Chrome_travis_ci: {
         base: "Chrome",

@@ -112,7 +112,6 @@
     }
   }
 
-  var mktag = void 0;
   _jquery2.default.fn.rx = function (prop) {
     var _this = this;
 
@@ -167,6 +166,9 @@
   //
   // reactive template DSL
   //
+  var autoFuncBind = function autoFuncBind(x) {
+    return _underscore2.default.isFunction(x) ? rx.bind(x) : x;
+  };
 
   var flattenWeb = function flattenWeb(x) {
     return rx.flatten(x, rxtFlattenHelper);
@@ -199,10 +201,40 @@
   var DOMEvents = ["blur", "change", "click", "dblclick", "error", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "load", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "ready", "resize", "scroll", "select", "submit", "toggle", "unload"];
 
   var svg_events = ["click"];
+  var smushClasses = function smushClasses(xs) {
+    return (0, _underscore2.default)(xs).chain().flatten().compact().value().join(" ").replace(/\s+/, " ").trim();
+  };
 
   var specialAttrs = {
     init: function init(elt, fn) {
       return fn.call(elt);
+    },
+    style: function style(elt, value) {
+      value = autoFuncBind(value);
+      var isCell = value instanceof rx.ObsCell;
+      return rx.autoSub(rx.cast(value).onSet, function (_ref) {
+        var _ref2 = _slicedToArray(_ref, 2),
+            o = _ref2[0],
+            n = _ref2[1];
+
+        if (n == null || _underscore2.default.isString(n)) {
+          setProp(elt, "style", n);
+        } else {
+          elt.removeAttr("style").css(n);
+        }
+        if (isCell && events.enabled) {
+          return events.onElementAttrsChanged.pub({ $element: elt, attr: "style" });
+        }
+      });
+    },
+    class: function _class(elt, value) {
+      return setDynProp(elt, "class", value, function (val) {
+        if (_underscore2.default.isString(val)) {
+          return val;
+        } else {
+          return smushClasses(val);
+        }
+      });
     }
   };
 
@@ -211,7 +243,7 @@
   var _iteratorError = undefined;
 
   try {
-    for (var _iterator = Array.from(DOMEvents)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    for (var _iterator = DOMEvents[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var ev = _step.value;
 
       (function (ev) {
@@ -227,9 +259,7 @@
       })(ev);
     }
 
-    // attr vs prop:
-    // http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
-    // http://api.jquery.com/prop/
+    // a little underscore-string inlining
   } catch (err) {
     _didIteratorError = true;
     _iteratorError = err;
@@ -244,6 +274,16 @@
       }
     }
   }
+
+  var trim = _jquery2.default.trim;
+
+  var dasherize = function dasherize(str) {
+    return trim(str).replace(/([A-Z])/g, "-$1").replace(/[-_\s]+/g, "-").toLowerCase();
+  };
+
+  // attr vs prop:
+  // http://blog.jquery.com/2011/05/10/jquery-1-6-1-rc-1-released/
+  // http://api.jquery.com/prop/
 
   var props = ["async", "autofocus", "checked", "location", "multiple", "readOnly", "selected", "selectedIndex", "tagName", "nodeName", "nodeType", "ownerDocument", "defaultChecked", "defaultSelected"];
   var propSet = _underscore2.default.object(props.map(function (prop) {
@@ -266,14 +306,12 @@
     if (xform == null) {
       xform = _underscore2.default.identity;
     }
-    if (_underscore2.default.isFunction(val)) {
-      val = rx.bind(val);
-    }
+    val = autoFuncBind(val);
     if (val instanceof rx.ObsCell) {
-      return rx.autoSub(val.onSet, function (_ref) {
-        var _ref2 = _slicedToArray(_ref, 2),
-            o = _ref2[0],
-            n = _ref2[1];
+      return rx.autoSub(val.onSet, function (_ref3) {
+        var _ref4 = _slicedToArray(_ref3, 2),
+            o = _ref4[0],
+            n = _ref4[1];
 
         setProp(elt, prop, xform(n));
         if (events.enabled) {
@@ -296,20 +334,35 @@
     return _underscore2.default.isString(contents) || _underscore2.default.isNumber(contents) || _underscore2.default.isArray(contents) || _underscore2.default.isBoolean(contents) || _underscore2.default.isFunction(contents) || contents instanceof Element || contents instanceof SVGElement || contents instanceof RawHtml || contents instanceof _jquery2.default || contents instanceof rx.ObsCell || contents instanceof rx.ObsArray || contents instanceof rx.ObsSet;
   };
 
-  var normalizeTagArgs = function normalizeTagArgs(arg1, arg2) {
-    if (arg1 == null && arg2 == null) {
-      return [{}, null];
-    } else if (arg2 == null && validContents(arg1)) {
-      return [{}, arg1];
-    } else if (_underscore2.default.isObject(arg1)) {
-      if (validContents(arg2)) {
-        return [arg1, arg2];
-      } else if (arg2 == null) {
-        return [arg1, null];
-      }
+  var normalizeTagArgs = function normalizeTagArgs() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
     }
 
-    throw Error("Unparsable arguments [" + arg1.constructor.name + ", " + arg2 + "]");
+    // while not strictly necessary, a great deal of the special-casing in this function is provided
+    // to ensure exact backwards compatibility.
+    // @TODO: Prior to the 3.0.0 release, this should be simplified.
+    args = args.filter(function (a) {
+      return a != null;
+    });
+    var first = _underscore2.default.first(args);
+    var rest = args.slice(1);
+    if (first == null && !rest.length) {
+      return [{}, null];
+    } else if (validContents(first)) {
+      if (args.length > 1) {
+        return [{}, args];
+      } else {
+        return [{}, first];
+      }
+    } else {
+      if (rest.length === 0) {
+        return [first, null];
+      } else if (rest.length === 1) {
+        return [first, _underscore2.default.first(rest)];
+      }
+      return [first, rest];
+    }
   };
 
   var toNodes = function toNodes(contents) {
@@ -380,119 +433,132 @@
     }
   };
 
-  mktag = function mktag(tag) {
-    return function (arg1, arg2) {
-      var _Array$from = Array.from(normalizeTagArgs(arg1, arg2)),
-          _Array$from2 = _slicedToArray(_Array$from, 2),
-          attrs = _Array$from2[0],
-          contents = _Array$from2[1];
-
-      contents = prepContents(contents);
-
-      var elt = (0, _jquery2.default)("<" + tag + "/>");
-      var object = _underscore2.default.omit(attrs, _underscore2.default.keys(specialAttrs));
-      for (var name in object) {
-        var value = object[name];
-        setDynProp(elt, name, value);
+  var mktag = function mktag(tag) {
+    return function () {
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
       }
-      if (contents != null) {
-        if (contents instanceof rx.ObsArray) {
-          rx.autoSub(contents.indexed().onChangeCells, function () {
-            var _Array$from3 = Array.from(arguments.length <= 0 ? undefined : arguments[0]),
-                _Array$from4 = _slicedToArray(_Array$from3, 3),
-                index = _Array$from4[0],
-                removed = _Array$from4[1],
-                added = _Array$from4[2];
 
-            elt.contents().slice(index, index + removed.length).remove();
-            var toAdd = toNodes(added.map(function (_ref3) {
-              var _ref4 = _slicedToArray(_ref3, 2),
-                  cell = _ref4[0],
-                  icell = _ref4[1];
-
-              return rx.snap(function () {
-                return cell.get();
-              });
-            }));
-            if (index === elt.contents().length) {
-              elt.append(toAdd);
-            } else {
-              elt.contents().eq(index).before(toAdd);
-            }
-            if (events.enabled && (removed.length || toAdd.length)) {
-              events.onElementChildrenChanged.pub({
-                $element: elt,
-                type: "childrenUpdated",
-                added: toAdd,
-                removed: toNodes(removed.map(function (cell) {
-                  return rx.snap(function () {
-                    return cell.get();
-                  });
-                }))
-              });
-            }
-            return function () {
-              var result1 = [];
-              var _iteratorNormalCompletion3 = true;
-              var _didIteratorError3 = false;
-              var _iteratorError3 = undefined;
-
-              try {
-                for (var _iterator3 = Array.from(added)[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                  var _step3$value = _slicedToArray(_step3.value, 2),
-                      cell = _step3$value[0],
-                      icell = _step3$value[1];
-
-                  result1.push(function (cell, icell) {
-                    return rx.autoSub(cell.onSet, rx.skipFirst(function (_ref5) {
-                      var _ref6 = _slicedToArray(_ref5, 2),
-                          old = _ref6[0],
-                          val = _ref6[1];
-
-                      var ival = rx.snap(function () {
-                        return icell.get();
-                      });
-                      toAdd = toNodes([val]);
-                      elt.contents().eq(ival).replaceWith(toAdd);
-                      if (events.enabled) {
-                        return events.onElementChildrenChanged.pub({
-                          $element: elt, type: "childrenUpdated", updated: toAdd
-                        });
-                      }
-                    }));
-                  }(cell, icell));
-                }
-              } catch (err) {
-                _didIteratorError3 = true;
-                _iteratorError3 = err;
-              } finally {
-                try {
-                  if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                    _iterator3.return();
-                  }
-                } finally {
-                  if (_didIteratorError3) {
-                    throw _iteratorError3;
-                  }
-                }
-              }
-
-              return result1;
-            }();
-          });
-        } else {
-          updateContents(elt, contents);
-        }
-      }
-      for (var key in attrs) {
-        if (key in specialAttrs) {
-          specialAttrs[key](elt, attrs[key], attrs, contents);
-        }
-      }
-      return elt;
+      return createTag.apply(undefined, [tag].concat(args));
     };
   };
 
+  var createTag = function createTag(tag) {
+    for (var _len3 = arguments.length, args = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+      args[_key3 - 1] = arguments[_key3];
+    }
+
+    var _Array$from = Array.from(normalizeTagArgs.apply(undefined, args)),
+        _Array$from2 = _slicedToArray(_Array$from, 2),
+        attrs = _Array$from2[0],
+        contents = _Array$from2[1];
+
+    contents = prepContents(contents);
+
+    var elt = (0, _jquery2.default)("<" + tag + "/>");
+    attrs = _underscore2.default.mapObject(attrs, function (value, key) {
+      if (key in specialAttrs) return value;else return autoFuncBind(value);
+    });
+    var object = _underscore2.default.omit(attrs, _underscore2.default.keys(specialAttrs));
+    for (var name in object) {
+      var value = object[name];
+      setDynProp(elt, name, value);
+    }
+    if (contents != null) {
+      if (contents instanceof rx.ObsArray) {
+        rx.autoSub(contents.indexed().onChangeCells, function (_ref5) {
+          var _ref6 = _slicedToArray(_ref5, 3),
+              index = _ref6[0],
+              removed = _ref6[1],
+              added = _ref6[2];
+
+          elt.contents().slice(index, index + removed.length).remove();
+          var toAdd = toNodes(added.map(function (_ref7) {
+            var _ref8 = _slicedToArray(_ref7, 2),
+                cell = _ref8[0],
+                icell = _ref8[1];
+
+            return rx.snap(function () {
+              return cell.get();
+            });
+          }));
+          if (index === elt.contents().length) {
+            elt.append(toAdd);
+          } else {
+            elt.contents().eq(index).before(toAdd);
+          }
+          if (events.enabled && (removed.length || toAdd.length)) {
+            events.onElementChildrenChanged.pub({
+              $element: elt,
+              type: "childrenUpdated",
+              added: toAdd,
+              removed: toNodes(removed.map(function (cell) {
+                return rx.snap(function () {
+                  return cell.get();
+                });
+              }))
+            });
+          }
+          return function () {
+            var result1 = [];
+            var _iteratorNormalCompletion3 = true;
+            var _didIteratorError3 = false;
+            var _iteratorError3 = undefined;
+
+            try {
+              for (var _iterator3 = Array.from(added)[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                var _step3$value = _slicedToArray(_step3.value, 2),
+                    cell = _step3$value[0],
+                    icell = _step3$value[1];
+
+                result1.push(function (cell, icell) {
+                  return rx.autoSub(cell.onSet, rx.skipFirst(function (_ref9) {
+                    var _ref10 = _slicedToArray(_ref9, 2),
+                        old = _ref10[0],
+                        val = _ref10[1];
+
+                    var ival = rx.snap(function () {
+                      return icell.get();
+                    });
+                    toAdd = toNodes([val]);
+                    elt.contents().eq(ival).replaceWith(toAdd);
+                    if (events.enabled) {
+                      return events.onElementChildrenChanged.pub({
+                        $element: elt, type: "childrenUpdated", updated: toAdd
+                      });
+                    }
+                  }));
+                }(cell, icell));
+              }
+            } catch (err) {
+              _didIteratorError3 = true;
+              _iteratorError3 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                  _iterator3.return();
+                }
+              } finally {
+                if (_didIteratorError3) {
+                  throw _iteratorError3;
+                }
+              }
+            }
+
+            return result1;
+          }();
+        });
+      } else {
+        updateContents(elt, contents);
+      }
+    }
+    for (var key in attrs) {
+      if (attrs.hasOwnProperty(key) && specialAttrs.hasOwnProperty(key)) {
+        specialAttrs[key](elt, attrs[key], attrs, contents);
+      }
+    }
+    return elt;
+  };
   // From <https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list>
   //
   // Extract with:
@@ -524,11 +590,15 @@
   };
 
   var svg_mktag = function svg_mktag(tag) {
-    return function (arg1, arg2) {
-      var _Array$from5 = Array.from(normalizeTagArgs(arg1, arg2)),
-          _Array$from6 = _slicedToArray(_Array$from5, 2),
-          attrs = _Array$from6[0],
-          contents = _Array$from6[1];
+    return function () {
+      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        args[_key4] = arguments[_key4];
+      }
+
+      var _Array$from3 = Array.from(normalizeTagArgs.apply(undefined, args)),
+          _Array$from4 = _slicedToArray(_Array$from3, 2),
+          attrs = _Array$from4[0],
+          contents = _Array$from4[1];
 
       var elt = document.createElementNS("http://www.w3.org/2000/svg", tag);
       var object = _underscore2.default.omit(attrs, _underscore2.default.keys(specialAttrs));
@@ -544,11 +614,11 @@
       if (contents != null) {
         if (contents instanceof rx.ObsArray) {
           contents.onChange.sub(function () {
-            var _Array$from7 = Array.from(arguments.length <= 0 ? undefined : arguments[0]),
-                _Array$from8 = _slicedToArray(_Array$from7, 3),
-                index = _Array$from8[0],
-                removed = _Array$from8[1],
-                added = _Array$from8[2];
+            var _Array$from5 = Array.from(arguments.length <= 0 ? undefined : arguments[0]),
+                _Array$from6 = _slicedToArray(_Array$from5, 3),
+                index = _Array$from6[0],
+                removed = _Array$from6[1],
+                added = _Array$from6[2];
 
             for (var i = 0, end = removed.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
               elt.removeChild(elt.childNodes[index]);
@@ -565,10 +635,10 @@
             }
           });
         } else if (contents instanceof rx.ObsCell) {
-          contents.onSet.sub(function (_ref7) {
-            var _ref8 = _slicedToArray(_ref7, 2),
-                old = _ref8[0],
-                val = _ref8[1];
+          contents.onSet.sub(function (_ref11) {
+            var _ref12 = _slicedToArray(_ref11, 2),
+                old = _ref12[0],
+                val = _ref12[1];
 
             return updateSVGContents(elt, val);
           });
@@ -664,8 +734,8 @@
     */
     $input._oldProp = $input.prop;
     $input.prop = function () {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
+      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+        args[_key5] = arguments[_key5];
       }
 
       var res = $input._oldProp.apply($input, _toConsumableArray(Array.from(args || [])));
@@ -709,42 +779,10 @@
       tag = "span";
     }return rawHtml("<" + tag + ">\\u" + code + ";</" + tag + ">");
   };
+
   //
   // rxt utilities
   //
-
-  // a little underscore-string inlining
-  var trim = _jquery2.default.trim;
-
-  var dasherize = function dasherize(str) {
-    return trim(str).replace(/([A-Z])/g, "-$1").replace(/[-_\s]+/g, "-").toLowerCase();
-  };
-
-  specialAttrs.style = function (elt, value) {
-    if (_underscore2.default.isFunction(value)) {
-      value = rx.bind(value);
-    }
-    var isCell = value instanceof rx.ObsCell;
-    return rx.autoSub(rx.cast(value).onSet, function (_ref9) {
-      var _ref10 = _slicedToArray(_ref9, 2),
-          o = _ref10[0],
-          n = _ref10[1];
-
-      if (n == null || _underscore2.default.isString(n)) {
-        setProp(elt, "style", n);
-      } else {
-        elt.removeAttr("style").css(n);
-      }
-      if (isCell && events.enabled) {
-        return events.onElementAttrsChanged.pub({ $element: elt, attr: "style" });
-      }
-    });
-  };
-
-  var smushClasses = function smushClasses(xs) {
-    return (0, _underscore2.default)(xs).chain().flatten().compact().value().join(" ").replace(/\s+/, " ").trim();
-  };
-
   specialAttrs.class = function (elt, value) {
     return setDynProp(elt, "class", value, function (val) {
       if (_underscore2.default.isString(val)) {
@@ -755,9 +793,28 @@
     });
   };
 
+  specialAttrs.className = specialAttrs.class;
+
+  function createElement(elemType, props) {
+    for (var _len6 = arguments.length, contents = Array(_len6 > 2 ? _len6 - 2 : 0), _key6 = 2; _key6 < _len6; _key6++) {
+      contents[_key6 - 2] = arguments[_key6];
+    }
+
+    if (_underscore2.default.isString(elemType)) {
+      return createTag.apply(undefined, [elemType, props].concat(contents));
+    } else if (_underscore2.default.isObject(elemType) && elemType.prototype && _underscore2.default.isFunction(elemType.prototype.render)) {
+      return new (Function.prototype.bind.apply(elemType, [null].concat([props], contents)))().render();
+    } else if (_underscore2.default.isFunction(elemType)) {
+      return elemType.apply(undefined, [props].concat(contents));
+    } else {
+      throw Error("Cannot create element " + elemType + "!");
+    }
+  }
+
   var rxt = exports.rxt = {
-    events: events, RawHtml: RawHtml, specialAttrs: specialAttrs, mktag: mktag, svg_mktag: svg_mktag, tags: tags, svg_tags: svg_tags, rawHtml: rawHtml, specialChar: specialChar, unicodeChar: unicodeChar,
-    trim: trim, dasherize: dasherize, smushClasses: smushClasses, normalizeTagArgs: normalizeTagArgs, flattenWeb: flattenWeb, rxtFlattenHelper: rxtFlattenHelper
+    events: events, RawHtml: RawHtml, specialAttrs: specialAttrs, mktag: mktag, svg_mktag: svg_mktag, tags: tags, svg_tags: svg_tags, rawHtml: rawHtml, specialChar: specialChar,
+    unicodeChar: unicodeChar, trim: trim, dasherize: dasherize, smushClasses: smushClasses, normalizeTagArgs: normalizeTagArgs, flattenWeb: flattenWeb, rxtFlattenHelper: rxtFlattenHelper,
+    createElement: createElement
   };
 });
 
