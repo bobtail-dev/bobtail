@@ -205,6 +205,16 @@
     return (0, _underscore2.default)(xs).chain().flatten().compact().value().join(" ").replace(/\s+/, " ").trim();
   };
 
+  var classAttr = function classAttr(elt, value) {
+    return setDynProp(elt, "class", value, function (val) {
+      if (_underscore2.default.isString(val)) {
+        return val;
+      } else {
+        return smushClasses(val);
+      }
+    });
+  };
+
   var specialAttrs = {
     init: function init(elt, fn) {
       return fn.call(elt);
@@ -227,15 +237,9 @@
         }
       });
     },
-    class: function _class(elt, value) {
-      return setDynProp(elt, "class", value, function (val) {
-        if (_underscore2.default.isString(val)) {
-          return val;
-        } else {
-          return smushClasses(val);
-        }
-      });
-    }
+
+    class: classAttr,
+    className: classAttr
   };
 
   var _iteratorNormalCompletion = true;
@@ -247,7 +251,7 @@
       var ev = _step.value;
 
       (function (ev) {
-        return specialAttrs[ev] = function (elt, fn) {
+        return specialAttrs[ev] = specialAttrs["on" + ev] = function (elt, fn) {
           if (elt instanceof SVGElement && Array.from(svg_events).includes(ev)) {
             return elt.addEventListener(ev, fn);
           } else {

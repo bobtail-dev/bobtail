@@ -84,6 +84,12 @@ let DOMEvents = ["blur", "change", "click", "dblclick", "error", "focus", "focus
 let svg_events = ["click"];
 let smushClasses = xs => _(xs).chain().flatten().compact().value().join(" ").replace(/\s+/, " ").trim();
 
+const classAttr = (elt, value) => {
+  return setDynProp(elt, "class", value, function(val) {
+    if (_.isString(val)) { return val; } else { return smushClasses(val); }
+  });
+};
+
 let specialAttrs = {
   init(elt, fn) { return fn.call(elt); },
   style (elt, value) {
@@ -100,16 +106,13 @@ let specialAttrs = {
       }
     });
   },
-  class (elt, value) {
-    return setDynProp(elt, "class", value, function(val) {
-      if (_.isString(val)) { return val; } else { return smushClasses(val); }
-    });
-  }
+  class: classAttr,
+  className: classAttr,
 };
 
 for (let ev of DOMEvents) {
   (ev =>
-    specialAttrs[ev] = function(elt, fn) {
+    specialAttrs[ev] = specialAttrs[`on${ev}`] = function(elt, fn) {
       if (elt instanceof SVGElement && Array.from(svg_events).includes(ev)) {
         return elt.addEventListener(ev, fn);
       } else {
