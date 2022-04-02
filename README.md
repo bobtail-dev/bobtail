@@ -4,10 +4,7 @@ bobtail [![Build Status](https://secure.travis-ci.org/yang/reactive-coffee.png?b
 A lightweight CoffeeScript library/DSL for [reactive programming] and for
 declaratively building scalable web UIs.
 
-See the [website], which has an overview, tutorial, comparisons, and more.
-
 [reactive programming]: http://en.wikipedia.org/wiki/Reactive_programming
-[website]: http://bobtailjs.io
 
 Highlights
 ----------
